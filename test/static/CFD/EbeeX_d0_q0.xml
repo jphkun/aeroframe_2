@@ -1,0 +1,626 @@
+<?xml version="1.0"?>
+<cpacs>
+  <header>
+    <name>EbeeX</name>
+    <version>1</version>
+    <cpacsVersion>3.0</cpacsVersion>
+    <creator>Jean-Philippe Kuntzer</creator>
+    <description>Test for aeroelatic deformation</description>
+    <timestamp>2020-07-19T21:20:47</timestamp>
+  </header>
+  <vehicles>
+    <aircraft>
+      <model uID="EbeeX">
+        <name>EbeeX</name>
+        <description>...</description>
+        <reference>
+          <area>10</area>
+          <length>1</length>
+          <point uID="EbeeX_point1">
+            <x>0.0</x>
+            <y>0.0</y>
+            <z>0.0</z>
+          </point>
+        </reference>
+        <wings>
+          <wing uID="Wing_1" symmetry="x-z-plane">
+            <name>Wing_1</name>
+            <description>Wing generated from the function CCPACSWings::CreateWing</description>
+            <transformation uID="Wing_1Transformation">
+              <scaling uID="Wing_1TransformationScal">
+                <x>1</x>
+                <y>1</y>
+                <z>1</z>
+              </scaling>
+              <rotation uID="Wing_1TransformationRot">
+                <x>0</x>
+                <y>0</y>
+                <z>0</z>
+              </rotation>
+              <translation uID="Wing_1TransformationTransl">
+                <x>1</x>
+                <y>0</y>
+                <z>0</z>
+              </translation>
+            </transformation>
+            <sections>
+              <section uID="Wing_1Sec1">
+                <name>Wing_1Sec1</name>
+                <transformation uID="Wing_1Sec1Tr">
+                  <scaling uID="Wing_1Sec1TrScal">
+                    <x>0.3</x>
+                    <y>0.3</y>
+                    <z>0.3</z>
+                  </scaling>
+                  <rotation uID="Wing_1Sec1TrRot">
+                    <x>0</x>
+                    <y>0</y>
+                    <z>0</z>
+                  </rotation>
+                  <translation uID="Wing_1Sec1TrTransl">
+                    <x>0</x>
+                    <y>0</y>
+                    <z>0</z>
+                  </translation>
+                </transformation>
+                <elements>
+                  <element uID="Wing_1Sec1Elem1">
+                    <name>Wing_1Sec1Elem1</name>
+                    <airfoilUID>NACA 2218</airfoilUID>
+                    <transformation uID="Wing_1Sec1Elem1Tr">
+                      <scaling uID="Wing_1Sec1Elem1TrScal">
+                        <x>1</x>
+                        <y>1</y>
+                        <z>1</z>
+                      </scaling>
+                      <rotation uID="Wing_1Sec1Elem1TrRot">
+                        <x>0</x>
+                        <y>0</y>
+                        <z>0</z>
+                      </rotation>
+                      <translation uID="Wing_1Sec1Elem1TrTransl">
+                        <x>0</x>
+                        <y>0</y>
+                        <z>0</z>
+                      </translation>
+                    </transformation>
+                  </element>
+                </elements>
+              </section>
+              <section uID="Wing_1Sec2">
+                <name>Wing_1Sec2</name>
+                <transformation uID="Wing_1Sec2Tr">
+                  <scaling uID="Wing_1Sec2TrScal">
+                    <x>0.289899</x>
+                    <y>0.289899</y>
+                    <z>0.289899</z>
+                  </scaling>
+                  <rotation uID="Wing_1Sec2TrRot">
+                    <x>0</x>
+                    <y>0</y>
+                    <z>0</z>
+                  </rotation>
+                  <translation uID="Wing_1Sec2TrTransl">
+                    <x>0</x>
+                    <y>0</y>
+                    <z>0</z>
+                  </translation>
+                </transformation>
+                <elements>
+                  <element uID="Wing_1Sec2Elem1">
+                    <name>Wing_1Sec2Elem1</name>
+                    <airfoilUID>NACA 2218</airfoilUID>
+                    <transformation uID="Wing_1Sec2Elem1Tr">
+                      <scaling uID="Wing_1Sec2Elem1TrScal">
+                        <x>1</x>
+                        <y>1</y>
+                        <z>1</z>
+                      </scaling>
+                      <rotation uID="Wing_1Sec2Elem1TrRot">
+                        <x>0</x>
+                        <y>0</y>
+                        <z>0</z>
+                      </rotation>
+                      <translation uID="Wing_1Sec2Elem1TrTransl">
+                        <x>0</x>
+                        <y>0</y>
+                        <z>0</z>
+                      </translation>
+                    </transformation>
+                  </element>
+                </elements>
+              </section>
+              <section uID="Wing_1Sec3">
+                <name>Wing_1Sec3</name>
+                <transformation uID="Wing_1Sec3Tr">
+                  <scaling uID="Wing_1Sec3TrScal">
+                    <x>0.279798</x>
+                    <y>0.279798</y>
+                    <z>0.279798</z>
+                  </scaling>
+                  <rotation uID="Wing_1Sec3TrRot">
+                    <x>0</x>
+                    <y>0</y>
+                    <z>0</z>
+                  </rotation>
+                  <translation uID="Wing_1Sec3TrTransl">
+                    <x>0</x>
+                    <y>0</y>
+                    <z>0</z>
+                  </translation>
+                </transformation>
+                <elements>
+                  <element uID="Wing_1Sec3Elem1">
+                    <name>Wing_1Sec3Elem1</name>
+                    <airfoilUID>NACA 2218</airfoilUID>
+                    <transformation uID="Wing_1Sec3Elem1Tr">
+                      <scaling uID="Wing_1Sec3Elem1TrScal">
+                        <x>1</x>
+                        <y>1</y>
+                        <z>1</z>
+                      </scaling>
+                      <rotation uID="Wing_1Sec3Elem1TrRot">
+                        <x>0</x>
+                        <y>0</y>
+                        <z>0</z>
+                      </rotation>
+                      <translation uID="Wing_1Sec3Elem1TrTransl">
+                        <x>0</x>
+                        <y>0</y>
+                        <z>0</z>
+                      </translation>
+                    </transformation>
+                  </element>
+                </elements>
+              </section>
+              <section uID="Wing_1Sec4">
+                <name>Wing_1Sec4</name>
+                <transformation uID="Wing_1Sec4Tr">
+                  <scaling uID="Wing_1Sec4TrScal">
+                    <x>0.269697</x>
+                    <y>0.269697</y>
+                    <z>0.269697</z>
+                  </scaling>
+                  <rotation uID="Wing_1Sec4TrRot">
+                    <x>0</x>
+                    <y>0</y>
+                    <z>0</z>
+                  </rotation>
+                  <translation uID="Wing_1Sec4TrTransl">
+                    <x>0</x>
+                    <y>0</y>
+                    <z>0</z>
+                  </translation>
+                </transformation>
+                <elements>
+                  <element uID="Wing_1Sec4Elem1">
+                    <name>Wing_1Sec4Elem1</name>
+                    <airfoilUID>NACA 2218</airfoilUID>
+                    <transformation uID="Wing_1Sec4Elem1Tr">
+                      <scaling uID="Wing_1Sec4Elem1TrScal">
+                        <x>1</x>
+                        <y>1</y>
+                        <z>1</z>
+                      </scaling>
+                      <rotation uID="Wing_1Sec4Elem1TrRot">
+                        <x>0</x>
+                        <y>0</y>
+                        <z>0</z>
+                      </rotation>
+                      <translation uID="Wing_1Sec4Elem1TrTransl">
+                        <x>0</x>
+                        <y>0</y>
+                        <z>0</z>
+                      </translation>
+                    </transformation>
+                  </element>
+                </elements>
+              </section>
+              <section uID="Wing_1Sec5">
+                <name>Wing_1Sec5</name>
+                <transformation uID="Wing_1Sec5Tr">
+                  <scaling uID="Wing_1Sec5TrScal">
+                    <x>0.259596</x>
+                    <y>0.259596</y>
+                    <z>0.259596</z>
+                  </scaling>
+                  <rotation uID="Wing_1Sec5TrRot">
+                    <x>0</x>
+                    <y>0</y>
+                    <z>0</z>
+                  </rotation>
+                  <translation uID="Wing_1Sec5TrTransl">
+                    <x>0</x>
+                    <y>0</y>
+                    <z>0</z>
+                  </translation>
+                </transformation>
+                <elements>
+                  <element uID="Wing_1Sec5Elem1">
+                    <name>Wing_1Sec5Elem1</name>
+                    <airfoilUID>NACA 2218</airfoilUID>
+                    <transformation uID="Wing_1Sec5Elem1Tr">
+                      <scaling uID="Wing_1Sec5Elem1TrScal">
+                        <x>1</x>
+                        <y>1</y>
+                        <z>1</z>
+                      </scaling>
+                      <rotation uID="Wing_1Sec5Elem1TrRot">
+                        <x>0</x>
+                        <y>0</y>
+                        <z>0</z>
+                      </rotation>
+                      <translation uID="Wing_1Sec5Elem1TrTransl">
+                        <x>0</x>
+                        <y>0</y>
+                        <z>0</z>
+                      </translation>
+                    </transformation>
+                  </element>
+                </elements>
+              </section>
+              <section uID="Wing_1Sec6">
+                <name>Wing_1Sec6</name>
+                <transformation uID="Wing_1Sec6Tr">
+                  <scaling uID="Wing_1Sec6TrScal">
+                    <x>0.249495</x>
+                    <y>0.249495</y>
+                    <z>0.249495</z>
+                  </scaling>
+                  <rotation uID="Wing_1Sec6TrRot">
+                    <x>0</x>
+                    <y>0</y>
+                    <z>0</z>
+                  </rotation>
+                  <translation uID="Wing_1Sec6TrTransl">
+                    <x>0</x>
+                    <y>0</y>
+                    <z>0</z>
+                  </translation>
+                </transformation>
+                <elements>
+                  <element uID="Wing_1Sec6Elem1">
+                    <name>Wing_1Sec6Elem1</name>
+                    <airfoilUID>NACA 2218</airfoilUID>
+                    <transformation uID="Wing_1Sec6Elem1Tr">
+                      <scaling uID="Wing_1Sec6Elem1TrScal">
+                        <x>1</x>
+                        <y>1</y>
+                        <z>1</z>
+                      </scaling>
+                      <rotation uID="Wing_1Sec6Elem1TrRot">
+                        <x>0</x>
+                        <y>0</y>
+                        <z>0</z>
+                      </rotation>
+                      <translation uID="Wing_1Sec6Elem1TrTransl">
+                        <x>0</x>
+                        <y>0</y>
+                        <z>0</z>
+                      </translation>
+                    </transformation>
+                  </element>
+                </elements>
+              </section>
+              <section uID="Wing_1Sec7">
+                <name>Wing_1Sec7</name>
+                <transformation uID="Wing_1Sec7Tr">
+                  <scaling uID="Wing_1Sec7TrScal">
+                    <x>0.239394</x>
+                    <y>0.239394</y>
+                    <z>0.239394</z>
+                  </scaling>
+                  <rotation uID="Wing_1Sec7TrRot">
+                    <x>0</x>
+                    <y>0</y>
+                    <z>0</z>
+                  </rotation>
+                  <translation uID="Wing_1Sec7TrTransl">
+                    <x>0</x>
+                    <y>0</y>
+                    <z>0</z>
+                  </translation>
+                </transformation>
+                <elements>
+                  <element uID="Wing_1Sec7Elem1">
+                    <name>Wing_1Sec7Elem1</name>
+                    <airfoilUID>NACA 2218</airfoilUID>
+                    <transformation uID="Wing_1Sec7Elem1Tr">
+                      <scaling uID="Wing_1Sec7Elem1TrScal">
+                        <x>1</x>
+                        <y>1</y>
+                        <z>1</z>
+                      </scaling>
+                      <rotation uID="Wing_1Sec7Elem1TrRot">
+                        <x>0</x>
+                        <y>0</y>
+                        <z>0</z>
+                      </rotation>
+                      <translation uID="Wing_1Sec7Elem1TrTransl">
+                        <x>0</x>
+                        <y>0</y>
+                        <z>0</z>
+                      </translation>
+                    </transformation>
+                  </element>
+                </elements>
+              </section>
+              <section uID="Wing_1Sec8">
+                <name>Wing_1Sec8</name>
+                <transformation uID="Wing_1Sec8Tr">
+                  <scaling uID="Wing_1Sec8TrScal">
+                    <x>0.229293</x>
+                    <y>0.229293</y>
+                    <z>0.229293</z>
+                  </scaling>
+                  <rotation uID="Wing_1Sec8TrRot">
+                    <x>0</x>
+                    <y>0</y>
+                    <z>0</z>
+                  </rotation>
+                  <translation uID="Wing_1Sec8TrTransl">
+                    <x>0</x>
+                    <y>0</y>
+                    <z>0</z>
+                  </translation>
+                </transformation>
+                <elements>
+                  <element uID="Wing_1Sec8Elem1">
+                    <name>Wing_1Sec8Elem1</name>
+                    <airfoilUID>NACA 2218</airfoilUID>
+                    <transformation uID="Wing_1Sec8Elem1Tr">
+                      <scaling uID="Wing_1Sec8Elem1TrScal">
+                        <x>1</x>
+                        <y>1</y>
+                        <z>1</z>
+                      </scaling>
+                      <rotation uID="Wing_1Sec8Elem1TrRot">
+                        <x>0</x>
+                        <y>0</y>
+                        <z>0</z>
+                      </rotation>
+                      <translation uID="Wing_1Sec8Elem1TrTransl">
+                        <x>0</x>
+                        <y>0</y>
+                        <z>0</z>
+                      </translation>
+                    </transformation>
+                  </element>
+                </elements>
+              </section>
+              <section uID="Wing_1Sec9">
+                <name>Wing_1Sec9</name>
+                <transformation uID="Wing_1Sec9Tr">
+                  <scaling uID="Wing_1Sec9TrScal">
+                    <x>0.219192</x>
+                    <y>0.219192</y>
+                    <z>0.219192</z>
+                  </scaling>
+                  <rotation uID="Wing_1Sec9TrRot">
+                    <x>0</x>
+                    <y>0</y>
+                    <z>0</z>
+                  </rotation>
+                  <translation uID="Wing_1Sec9TrTransl">
+                    <x>0</x>
+                    <y>0</y>
+                    <z>0</z>
+                  </translation>
+                </transformation>
+                <elements>
+                  <element uID="Wing_1Sec9Elem1">
+                    <name>Wing_1Sec9Elem1</name>
+                    <airfoilUID>NACA 2218</airfoilUID>
+                    <transformation uID="Wing_1Sec9Elem1Tr">
+                      <scaling uID="Wing_1Sec9Elem1TrScal">
+                        <x>1</x>
+                        <y>1</y>
+                        <z>1</z>
+                      </scaling>
+                      <rotation uID="Wing_1Sec9Elem1TrRot">
+                        <x>0</x>
+                        <y>0</y>
+                        <z>0</z>
+                      </rotation>
+                      <translation uID="Wing_1Sec9Elem1TrTransl">
+                        <x>0</x>
+                        <y>0</y>
+                        <z>0</z>
+                      </translation>
+                    </transformation>
+                  </element>
+                </elements>
+              </section>
+              <section uID="Wing_1Sec10">
+                <name>Wing_1Sec10</name>
+                <transformation uID="Wing_1Sec10Tr">
+                  <scaling uID="Wing_1Sec10TrScal">
+                    <x>0.209091</x>
+                    <y>0.209091</y>
+                    <z>0.209091</z>
+                  </scaling>
+                  <rotation uID="Wing_1Sec10TrRot">
+                    <x>0</x>
+                    <y>0</y>
+                    <z>0</z>
+                  </rotation>
+                  <translation uID="Wing_1Sec10TrTransl">
+                    <x>0</x>
+                    <y>0</y>
+                    <z>0</z>
+                  </translation>
+                </transformation>
+                <elements>
+                  <element uID="Wing_1Sec10Elem1">
+                    <name>Wing_1Sec10Elem1</name>
+                    <airfoilUID>NACA 2218</airfoilUID>
+                    <transformation uID="Wing_1Sec10Elem1Tr">
+                      <scaling uID="Wing_1Sec10Elem1TrScal">
+                        <x>1</x>
+                        <y>1</y>
+                        <z>1</z>
+                      </scaling>
+                      <rotation uID="Wing_1Sec10Elem1TrRot">
+                        <x>0</x>
+                        <y>0</y>
+                        <z>0</z>
+                      </rotation>
+                      <translation uID="Wing_1Sec10Elem1TrTransl">
+                        <x>0</x>
+                        <y>0</y>
+                        <z>0</z>
+                      </translation>
+                    </transformation>
+                  </element>
+                </elements>
+              </section>
+            </sections>
+            <positionings>
+              <positioning uID="Wing_1Sec1GenPos">
+                <name></name>
+                <length>1.14624</length>
+                <sweepAngle>-89.7981</sweepAngle>
+                <dihedralAngle>-90</dihedralAngle>
+                <fromSectionUID></fromSectionUID>
+                <toSectionUID>Wing_1Sec1</toSectionUID>
+              </positioning>
+              <positioning uID="Wing_1Sec2GenPos">
+                <name></name>
+                <length>0.058174</length>
+                <sweepAngle>34.2032</sweepAngle>
+                <dihedralAngle>0.161993</dihedralAngle>
+                <fromSectionUID>Wing_1Sec1</fromSectionUID>
+                <toSectionUID>Wing_1Sec2</toSectionUID>
+              </positioning>
+              <positioning uID="Wing_1Sec3GenPos">
+                <name></name>
+                <length>0.058174</length>
+                <sweepAngle>34.2032</sweepAngle>
+                <dihedralAngle>0.161993</dihedralAngle>
+                <fromSectionUID>Wing_1Sec2</fromSectionUID>
+                <toSectionUID>Wing_1Sec3</toSectionUID>
+              </positioning>
+              <positioning uID="Wing_1Sec4GenPos">
+                <name></name>
+                <length>0.058174</length>
+                <sweepAngle>34.2032</sweepAngle>
+                <dihedralAngle>0.161993</dihedralAngle>
+                <fromSectionUID>Wing_1Sec3</fromSectionUID>
+                <toSectionUID>Wing_1Sec4</toSectionUID>
+              </positioning>
+              <positioning uID="Wing_1Sec5GenPos">
+                <name></name>
+                <length>0.058174</length>
+                <sweepAngle>34.2032</sweepAngle>
+                <dihedralAngle>0.161993</dihedralAngle>
+                <fromSectionUID>Wing_1Sec4</fromSectionUID>
+                <toSectionUID>Wing_1Sec5</toSectionUID>
+              </positioning>
+              <positioning uID="Wing_1Sec6GenPos">
+                <name></name>
+                <length>0.058174</length>
+                <sweepAngle>34.2032</sweepAngle>
+                <dihedralAngle>0.161993</dihedralAngle>
+                <fromSectionUID>Wing_1Sec5</fromSectionUID>
+                <toSectionUID>Wing_1Sec6</toSectionUID>
+              </positioning>
+              <positioning uID="Wing_1Sec7GenPos">
+                <name></name>
+                <length>0.058174</length>
+                <sweepAngle>34.2032</sweepAngle>
+                <dihedralAngle>0.161993</dihedralAngle>
+                <fromSectionUID>Wing_1Sec6</fromSectionUID>
+                <toSectionUID>Wing_1Sec7</toSectionUID>
+              </positioning>
+              <positioning uID="Wing_1Sec8GenPos">
+                <name></name>
+                <length>0.058174</length>
+                <sweepAngle>34.2032</sweepAngle>
+                <dihedralAngle>0.161993</dihedralAngle>
+                <fromSectionUID>Wing_1Sec7</fromSectionUID>
+                <toSectionUID>Wing_1Sec8</toSectionUID>
+              </positioning>
+              <positioning uID="Wing_1Sec9GenPos">
+                <name></name>
+                <length>0.058174</length>
+                <sweepAngle>34.2032</sweepAngle>
+                <dihedralAngle>0.161993</dihedralAngle>
+                <fromSectionUID>Wing_1Sec8</fromSectionUID>
+                <toSectionUID>Wing_1Sec9</toSectionUID>
+              </positioning>
+              <positioning uID="Wing_1Sec10GenPos">
+                <name></name>
+                <length>0.058174</length>
+                <sweepAngle>34.2032</sweepAngle>
+                <dihedralAngle>0.161993</dihedralAngle>
+                <fromSectionUID>Wing_1Sec9</fromSectionUID>
+                <toSectionUID>Wing_1Sec10</toSectionUID>
+              </positioning>
+            </positionings>
+            <segments>
+              <segment uID="Wing_1Seg1">
+                <name>Wing_1Seg1</name>
+                <fromElementUID>Wing_1Sec1Elem1</fromElementUID>
+                <toElementUID>Wing_1Sec2Elem1</toElementUID>
+              </segment>
+              <segment uID="Wing_1Seg2">
+                <name>Wing_1Seg2</name>
+                <fromElementUID>Wing_1Sec2Elem1</fromElementUID>
+                <toElementUID>Wing_1Sec3Elem1</toElementUID>
+              </segment>
+              <segment uID="Wing_1Seg3">
+                <name>Wing_1Seg3</name>
+                <fromElementUID>Wing_1Sec3Elem1</fromElementUID>
+                <toElementUID>Wing_1Sec4Elem1</toElementUID>
+              </segment>
+              <segment uID="Wing_1Seg4">
+                <name>Wing_1Seg4</name>
+                <fromElementUID>Wing_1Sec4Elem1</fromElementUID>
+                <toElementUID>Wing_1Sec5Elem1</toElementUID>
+              </segment>
+              <segment uID="Wing_1Seg5">
+                <name>Wing_1Seg5</name>
+                <fromElementUID>Wing_1Sec5Elem1</fromElementUID>
+                <toElementUID>Wing_1Sec6Elem1</toElementUID>
+              </segment>
+              <segment uID="Wing_1Seg6">
+                <name>Wing_1Seg6</name>
+                <fromElementUID>Wing_1Sec6Elem1</fromElementUID>
+                <toElementUID>Wing_1Sec7Elem1</toElementUID>
+              </segment>
+              <segment uID="Wing_1Seg7">
+                <name>Wing_1Seg7</name>
+                <fromElementUID>Wing_1Sec7Elem1</fromElementUID>
+                <toElementUID>Wing_1Sec8Elem1</toElementUID>
+              </segment>
+              <segment uID="Wing_1Seg8">
+                <name>Wing_1Seg8</name>
+                <fromElementUID>Wing_1Sec8Elem1</fromElementUID>
+                <toElementUID>Wing_1Sec9Elem1</toElementUID>
+              </segment>
+              <segment uID="Wing_1Seg9">
+                <name>Wing_1Seg9</name>
+                <fromElementUID>Wing_1Sec9Elem1</fromElementUID>
+                <toElementUID>Wing_1Sec10Elem1</toElementUID>
+              </segment>
+            </segments>
+          </wing>
+        </wings>
+        <fuselages/>
+      </model>
+      <description/>
+    </aircraft>
+    <profiles>
+      <wingAirfoils>
+        <wingAirfoil uID="NACA 2218">
+          <name>NACA 2218</name>
+          <pointList>
+            <x mapType="vector">0;0.00402;0.00803;0.01205;0.01606;0.02008;0.0241;0.02811;0.03213;0.03614;0.04016;0.04418;0.04819;0.05221;0.05622;0.06024;0.06426;0.06827;0.07229;0.07631;0.08032;0.08434;0.08835;0.09237;0.09639;0.1004;0.10442;0.10843;0.11245;0.11647;0.12048;0.1245;0.12851;0.13253;0.13655;0.14056;0.14458;0.14859;0.15261;0.15663;0.16064;0.16466;0.16867;0.17269;0.17671;0.18072;0.18474;0.18876;0.19277;0.19679;0.2008;0.20482;0.20884;0.21285;0.21687;0.22088;0.2249;0.22892;0.23293;0.23695;0.24096;0.24498;0.249;0.25301;0.25703;0.26104;0.26506;0.26908;0.27309;0.27711;0.28112;0.28514;0.28916;0.29317;0.29719;0.3012;0.30522;0.30924;0.31325;0.31727;0.32129;0.3253;0.32932;0.33333;0.33735;0.34137;0.34538;0.3494;0.35341;0.35743;0.36145;0.36546;0.36948;0.37349;0.37751;0.38153;0.38554;0.38956;0.39357;0.39759;0.40161;0.40562;0.40964;0.41365;0.41767;0.42169;0.4257;0.42972;0.43373;0.43775;0.44177;0.44578;0.4498;0.45382;0.45783;0.46185;0.46586;0.46988;0.4739;0.47791;0.48193;0.48594;0.48996;0.49398;0.49799;0.50201;0.50602;0.51004;0.51406;0.51807;0.52209;0.5261;0.53012;0.53414;0.53815;0.54217;0.54618;0.5502;0.55422;0.55823;0.56225;0.56627;0.57028;0.5743;0.57831;0.58233;0.58635;0.59036;0.59438;0.59839;0.60241;0.60643;0.61044;0.61446;0.61847;0.62249;0.62651;0.63052;0.63454;0.63855;0.64257;0.64659;0.6506;0.65462;0.65863;0.66265;0.66667;0.67068;0.6747;0.67871;0.68273;0.68675;0.69076;0.69478;0.6988;0.70281;0.70683;0.71084;0.71486;0.71888;0.72289;0.72691;0.73092;0.73494;0.73896;0.74297;0.74699;0.751;0.75502;0.75904;0.76305;0.76707;0.77108;0.7751;0.77912;0.78313;0.78715;0.79116;0.79518;0.7992;0.80321;0.80723;0.81124;0.81526;0.81928;0.82329;0.82731;0.83133;0.83534;0.83936;0.84337;0.84739;0.85141;0.85542;0.85944;0.86345;0.86747;0.87149;0.8755;0.87952;0.88353;0.88755;0.89157;0.89558;0.8996;0.90361;0.90763;0.91165;0.91566;0.91968;0.92369;0.92771;0.93173;0.93574;0.93976;0.94378;0.94779;0.95181;0.95582;0.95984;0.96386;0.96787;0.97189;0.9759;0.97992;0.98394;0.98795;0.99197;0.99598;1;1;0.99598;0.99197;0.98795;0.98394;0.97992;0.9759;0.97189;0.96787;0.96386;0.95984;0.95582;0.95181;0.94779;0.94378;0.93976;0.93574;0.93173;0.92771;0.92369;0.91968;0.91566;0.91165;0.90763;0.90361;0.8996;0.89558;0.89157;0.88755;0.88353;0.87952;0.8755;0.87149;0.86747;0.86345;0.85944;0.85542;0.85141;0.84739;0.84337;0.83936;0.83534;0.83133;0.82731;0.82329;0.81928;0.81526;0.81124;0.80723;0.80321;0.7992;0.79518;0.79116;0.78715;0.78313;0.77912;0.7751;0.77108;0.76707;0.76305;0.75904;0.75502;0.751;0.74699;0.74297;0.73896;0.73494;0.73092;0.72691;0.72289;0.71888;0.71486;0.71084;0.70683;0.70281;0.6988;0.69478;0.69076;0.68675;0.68273;0.67871;0.6747;0.67068;0.66667;0.66265;0.65863;0.65462;0.6506;0.64659;0.64257;0.63855;0.63454;0.63052;0.62651;0.62249;0.61847;0.61446;0.61044;0.60643;0.60241;0.59839;0.59438;0.59036;0.58635;0.58233;0.57831;0.5743;0.57028;0.56627;0.56225;0.55823;0.55422;0.5502;0.54618;0.54217;0.53815;0.53414;0.53012;0.5261;0.52209;0.51807;0.51406;0.51004;0.50602;0.50201;0.49799;0.49398;0.48996;0.48594;0.48193;0.47791;0.4739;0.46988;0.46586;0.46185;0.45783;0.45382;0.4498;0.44578;0.44177;0.43775;0.43373;0.42972;0.4257;0.42169;0.41767;0.41365;0.40964;0.40562;0.40161;0.39759;0.39357;0.38956;0.38554;0.38153;0.37751;0.37349;0.36948;0.36546;0.36145;0.35743;0.35341;0.3494;0.34538;0.34137;0.33735;0.33333;0.32932;0.3253;0.32129;0.31727;0.31325;0.30924;0.30522;0.3012;0.29719;0.29317;0.28916;0.28514;0.28112;0.27711;0.27309;0.26908;0.26506;0.26104;0.25703;0.25301;0.249;0.24498;0.24096;0.23695;0.23293;0.22892;0.2249;0.22088;0.21687;0.21285;0.20884;0.20482;0.2008;0.19679;0.19277;0.18876;0.18474;0.18072;0.17671;0.17269;0.16867;0.16466;0.16064;0.15663;0.15261;0.14859;0.14458;0.14056;0.13655;0.13253;0.12851;0.1245;0.12048;0.11647;0.11245;0.10843;0.10442;0.1004;0.09639;0.09237;0.08835;0.08434;0.08032;0.07631;0.07229;0.06827;0.06426;0.06024;0.05622;0.05221;0.04819;0.04418;0.04016;0.03614;0.03213;0.02811;0.0241;0.02008;0.01606;0.01205;0.00803;0.00402;0</x>
+            <y mapType="vector">0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0</y>
+            <z mapType="vector">0;-0.01537;-0.02103;-0.0251;-0.02835;-0.03109;-0.03345;-0.03554;-0.03742;-0.03912;-0.04067;-0.0421;-0.04342;-0.04465;-0.04579;-0.04687;-0.04788;-0.04884;-0.04974;-0.0506;-0.05141;-0.05219;-0.05293;-0.05363;-0.05431;-0.05496;-0.05558;-0.05618;-0.05675;-0.05731;-0.05785;-0.05837;-0.05887;-0.05936;-0.05983;-0.06029;-0.06074;-0.06118;-0.0616;-0.06202;-0.06243;-0.06282;-0.06321;-0.0636;-0.06398;-0.06435;-0.06471;-0.06507;-0.06543;-0.06578;-0.06613;-0.06646;-0.06678;-0.06709;-0.06737;-0.06765;-0.0679;-0.06815;-0.06837;-0.06859;-0.06879;-0.06897;-0.06915;-0.06931;-0.06946;-0.06959;-0.06972;-0.06983;-0.06993;-0.07002;-0.0701;-0.07016;-0.07022;-0.07027;-0.0703;-0.07033;-0.07034;-0.07035;-0.07035;-0.07033;-0.07031;-0.07028;-0.07024;-0.07019;-0.07013;-0.07007;-0.07;-0.06991;-0.06982;-0.06973;-0.06962;-0.06951;-0.06939;-0.06926;-0.06912;-0.06898;-0.06883;-0.06868;-0.06851;-0.06834;-0.06817;-0.06799;-0.0678;-0.0676;-0.0674;-0.0672;-0.06698;-0.06677;-0.06654;-0.06631;-0.06608;-0.06584;-0.06559;-0.06534;-0.06508;-0.06482;-0.06455;-0.06428;-0.064;-0.06372;-0.06344;-0.06314;-0.06285;-0.06255;-0.06224;-0.06194;-0.06162;-0.0613;-0.06098;-0.06066;-0.06033;-0.05999;-0.05965;-0.05931;-0.05897;-0.05862;-0.05826;-0.05791;-0.05754;-0.05718;-0.05681;-0.05644;-0.05607;-0.05569;-0.0553;-0.05492;-0.05453;-0.05414;-0.05374;-0.05334;-0.05294;-0.05254;-0.05213;-0.05172;-0.05131;-0.05089;-0.05047;-0.05005;-0.04962;-0.04919;-0.04876;-0.04833;-0.04789;-0.04745;-0.04701;-0.04656;-0.04611;-0.04566;-0.04521;-0.04475;-0.04429;-0.04383;-0.04337;-0.0429;-0.04243;-0.04196;-0.04149;-0.04101;-0.04053;-0.04005;-0.03956;-0.03908;-0.03859;-0.0381;-0.0376;-0.03711;-0.03661;-0.03611;-0.0356;-0.0351;-0.03459;-0.03408;-0.03356;-0.03305;-0.03253;-0.03201;-0.03149;-0.03096;-0.03043;-0.0299;-0.02937;-0.02883;-0.0283;-0.02776;-0.02721;-0.02667;-0.02612;-0.02557;-0.02502;-0.02446;-0.02391;-0.02335;-0.02278;-0.02222;-0.02165;-0.02108;-0.02051;-0.01993;-0.01935;-0.01877;-0.01819;-0.0176;-0.01701;-0.01642;-0.01583;-0.01523;-0.01463;-0.01403;-0.01342;-0.01281;-0.0122;-0.01159;-0.01097;-0.01035;-0.00973;-0.0091;-0.00847;-0.00784;-0.00721;-0.00657;-0.00592;-0.00528;-0.00463;-0.00398;-0.00333;-0.00267;-0.00201;-0.00134;-0.00067;0;-0;0.00107;0.00214;0.0032;0.00426;0.00531;0.00635;0.00739;0.00843;0.00946;0.01048;0.0115;0.01251;0.01352;0.01453;0.01553;0.01652;0.01751;0.01849;0.01947;0.02044;0.02141;0.02238;0.02333;0.02429;0.02524;0.02618;0.02712;0.02806;0.02899;0.02991;0.03083;0.03175;0.03266;0.03357;0.03447;0.03537;0.03626;0.03715;0.03804;0.03891;0.03979;0.04066;0.04153;0.04239;0.04324;0.0441;0.04494;0.04579;0.04663;0.04746;0.04829;0.04912;0.04994;0.05076;0.05157;0.05238;0.05318;0.05398;0.05477;0.05556;0.05635;0.05713;0.05791;0.05868;0.05945;0.06021;0.06097;0.06173;0.06248;0.06322;0.06396;0.0647;0.06543;0.06616;0.06688;0.0676;0.06831;0.06902;0.06973;0.07043;0.07112;0.07181;0.0725;0.07318;0.07386;0.07453;0.0752;0.07586;0.07652;0.07717;0.07782;0.07846;0.0791;0.07973;0.08036;0.08098;0.0816;0.08221;0.08282;0.08342;0.08402;0.08461;0.0852;0.08578;0.08636;0.08693;0.0875;0.08806;0.08861;0.08916;0.0897;0.09024;0.09077;0.0913;0.09182;0.09233;0.09284;0.09335;0.09384;0.09433;0.09482;0.0953;0.09577;0.09624;0.09669;0.09715;0.09759;0.09803;0.09847;0.0989;0.09932;0.09973;0.10013;0.10053;0.10093;0.10131;0.10169;0.10206;0.10242;0.10278;0.10313;0.10347;0.1038;0.10412;0.10444;0.10475;0.10505;0.10534;0.10563;0.1059;0.10617;0.10643;0.10668;0.10692;0.10715;0.10738;0.10759;0.1078;0.10799;0.10818;0.10835;0.10852;0.10867;0.10882;0.10896;0.10908;0.1092;0.1093;0.10939;0.10947;0.10954;0.1096;0.10965;0.10969;0.10971;0.10972;0.10972;0.10971;0.10969;0.10965;0.1096;0.10953;0.10945;0.10936;0.10925;0.10913;0.109;0.10885;0.10868;0.1085;0.10831;0.10809;0.10786;0.10762;0.10736;0.10708;0.10678;0.10646;0.10613;0.10577;0.10538;0.10495;0.10448;0.10398;0.10343;0.10285;0.10223;0.10158;0.10088;0.10014;0.09936;0.09853;0.09767;0.09676;0.0958;0.09481;0.09376;0.09267;0.09152;0.09033;0.08909;0.08779;0.08644;0.08504;0.08357;0.08205;0.08046;0.07881;0.07709;0.0753;0.07343;0.07149;0.06946;0.06734;0.06512;0.0628;0.06037;0.05781;0.05512;0.05227;0.04924;0.046;0.04251;0.03872;0.03452;0.02977;0.02418;0.01696;0</z>
+          </pointList>
+        </wingAirfoil>
+      </wingAirfoils>
+    </profiles>
+  </vehicles>
+</cpacs>
