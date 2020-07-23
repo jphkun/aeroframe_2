@@ -16,6 +16,7 @@ class settings():
         logger.debug("Initialisazion of the settings file")
         self.CFD_solver = dictionary["CFD_solver"]
         self.CSD_solver = dictionary["CSD_solver"]
+        self.def_file_path = dictionary["deformation_file"]
     
     def verify(self):
         """

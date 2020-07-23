@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 class Mesh_Def:
 
-    def __init__(self, lattice):
+    def __init__(self, lattice,file=None):
         """
         *_p : lattice points
         *r_ p: lattice points reshaped array for ease of use
@@ -41,6 +41,8 @@ class Mesh_Def:
         None.
 
         """
+        self.file = file
+        
         # stores lattice shapes (only theses two are needed, the others are
         # of identical shape)
         self.s_p = lattice.p.shape
@@ -263,7 +265,10 @@ class Mesh_Def:
               with beams.
         """
         logger.debug("=== csv deformation function called ===")
-        path = settings.paths('f_deformation_file')
+        path = self.file
+        if path is None:
+            logger.error("NO DEFORMATION FILE")
+        
         logger.debug(path)
         try:
             dataset = pd.read_csv(path)

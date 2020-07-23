@@ -61,12 +61,12 @@ def virtual_cli(dir_path,setting_file_path):
     return args
 
 
-def deform_mesh(settings,lattice):
+def deform_mesh(settings,lattice,file):
     logger.info(settings.settings["deformation"])
     if settings.settings["deformation"]:
         # Deforms the mesh and uploads the deformed one into the code
         logger.info("===== Mesh deformation function activated =====")
-        mesh_def = aeroDef.Mesh_Def(lattice)
+        mesh_def = aeroDef.Mesh_Def(lattice,file)
         mesh_def.deformation(settings)
         lattice.p = mesh_def.f_p
         lattice.v = mesh_def.f_v  # turns everything down
@@ -84,7 +84,8 @@ def main():
     logger.info(f"{__prog_name__} started")
 
     # for construction purposes
-    dir_path = "/home/cfse2/Documents/aeroframe_2/test/static/3_OptimaleNoFlaps/"
+    dir_path = "/home/cfse2/Documents/aeroframe_2/test/static/Optimale_withDLR/"
+    # /home/cfse2/Documents/aeroframe_2/test/static/Optimale_withDLR
     # "/home/user/Documents/aeroframe_2/test/static/3_OptimaleNoFlaps"
     #/home/user/Documents/aeroframe_2/test/static/1_OptimaleWingtipON
     # "/home/cfse2/Documents/aeroframe_2/test/static/"
@@ -111,7 +112,9 @@ def main():
         # Buids CFD mesh
         lattice, vlmdata, settings, aircraft, cur_state, state = cfd.meshing(args)
         # Deforms CFD mesh
-        deform_mesh(settings,lattice)
+        file_path = dir_path + simulation.def_file_path
+        logger.debug(file_path)
+        deform_mesh(settings,lattice,file_path)
         # Computes CFD solution
         cfd.solver(lattice, vlmdata, settings, aircraft, cur_state, state)
         
