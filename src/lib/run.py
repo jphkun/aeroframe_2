@@ -84,7 +84,7 @@ def main():
     logger.info(f"{__prog_name__} started")
 
     # for construction purposes
-    dir_path = "/home/user/Documents/aeroframe_2/test/static/3_OptimaleNoFlaps/"
+    dir_path = "/home/cfse2/Documents/aeroframe_2/test/static/3_OptimaleNoFlaps/"
     # "/home/user/Documents/aeroframe_2/test/static/3_OptimaleNoFlaps"
     #/home/user/Documents/aeroframe_2/test/static/1_OptimaleWingtipON
     # "/home/cfse2/Documents/aeroframe_2/test/static/"

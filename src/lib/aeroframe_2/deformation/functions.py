@@ -159,7 +159,7 @@ class Mesh_Def:
         elif case == "Optimale_Tornado_SU2_funActivated.xml":
             m = const
         elif case == "Optimale.xml":
-            m = 0.2
+            m = 1e-6
         elif case == "EbeeX_d0_q0.xml":
             m = 0.1975
         elif "Wing_" in case:
@@ -203,7 +203,7 @@ class Mesh_Def:
 
         logger.info("Shape function 2 is selected")
         if case == "EbeeX_d0_q0.xml":
-            m = 0.1975
+            m = 0.0
         if case == "Optimale.xml":
             m = 0.0
         else:
@@ -214,7 +214,7 @@ class Mesh_Def:
         self.u_v[:,2] = m * self.y_v + h
         self.u_c[:,2] = m * self.y_c + h
         self.u_b[:,2] = m * self.y_b + h
-        cst2 = 5e-3
+        cst2 = 1e-1
         self.u_p[:,2] = self.u_p[:,2] + cst2*self.y_p**2
         self.u_v[:,2] = self.u_v[:,2] + cst2*self.y_v**2
         self.u_c[:,2] = self.u_c[:,2] + cst2*self.y_c**2
