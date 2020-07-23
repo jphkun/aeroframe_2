@@ -1,0 +1,38 @@
+{
+"aircraft": "Optimale.xml", 
+"state": "template.json", 
+"deformation": true, 
+"deformation_method": "load_from_csv",
+"deformation_file": "Optimale_disp_dlr.csv",
+"vlm_autopanels_c": 10,
+"vlm_autopanels_s": 20, 
+"_epsilon": 1e-2,
+"save_results": {
+	"global": false, 
+	"panelwise": true, 
+	"aeroperformance": false, 
+	"matrix_system": false
+	}, 
+	"plot": {
+		"geometry": {
+			"opt": [], 
+			"show": false, 
+			"save": false
+		}, 
+		"lattice": {
+			"opt": [], 
+			"show": false, 
+			"save": false
+		}, 
+        	"matrix_downwash": {
+		    "opt": [], 
+		    "show": false, 
+		    "save": false
+		}, 
+		"results": {
+		    "opt": ["cp"], 
+		    "show": false, 
+		    "save": true
+        	}
+    	}
+}

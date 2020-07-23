@@ -47,6 +47,7 @@ class Mesh_Def:
         self.s_v = lattice.v.shape
         self.s_c = lattice.c.shape
         self.s_b = lattice.bound_leg_midpoints.shape
+        self.s_n = lattice.n.shape
 
         # stores lattice intitial (i_) data
         self.i_p = np.copy(lattice.p)
@@ -157,6 +158,8 @@ class Mesh_Def:
             m = const
         elif case == "Optimale_Tornado_SU2_funActivated.xml":
             m = const
+        elif case == "Optimale.xml":
+            m = 0.2
         elif case == "EbeeX_d0_q0.xml":
             m = 0.1975
         elif "Wing_" in case:
@@ -201,6 +204,8 @@ class Mesh_Def:
         logger.info("Shape function 2 is selected")
         if case == "EbeeX_d0_q0.xml":
             m = 0.1975
+        if case == "Optimale.xml":
+            m = 0.0
         else:
             logger.warning("Deformation input UNEXPECTED")
 
@@ -209,7 +214,7 @@ class Mesh_Def:
         self.u_v[:,2] = m * self.y_v + h
         self.u_c[:,2] = m * self.y_c + h
         self.u_b[:,2] = m * self.y_b + h
-        cst2 = 0.5
+        cst2 = 5e-3
         self.u_p[:,2] = self.u_p[:,2] + cst2*self.y_p**2
         self.u_v[:,2] = self.u_v[:,2] + cst2*self.y_v**2
         self.u_c[:,2] = self.u_c[:,2] + cst2*self.y_c**2
@@ -283,7 +288,7 @@ class Mesh_Def:
         if s[1] == 6:
             logger.info("Input deformation data is of type surface")
             # interpolates the points (lattice.p)
-            rbfi = Rbf(x,y,z,d,function='thin_plate',mode="N-D")
+            rbfi = Rbf(x,y,z,d,function='linear',mode="N-D")
             self.u_p = rbfi(self.ir_p[:,0],self.ir_p[:,1],self.ir_p[:,2])
 
             # interpolates the vortex horseshoe points (lattice.v)
@@ -303,6 +308,7 @@ class Mesh_Def:
 
             # interpolates the bound leg mid-points (lattice.blm)
             self.u_b = rbfi(self.i_b[:,0],self.i_b[:,1],self.i_b[:,2])
+            
             # Feed values to the deformed points (f for final).
             self.fr_p = self.ir_p + self.u_p
             self.f_p = self.i_p + self.u_p.reshape(self.s_p[0],
