@@ -1,9 +1,13 @@
 {
+    "CFD_settings_file": "Optimale.json",
+    "aircraft_file": "Optimale.xml",
     "CFD_solver": "Pytornado",
     "CSD_solver": "External",
     "MaxIterationsNumber": 10,
     "Convergeance_tolerence": 0.001,
+    "deformation_activation": false,
     "deformation_file": "CSD/deformation/Optimale_disp_dlr.csv",
+    "save_pkl": false,
     "Results": {
         "Save_mapping_matrix": false
     },

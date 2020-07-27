@@ -10,8 +10,8 @@
 	"global": true, 
 	"panelwise": true, 
 	"aeroperformance": false, 
-	"matrix_system": false,
-	}, 
+	"matrix_system": false
+	},
 	"plot": {
 		"geometry": {
 			"opt": [], 
