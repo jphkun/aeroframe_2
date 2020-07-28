@@ -8,18 +8,21 @@ Created on Tue Jul 21 10:48:15 2020
 
 import logging
 import json
-import argparse
-import aeroframe_2.fileio.settings as Settings
+# import argparse
+# import aeroframe_2.fileio.settings as Settings
 import aeroframe_2.deformation.functions as aeroDef
+import aeroframe_2.csd_meshing.mesher as mesher
 import pytornado.stdfun.run as cfd
-import pytornado.fileio as io
-import os
+# import pytornado.fileio as io
+# import os
 import pickle
 # import SU2_CFD
 
+# TODO take the information from the args parameters
 logging.basicConfig(level=logging.DEBUG)
-__prog_name__ = "Aeroframe2.0"
+__prog_name__ = "aeroframe_2"
 logger = logging.getLogger(__prog_name__+"."+__name__)
+
 
 def save_to_pkl(path,act_dea,lattice,vlmdata):
     if act_dea == "activated":
@@ -31,15 +34,15 @@ def save_to_pkl(path,act_dea,lattice,vlmdata):
     else:
         logger.error("activation or diactivation not specified")
     with open(path + name_lattice, "wb") as la:
-        var = [lattice.p, # 0
-               lattice.v, # 1
-               lattice.c, # 2
-               lattice.n, # 3
-               lattice.a, # 4
-               lattice.bound_leg_midpoints] # 5
+        var = [lattice.p,  # 0
+               lattice.v,  # 1
+               lattice.c,  # 2
+               lattice.n,  # 3
+               lattice.a,  # 4
+               lattice.bound_leg_midpoints]  # 5
         pickle.dump(var, la)
     la.close()
-    
+
     with open(path + name_vlmdata, "wb") as d:
         pickle.dump(vlmdata, d)
     d.close()
@@ -94,35 +97,59 @@ def standard_run(args):
     aeroframe_2_settings = getSettings(settingsFileAndPath)
 
     # simulation.verify()
-    logger.debug(aeroframe_2_settings)
-    if aeroframe_2_settings["CFD_solver"] == "Pytornado":
-        # Command line simulation
-        pytornado_settings_file = args.cwd + "/CFD/settings/" + aeroframe_2_settings["CFD_settings_file"]
-        def_file_path = aeroframe_2_settings["deformation_file"]
-        dir_path = args.cwd
+    # logger.debug(aeroframe_2_settings)
+    # All the accepted ways of writing pytornado in the json file
+    pytornado = ["pytornado","Pytornado","pyTornado","PyTornado"]
+    # if aeroframe_2_settings["CFD_solver"] in pytornado:
+    #     # Command line simulation
+    #     pytornado_settings_file = args.cwd + "/CFD/settings/" + aeroframe_2_settings["CFD_settings_file"]
+    #     def_file_path = aeroframe_2_settings["deformation_file"]
+    #     dir_path = args.cwd
 
-        # Buids CFD mesh
-        lattice, vlmdata, settings, aircraft, cur_state, state = cfd.meshing(args,pytornado_settings_file)
-        logger.debug("Meshing done")
+    #     # Buids CFD mesh
+    #     lattice, vlmdata, settings, aircraft, cur_state, state = cfd.meshing(args,pytornado_settings_file)
+    #     logger.debug("Meshing done")
 
-        # Deforms CFD mesh
-        file_path = dir_path + "/" + def_file_path
-        logger.debug(file_path)
-        # Activates or diactivates function
-        if aeroframe_2_settings["deformation_activation"]:
-            deform_mesh(settings,lattice,file_path)
-        
-        # Computes CFD solution
-        cfd.solver(lattice, vlmdata, settings, aircraft, cur_state, state)
+    #     # Deforms CFD mesh
+    #     file_path = args.cwd + "/" + def_file_path
+    #     logger.debug(file_path)
+    #     # Activates or diactivates function
+    #     if aeroframe_2_settings["deformation_activation"]:
+    #         deform_mesh(settings,lattice,file_path)
 
-        if aeroframe_2_settings["deformation_activation"]:
-            if aeroframe_2_settings["save_pkl"]:
-                save_to_pkl(dir_path, "activated", lattice, vlmdata)
-        else:
-            if aeroframe_2_settings["save_pkl"]:
-                save_to_pkl(dir_path, "deactivated", lattice, vlmdata)
+    #     # Computes CFD solution
+    #     cfd.solver(lattice, vlmdata, settings, aircraft, cur_state, state)
 
-    # TODO cfd Mesh
+    #     if aeroframe_2_settings["deformation_activation"]:
+    #         if aeroframe_2_settings["save_pkl"]:
+    #             save_to_pkl(args.cwd, "activated", lattice, vlmdata)
+    #     else:
+    #         if aeroframe_2_settings["save_pkl"]:
+    #             save_to_pkl(args.cwd, "deactivated", lattice, vlmdata)
+
+
+    # TODO check if deformation is activated
+    # TODO have a specific mode for when the structural solver is external
+    # All the accepted ways of writing FramAT in the json file
+    framat = ["framat","Framat","FramAT","framAT"]
+    if aeroframe_2_settings["CSD_solver"] in framat:
+        """
+        Reads the cpacs file and gets the rough geometry. Geometry properties
+        are given by the user.
+        """
+        logger.info("FramAT is chosen as the CSD solver")
+        logger.debug(args.cwd)
+        aircraft_path = args.cwd + "/CFD/aircraft/" + aeroframe_2_settings["aircraft_file"]
+        logger.debug(aeroframe_2_settings)
+        logger.debug(aircraft_path)
+        csd_mesh = mesher.Csd_mesh(aircraft_path)
+        csd_mesh.getAllPoints()
+        # TODO get path
+        # TODO Upload path and aircraft to the mesher
+        # csd = mesher()
+        #
+    
+    # TODO 3D cfd Mesh
     # TODO structure mesh
 
 

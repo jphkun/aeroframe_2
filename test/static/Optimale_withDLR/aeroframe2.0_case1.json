@@ -1,8 +1,8 @@
 {
     "CFD_settings_file": "Optimale.json",
-    "aircraft_file": "Optimale.xml",
+    "aircraft_file": "Optimale17_1_4_v3.1.xml",
     "CFD_solver": "Pytornado",
-    "CSD_solver": "External",
+    "CSD_solver": "FramAT",
     "MaxIterationsNumber": 10,
     "Convergeance_tolerence": 0.001,
     "deformation_activation": false,
