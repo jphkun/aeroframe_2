@@ -11,11 +11,13 @@ import json
 # import argparse
 # import aeroframe_2.fileio.settings as Settings
 import aeroframe_2.deformation.functions as aeroDef
-import aeroframe_2.csd_meshing.mesher as mesher
+import aeroframe_2.csdImportGeometry.importGeomerty as importGeomerty
+import aeroframe_2.wrappers.framatWrapper as framatWrapper
 import pytornado.stdfun.run as cfd
 # import pytornado.fileio as io
 # import os
 import pickle
+
 # import SU2_CFD
 
 # TODO take the information from the args parameters
@@ -138,12 +140,23 @@ def standard_run(args):
         are given by the user.
         """
         logger.info("FramAT is chosen as the CSD solver")
-        logger.debug(args.cwd)
+        # Importing geometry
+        # logger.debug(args.cwd)
         aircraft_path = args.cwd + "/CFD/aircraft/" + aeroframe_2_settings["aircraft_file"]
-        logger.debug(aeroframe_2_settings)
-        logger.debug(aircraft_path)
-        csd_mesh = mesher.Csd_mesh(aircraft_path)
-        csd_mesh.getAllPoints()
+        # logger.debug(aeroframe_2_settings)
+        # logger.debug(aircraft_path)
+        csdGeometry = importGeomerty.CsdGeometryImport(aircraft_path)
+        csdGeometry.getAllPoints()
+        # csdGeometry.plotPoints()
+        
+        # FramAT part
+        csd = framatWrapper.framat(csdGeometry)
+        csd.csdRun()
+        # csd.plotPoints()
+        # logger.debug(csd_mesh.wingsSectionsCenters)
+        
+        
+        
         # TODO get path
         # TODO Upload path and aircraft to the mesher
         # csd = mesher()

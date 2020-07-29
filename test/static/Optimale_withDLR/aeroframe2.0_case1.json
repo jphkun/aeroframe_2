@@ -1,5 +1,6 @@
 {
-    "CFD_settings_file": "Optimale.json",
+    "CFD_settings_file": "OptimaleCFDsettings.json",
+    "CSD_settings_file": "OptimaleCSDsettings.json",
     "aircraft_file": "Optimale17_1_4_v3.1.xml",
     "CFD_solver": "Pytornado",
     "CSD_solver": "FramAT",
