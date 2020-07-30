@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 class framat:
 
-    def __init__(self,geometry):  # propertiesPath,csd_mesh):
+    def __init__(self,geometry,settings):  # propertiesPath,csd_mesh):
         self.model = Model()
         self.geometryInput = geometry
 

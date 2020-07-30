@@ -145,13 +145,13 @@ def standard_run(args):
         aircraft_path = args.cwd + "/CFD/aircraft/" + aeroframe_2_settings["aircraft_file"]
         # logger.debug(aeroframe_2_settings)
         # logger.debug(aircraft_path)
-        csdGeometry = importGeomerty.CsdGeometryImport(aircraft_path)
+        csdGeometry = importGeomerty.CsdGeometryImport(aircraft_path,aeroframe_2_settings)
         csdGeometry.getAllPoints()
-        # csdGeometry.plotPoints()
+        # csdGeometry.plotSectionsPoints()
         
         # FramAT part
-        csd = framatWrapper.framat(csdGeometry)
-        csd.csdRun()
+        # csd = framatWrapper.framat(csdGeometry)
+        # csd.csdRun()
         # csd.plotPoints()
         # logger.debug(csd_mesh.wingsSectionsCenters)
         
