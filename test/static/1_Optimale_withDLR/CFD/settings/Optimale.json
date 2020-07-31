@@ -1,5 +1,5 @@
 {
-"aircraft": "Optimale17_1_4_v3.1.xml", 
+"aircraft": "Optimale.xml", 
 "state": "template.json", 
 "deformation": true, 
 "deformation_method": "load_from_csv",
