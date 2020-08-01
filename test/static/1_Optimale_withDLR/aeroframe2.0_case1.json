@@ -41,7 +41,7 @@
         },
         "FEM": {
             "mechanicalInterpolationType": "constant",
-            "nodesFEM": 20
+            "nodesFEM": 10
         }
     },
     "wing2": {

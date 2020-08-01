@@ -11,6 +11,6 @@ src/lib/aeroframe_2.egg-info/requires.txt
 src/lib/aeroframe_2.egg-info/top_level.txt
 src/lib/aeroframe_2/fileio/__init__.py
 src/lib/aeroframe_2/fileio/settings.py
-src/lib/aeroframe_2/std_run/__init__.py
-src/lib/aeroframe_2/std_run/_run.py
-src/lib/aeroframe_2/std_run/run.py
+src/lib/aeroframe_2/std_fun/__init__.py
+src/lib/aeroframe_2/std_fun/_run.py
+src/lib/aeroframe_2/std_fun/run.py

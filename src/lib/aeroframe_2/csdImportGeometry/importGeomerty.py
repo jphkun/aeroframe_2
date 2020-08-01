@@ -4,6 +4,35 @@
 Created on Tue Jul 28 08:45:26 2020
 
 @author: Jean-Philippe Kuntzer
+
+OK TODO: See how the program behaves with a single wing and correct up to here
+OK TODO: See how the program behaves with a boxwing and correct up to here
+OK TODO: distribute the nodes accordingly for the fuselage
+OK TODO: Generate the nodes names for the fuselage
+OK TODO vérifier qu'il y a assez de points
+OK TODO répartir linéairement
+OK TODO: Verify that the wing section is correct 
+    -> there is some dispersion
+OK TODO: Verify that the fuselage section is correct
+OK TODO: distribute the nodes accordingly for the wing
+OK TODO: add the clamped node
+OK TODO: Generate the nodes names for the wing
+
+TODO: Assemble the points together in a big matrix
+TODO: Assemble the names together in a big matrix
+TODO: for wings find the attached nodes pairs
+TODO: find a uid for each cross sections
+        cs = self.model.add_feature('cross_section', uid='dummy')
+TODO: compute 'A' for each points
+TODO: compute 'Iy' for each points
+TODO: compute 'Ix' for each points
+TODO: compute 'J' for each points
+TODO: Add an savety for when there is no input origin.
+
+(BONUS)
+TODO: Fix the points distibution with the boxwing, there is an issue with tigl
+TDOD: Take into account boxwings
+
 """
 
 import logging
@@ -97,202 +126,26 @@ class CsdGeometryImport:
         except:
             logger.error("Not all CPACS wings where found in JSON setting file")
             sys.exit()
-        
+
+
     def getOrigin(self):
         """
         Reads where the origin of the aircraft is and stores it into the class
         """
-        # TODO: can be a source of error. Should be tested with multiple CPACS
-        # files.
         ogX = self.tixi.getDoubleElement("/cpacs/vehicles/aircraft/model/reference/point/x")
         ogY = self.tixi.getDoubleElement("/cpacs/vehicles/aircraft/model/reference/point/y")
         ogZ = self.tixi.getDoubleElement("/cpacs/vehicles/aircraft/model/reference/point/z")
         self.origin = np.array([ogX, ogY, ogZ])
 
-    def getFuselageSectionCenterPointsAndArea(self):
-        """
-        Gets all the fuselage sections center points. This will give us a line
-        of points that will be meshed afterwards for the CSD simulation.
-        """
-        if self.nFuselage > 0:
-            logger.info("Starts computing each section of the fuselage central point")
-            self.nFuseSect = self.tigl.fuselageGetSectionCount(1)
-            self.nFuseSegm = self.tigl.fuselageGetSegmentCount(1)
-            self.fuseSegmNames = []
-
-            # Gets each fuselage section UID and stores it
-            for i in range(1,self.nFuseSegm + 1):
-                self.fuseSegmNames.append(self.tigl.fuselageGetSegmentUID(1,i))
-
-            # Computes each fuselage section central point
-            self.fuselageSectionsPoints = np.empty((self.nFuseSegm+1,3))
-            self.fuselageSectionsArea = np.empty(self.nFuseSegm+1)
-            for i in range(0,self.nFuseSegm):
-                name = self.fuseSegmNames[i]
-                point = self.tigl.fuselageGetSectionCenter(name,0.0)
-                area = self.tigl.fuselageGetCrossSectionArea(name, 0.0)
-                self.fuselageSectionsPoints[i] = point
-                self.fuselageSectionsArea[i] = area
-            point = self.tigl.fuselageGetSectionCenter(name,1.0)
-            area = self.tigl.fuselageGetCrossSectionArea(name, 0.0)
-            self.fuselageSectionsPoints[-1] = point
-            self.fuselageSectionsArea[-1] = area
-            logger.info("Fuselage sections center points and area are computed")
-            logger.debug("Fuselage center points:\n"+str(self.fuselageSectionsPoints))
-            logger.debug("Fuselage areas:\n"+str(self.fuselageSectionsArea))
-
-        elif self.nFuselage > 1:
-            logger.warning("More than one fuselage found in the CPACS file,")
-            logger.warning("only the first one is taken into account for this")
-            logger.warning("simulation")
-
-        else:
-            logger.warning("No fuselage found in the CPACS file")
-
-    def areaWingSection(self,i,j,eta):
-        """
-        Computes wing section area by assuming wing is a rectagle. This is
-        done this way because sections can be tilted and complexity will
-        increase tremendeuly if complex Hull are used.
-        """
-        # The more you know
-        # self.tigl.wingGetUpperPoint(wingIndex, segmentIndex, eta -> y, xsi->x)
-        
-        # Computes some key points, 0.25 is arbitrary but should be a good
-        # estimate of biggest wing thickness
-        leadingEdge = upper = np.array(self.tigl.wingGetUpperPoint(i+1,j+1,eta,0))
-        trailingEdge = upper = np.array(self.tigl.wingGetUpperPoint(i+1,j+1,eta,1))
-        upper = np.array(self.tigl.wingGetUpperPoint(i+1,j+1,eta,0.25))
-        lower = np.array(self.tigl.wingGetLowerPoint(i+1,j+1,eta,0.25))
-        
-        width = np.linalg.norm(leadingEdge - trailingEdge)
-        height = np.linalg.norm(upper - lower)
-        
-        area = width * height
-        return area
-
-    # def getWingsSectionCenterPointsAndArea(self):
-    #     """
-    #     Warning, the hypothesis of having a center of rotation which is not
-    #     alligned with the center of pressure of the wing is done. This 
-    #     hypothesis at the moment is such that the center of rotation is at
-    #     1/3 of the chord.
-    #     """
-    #     logger.info("Starts computing each section of the wing central point")
-    #     # OK TODO: add a parameter for the chord axis of rotation.
-        
-        
-    #     if self.nWings > 0:
-    #         # Number of sections in each wing
-    #         self.wingsNsegm = np.empty((self.nWings))
-    #         self.wingsNsect = np.empty((self.nWings))
-    #         # Distance from the leading edge
-    #         # WARNING This is probably also the mass line of the wing
-    #         self.wingHingeAxis = np.empty((self.nWings))
-    #         for i in range(self.nWings):
-    #             self.wingsNsegm[i] = self.tigl.wingGetSegmentCount(i+1)
-    #             self.wingsNsect[i] = self.tigl.wingGetSectionCount(i+1)
-    #             # logger.debug(self.settings["wing"+str(i+1)]["mechanicalCenter"])
-    #             self.wingHingeAxis[i] = self.settings["wing"+str(i+1)]["mechanicalCenter"]
-            
-    #         logger.debug("Number of sections per wing"+str(self.wingsNsect))
-    #         logger.debug("Number of segments per wing"+str(self.wingsNsegm))
-            
-    #         # Gets each section and segement name
-    #         self.wingsSegmentNames = []
-    #         self.wingsSectionsCenters = []
-    #         self.wingsSectionsArea = []
-
-    #         for i in range(self.nWings):
-    #             # segmentUID = []
-    #             N = int(self.wingsNsect[i])
-    #             center = np.empty((N,3))
-    #             area = np.empty(N)
-    #             for j in range(N-1):
-    #                 # segmentUID.append(self.tigl.wingGetSegmentUID(i+1, j+1))
-    #                 upper = self.tigl.wingGetUpperPoint(i+1, j+1, 0, self.wingHingeAxis[i])  # WARNING WITH THE 0
-    #                 upper = np.array(upper)
-    #                 lower = self.tigl.wingGetLowerPoint(i+1, j+1, 0, self.wingHingeAxis[i])
-    #                 lower = np.array(lower)
-    #                 center[j] = 0.5*(upper + lower)
-    #                 area[j] = self.areaWingSection(i,j,0)
-    #                 # logger.debug(area[j])
-    #                 # logger.debug("Wing section area:"+str(self.tigl.))
-    #             # Gets last part of each segment
-    #             upper = self.tigl.wingGetUpperPoint(i+1, j+1, 1, self.wingHingeAxis[i])
-    #             upper = np.array(upper)
-    #             lower = self.tigl.wingGetLowerPoint(i+1, j+1, 1, self.wingHingeAxis[i])
-    #             lower = np.array(lower)
-    #             center[j+1] = 0.5*(upper + lower)
-    #             area[j+1] = self.areaWingSection(i,j,1)
-    #             # logger.debug("="*50)
-    #             # logger.debug(center)
-    #             # logger.debug(area)
-
-    #             # If there is a symmetry, a set of point symmetric to the plane
-    #             # is added
-    #             symmetry = self.tigl.wingGetSymmetry(i+1)
-    #             if symmetry == 0:
-    #                 self.wingsSectionsCenters.append(center)
-    #                 self.wingsSectionsArea.append(area)
-    #             # Necessary, otherwise python will add the same vector to
-    #             # self.wingsSectionsCenters leading to an error
-                
-
-                
-    #             # In tigl3wrapper.py the symmetry is defined as such
-    #             # class TiglSymmetryAxis(object):
-    #             # TIGL_NO_SYMMETRY = 0
-    #             # TIGL_X_Y_PLANE = 1
-    #             # TIGL_X_Z_PLANE = 2
-    #             # TIGL_Y_Z_PLANE = 3
-    #             if symmetry > 0:
-    #                 center_copy = np.copy(center)
-    #                 area_copy = np.copy(area)
-    #                 if symmetry == 1:
-    #                     index = 2
-    #                 elif symmetry == 2:
-    #                     index = 1
-    #                 elif symmetry == 3:
-    #                     index = 0
-    #                 # Computes symmetry
-    #                 for k in range(len(center)):
-    #                     center_copy[k][index] = -center[k,index]
-    #                     # The -1 avoids copying two times the "same" point
-    #                 centerConcat = np.concatenate((np.flip(center_copy[1:],axis=0),center))
-    #                 areaConcat = np.concatenate((np.flip(area_copy[1:],axis=0),area))
-    #                 self.wingsSectionsCenters.append(centerConcat)
-    #                 self.wingsSectionsArea.append(areaConcat)
-    #             logger.debug("="*50)
-    #             logger.debug("Wing sections areas")
-    #             logger.debug(self.wingsSectionsArea)
-            
-            
-
-    #     else:
-    #         logger.warning("No wings found in the CPACS file")
-    #         sys.exit()
-
     def getAllPoints(self):
-        # OK TODO: See how the program behaves with a single wing and correct up to here
-        # OK TODO: See how the program behaves with a boxwing and correct up to here
-        # OK TODO: distribute the nodes accordingly for the fuselage
-        # TODO: distribute the nodes accordingly for the wing
-        # TODO: add the clamped node
-        # OK TODO: Generate the nodes names for the fuselage
-        # TODO: Generate the nodes names for the wing
-        # TODO: Assemble the points together in a big matrix
-        # TODO: Assemble the names together in a big matrix
-        # OK TODO vérifier qu'il y a assez de points
-        # OK TODO répartir linéairement
         """
         Calls all the necessary functions to build a mesh
         """
         self.getOrigin()
-        # self.getWingsSectionCenterPointsAndArea()
         self.computesWingsMeshPoints()
-        # self.getFuselageSectionCenterPointsAndArea()
         self.computesFuselageMeshPoints()
+        self.assembleMatrices()
+        self.plotSectionsPoints()
         
     def getWingChordLinePoint(self,wingIndex,segmentIndex,eta,xsi):
         # tigl.wingGetUpperPoint(wingIndex, segmentIndex, eta -> y, xsi->x)
@@ -304,19 +157,55 @@ class CsdGeometryImport:
         return center
     
     def computePointSectionArea(self,wingIndex,segmentIndex,eta,xsi):
+        """
+        Computes the wing section area. No matter the ortientation of the wing
+        """
         # tigl.wingGetUpperPoint(wingIndex, segmentIndex, eta -> y, xsi->x)
-        # TODO try to get something working with convex hulls.
-        up = self.tigl.wingGetUpperPoint(wingIndex,segmentIndex,eta,xsi)
-        lw = self.tigl.wingGetLowerPoint(wingIndex,segmentIndex,eta,xsi)
-        le = self.tigl.wingGetUpperPoint(wingIndex,segmentIndex,eta,0)
-        te = self.tigl.wingGetUpperPoint(wingIndex,segmentIndex,eta,1)
-        upper = np.array(up)
-        lower = np.array(lw)
-        leadi = np.array(up)
-        trail = np.array(lw)
-        hight = np.linalg.norm(upper-lower)
-        width = np.linalg.norm(leadi-trail)
-        area = hight*width
+        # WARNING there is a slight difference in the area computed with this
+        # method ans CPACSCREATOR. At the moment it is undetermined who is more
+        # accurate.
+        N = 20
+        xsi1 = np.linspace(0,1,N)
+        upper = np.empty((N,3))
+        lower = np.empty((N,3))
+        for i in range(N):
+            u = self.tigl.wingGetUpperPoint(wingIndex,segmentIndex,eta,xsi1[i])
+            l = self.tigl.wingGetLowerPoint(wingIndex,segmentIndex,eta,xsi1[i])
+            upper[i] = np.array(u)
+            lower[i] = np.array(l)
+        v1 = upper[0]-upper[-1]
+        v2 = upper[7] - lower[7]
+        v1xv2 = np.cross(v1,v2)
+        upper = np.flip(upper,axis=0)
+        wingSectionPoints = np.concatenate((upper, lower))
+        ey_0 = np.array([0,1,0])
+        e_1 = v1xv2
+        # Computes the cross prodct
+        cross = np.cross(ey_0,e_1)
+        normCross = np.linalg.norm(cross)
+        cross = cross/normCross
+        if normCross < 1e-8:
+            # No need to rotate
+            wingSectionPoints = np.delete(wingSectionPoints,1,1)
+            hull = ConvexHull(wingSectionPoints)
+            area = hull.volume
+        else:
+            ab = inner1d(ey_0,e_1)
+            a = np.linalg.norm(ey_0)
+            b = np.linalg.norm(e_1)
+            angle = np.arccos(ab / (a*b))
+            logger.debug("angle: "+str(angle))
+            quat = angle*cross
+            r = R.from_rotvec(quat)
+            # Deletes the y column since the Convex hull will struggle with
+            # a 3d plane otherwise
+            wingSectionPoints = r.apply(wingSectionPoints)
+            wingSectionPoints = np.delete(wingSectionPoints,1,1)
+            hull = ConvexHull(wingSectionPoints)
+            area = hull.volume
+        
+        logger.debug("Computed section area: "+str(area))
+
         return area
                             
     def computesWingsMeshPoints(self):
@@ -382,6 +271,21 @@ class CsdGeometryImport:
             w_m_relativePoints = np.linspace(0, w_length, w_m_N_nodes)
             logger.debug("Wing"+str(wingIndex)+" relative mesh points:\n"+str(w_m_relativePoints))
             
+            # If the user askes more points that there in the CPACS file 
+            # definitions the program automatically changes the position to the
+            # closest known point. This features ensures that the simulations
+            # will be made with maximal fidelity to the definintion.
+            logger.debug("+"*20)
+            logger.debug("wing relative pos:\n"+str(w_sg_relativePosition))
+            logger.debug("mesh relative pos:\n"+str(w_m_relativePoints))
+            if w_N_sc <= w_m_N_nodes:
+                for j in range(w_N_sc):
+                    diff = np.abs(w_m_relativePoints - w_sg_relativePosition[j])
+                    index = np.argmin(diff)
+                    w_m_relativePoints[index] = w_sg_relativePosition[j]
+            
+            logger.debug("mesh relative pos:\n"+str(w_m_relativePoints))
+            
             # Computes the eta for each segment in order to get the mesh point
             # from tigl
             w_m_points = np.empty((w_m_N_nodes,3))
@@ -419,6 +323,9 @@ class CsdGeometryImport:
                 # Gets the wing point
                 w_m_points[j] = self.getWingChordLinePoint(wingIndex,segmentIndex,eta,xsi)
                 name = "w_"+str(i+1)+"_n_"+str(j)
+                if self.nFuselage == 0:
+                    if np.abs(w_m_points[j][1]) < 1e-2:
+                        name = "w_n_clamped"
                 w_m_pointsName.append(name)
                 # Computes section area
                 area = self.computePointSectionArea(wingIndex,segmentIndex,eta,xsi)
@@ -454,10 +361,6 @@ class CsdGeometryImport:
                 logger.debug(np.flip(w_m_pointsArea))
                 w_m_pointsArea = np.concatenate((np.flip(w_m_pointsArea),w_m_pointsArea))
             
-            # TODO add improvement that when the number of element is higher
-            # than the number of segments point. a function pushes the closer
-            # point to the exact segment end to get more accurate results.
-            
             logger.debug("Wing mesh points:\n"+str(w_m_points))
             self.ws_m_points.append(w_m_points)
             self.ws_m_pointsArea.append(w_m_pointsArea)
@@ -489,7 +392,7 @@ class CsdGeometryImport:
             logger.debug("Fuselage has "+str(f_N_sg)+" segments")
             logger.debug("Fuselage has "+str(f_N_sc)+" sections")
             if f_m_N_nodes < f_N_sc:
-                logger.warning("Mesh underdetermined, less mesh points than actual CPACS sections")
+                logger.warning("Fuselage mesh underdetermined, less mesh points than actual CPACS sections")
             
             # Gets each segments starting and ending points
             f_sg_points = np.empty((f_N_sg+1,3))
@@ -518,6 +421,32 @@ class CsdGeometryImport:
             f_m_relativePoints = np.linspace(0, f_length, f_m_N_nodes)
             logger.debug("Fuselage relative mesh points:\n"+str(f_m_relativePoints))
             
+            # Corrects node closet to the origin to be exactly on the same
+            # x postion.
+            dist = np.empty(f_N_sg)
+            for j in range(f_N_sg):
+                dist[j] = np.linalg.norm(f_sg_points[j]-self.origin)
+            index = np.argmin(dist)
+            if f_sg_points[index,0] - self.origin[0] > 0:
+                index -= 1
+            etaClamped = (self.origin[0] - f_sg_points[index][0])/f_sg_length[index]
+            diff = np.empty(f_m_N_nodes)
+            
+            logger.debug(f_sg_relativePosition[index])
+            logger.debug(f_sg_relativePosition[index] + etaClamped)
+            logger.debug(f_m_relativePoints)
+            
+            for j in range(f_m_N_nodes):
+                diff[j] = np.abs(f_sg_relativePosition[index]+etaClamped - f_m_relativePoints[j])
+            
+            closest = np.argmin(diff)
+            logger.debug("Origin: "+str(self.origin))
+            logger.debug("closest point:"+str(f_sg_points[index]))
+            logger.debug("segment length"+str(f_sg_length[index]))
+            logger.debug("eta = "+str(etaClamped))
+            # closest = 100000
+            # etaClamped = 0
+
             # Computes the eta for each segment in order to get the mesh point
             # from tigl
             f_m_points = np.empty((f_m_N_nodes,3))
@@ -533,102 +462,69 @@ class CsdGeometryImport:
                     case = 1
                     eta = f_m_relativePoints[j] - f_sg_relativePosition[segmentIndex-1]
                     eta = (eta/f_sg_length[segmentIndex-1])
+                    name = "f_n_"+str(j+1)
+                    if j == closest:
+                        name = "f_n_clamped"
+                        eta = etaClamped
                 # o--x-------o situation
                 elif dist[segmentIndex-1] > 0:
                     case = 2
                     eta = f_sg_relativePosition[segmentIndex-1] - f_m_relativePoints[j]
                     segmentIndex = segmentIndex -1
                     eta = 1 - (eta/f_sg_length[segmentIndex-1])
+                    name = "f_n_"+str(j+1)
+                    if j == closest:
+                        name = "f_n_"+str(j+1)+"_clamped"
+                        eta = etaClamped
                 elif dist[segmentIndex-1] == 0.0 and segmentIndex == 1:
                     case = 3
                     eta = 0
+                    name = "f_n_"+str(j+1)
+                    if j == closest:
+                        name = "f_n_"+str(j+1)+"_clamped"
+                        eta = 0
                 elif dist[segmentIndex-1] == 0.0 and segmentIndex != 1:
                     case = 4
                     eta = 1
                     segmentIndex -= 1
+                    name = "f_n_"+str(j+1)
+                    if j == closest:
+                        name = "f_n_"+str(j+1)+"_clamped"
+                        eta = 1
                 else:
                     logger.error("Something wrong with CPACS file")
-                    sys.exit()
                 # logger.debug()
-                logger.debug("case "+str(case)+"  eta = "+str(eta))
 
                 # Gets the fuselage center point
                 f_m_points[j] = self.tigl.fuselageGetSectionCenter(f_sg_names[segmentIndex-1], eta)
-                name = "f_n_"+str(j+1)
+                
                 f_m_pointsName.append(name)
                 # Computes section area
                 area = self.tigl.fuselageGetCrossSectionArea(f_sg_names[segmentIndex-1], eta)
                 f_m_pointsArea[j] = area
+            
             logger.debug("fuselage center points:\n"+str(f_m_points))
             logger.debug("fuselage center area:\n"+str(f_m_pointsArea))
             logger.debug("fuselage points names:\n"+str(f_m_pointsName))
+            # sys.exit()
             self.fs_m_points.append(f_m_points)
             self.fs_m_pointsName.append(f_m_pointsArea)
             self.fs_m_pointsAera.append(f_m_pointsName)
-# =============================================================================
-            # # Initialization of the fuselage mesh points
-            # self.fuselageMeshPoints = np.empty((self.userAskedNNodesFuselage,3))
-            # self.fuselageMeshArea = np.empty(self.userAskedNNodesFuselage)
-            # self.fuselageNodesName = []
-            # # gets fuselage total length:
-            # self.fuselageLength = 0
-            # self.segmentsLength = np.empty(len(self.fuselageSectionsPoints)-1)
-            # self.segmentsRelativePoints = np.empty(len(self.fuselageSectionsPoints)-1)
-            # # Computes
-            # #   relative position in terms of lenth
-            # #   total length
-            # #   each segement lemgth
-            # for i in range(len(self.fuselageSectionsPoints)-1):
 
-            #     self.segmentsRelativePoints[i] = self.fuselageLength
-
-            #     p1 = self.fuselageSectionsPoints[i]
-            #     p2 = self.fuselageSectionsPoints[i+1]
-            #     dist = np.linalg.norm(p2-p1)
-
-            #     self.fuselageLength += dist
-            #     self.segmentsLength[i] = dist
-            # self.segmentsRelativePoints[-1] = self.fuselageLength
-
-            # # sets equidistant nodes from 0 to max fuselage length
-            # self.futureMeshPoints = np.linspace(0,self.fuselageLength,self.userAskedNNodesFuselage)
-
-            # logger.debug(self.fuselageLength)
-            # logger.debug(self.segmentsLength)
-            # logger.debug(self.segmentsRelativePoints)
-            # logger.debug(self.futureMeshPoints)
-
-            # for i in range(len(self.futureMeshPoints)):
-            #     x = self.futureMeshPoints[i]
-            #     # logger.debug(self.segmentsRelativePoints[:]-x)
-            #     dist = self.segmentsRelativePoints[:]-x
-            #     segmentIndex = np.argmin(np.abs(dist))
-            #     # logger.debug(x)
-            #     # logger.debug(self.segmentsRelativePoints[i])
-            #     if segmentIndex == 0:
-            #         segmentUID = self.tigl.fuselageGetSegmentUID(1, 1)
-            #         eta = 0
-            #     elif segmentIndex == self.nFuseSegm:
-            #         segmentUID = self.tigl.fuselageGetSegmentUID(1, self.nFuseSegm)
-            #         eta = 1
-            #     elif x > self.segmentsRelativePoints[segmentIndex]:
-            #         segmentUID = self.tigl.fuselageGetSegmentUID(1, segmentIndex+1)
-            #         eta = self.segmentsRelativePoints[segmentIndex+1]-x
-            #         eta = eta / self.segmentsLength[segmentIndex]
-            #     elif x < self.segmentsRelativePoints[segmentIndex]:
-            #         segmentUID = self.tigl.fuselageGetSegmentUID(1, segmentIndex)
-            #         eta = self.segmentsRelativePoints[segmentIndex]-x
-            #         eta = eta / self.segmentsLength[segmentIndex-1]
-                
-            #     point = self.tigl.fuselageGetSectionCenter(segmentUID,eta)
-            #     self.fuselageMeshPoints[i] = np.array(point)
-            #     area = self.tigl.fuselageGetCrossSectionArea(segmentUID, eta)
-            #     self.fuselageMeshArea[i] = area
-            #     self.fuselageNodesName.append("fuse1node"+str(i))
-
-            # logger.debug(self.fuselageMeshPoints)
-            # logger.debug(self.fuselageMeshArea)
-
+    def assembleMatrices(self):
+        """
+        Assembles fuselage points and wing points into a "nodes" matrix/instance
+        Assembles each point CPACS area in an "CPACSarea" matrix/instance
+        Assembles each point names into a "nodesNames" matrix/instance
+        """
+        pass
+    
+    def computesConnexions():
+        """
+        Computes each wing pair connexions.
+        """
+        pass
+    
     def plotSectionsPoints(self):
         # N = len(self.wingsSectionsCenters)
 
@@ -652,6 +548,3 @@ class CsdGeometryImport:
         ax.set_ylabel('Y Label')
         ax.set_zlabel('Z Label')        
         plt.show()
-
-    def plotMeshPoints(self):
-        pass

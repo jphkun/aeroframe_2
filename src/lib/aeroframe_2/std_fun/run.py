@@ -147,7 +147,7 @@ def standard_run(args):
         # logger.debug(aircraft_path)
         csdGeometry = importGeomerty.CsdGeometryImport(aircraft_path,aeroframe_2_settings)
         csdGeometry.getAllPoints()
-        csdGeometry.plotSectionsPoints()
+        # csdGeometry.plotSectionsPoints()
         
         # FramAT part
         # csd = framatWrapper.framat(csdGeometry)
