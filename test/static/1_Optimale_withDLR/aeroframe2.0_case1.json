@@ -22,8 +22,8 @@
             "rho": 1
         },
         "FEM": {
-            "mechanicalInterpolationType": "constant",
-            "nodesFEM": 15 
+            "mechanicalInterpolationType": "quadratic",
+            "nodesFEM": 5 
         }
     },
     "wing1": {
@@ -40,8 +40,8 @@
             "rho": 1
         },
         "FEM": {
-            "mechanicalInterpolationType": "constant",
-            "nodesFEM": 10
+            "mechanicalInterpolationType": "quadratic",
+            "nodesFEM": 5
         }
     },
     "wing2": {
@@ -58,8 +58,8 @@
             "rho": 1
         },
         "FEM": {
-            "mechanicalInterpolationType": "constant",
-            "nodesFEM": 7 
+            "mechanicalInterpolationType": "quadratic",
+            "nodesFEM": 5 
         }
     },
     "wing3": {
@@ -76,7 +76,7 @@
             "rho": 1
         },
         "FEM": {
-            "mechanicalInterpolationType": "constant",
+            "mechanicalInterpolationType": "quadratic",
             "nodesFEM": 5 
         }
     },

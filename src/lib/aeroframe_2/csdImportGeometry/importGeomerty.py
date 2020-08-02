@@ -17,17 +17,19 @@ OK TODO: Verify that the fuselage section is correct
 OK TODO: distribute the nodes accordingly for the wing
 OK TODO: add the clamped node
 OK TODO: Generate the nodes names for the wing
+OK TODO: Assemble the points together in a big matrix
+OK TODO: Assemble the names together in a big matrix
+OK TODO: compute 'A' for each points
+OK TODO: compute 'Iy' for each points
+OK TODO: compute 'Ix' for each points
+OK TODO: compute 'J' for each points
+OK TODO: Add an savety for when there is no input origin.0
+OK TODO: solve the wing node name issue
+OK TODO: Verify if the areas correspond
 
-TODO: Assemble the points together in a big matrix
-TODO: Assemble the names together in a big matrix
 TODO: for wings find the attached nodes pairs
 TODO: find a uid for each cross sections
-        cs = self.model.add_feature('cross_section', uid='dummy')
-TODO: compute 'A' for each points
-TODO: compute 'Iy' for each points
-TODO: compute 'Ix' for each points
-TODO: compute 'J' for each points
-TODO: Add an savety for when there is no input origin.
+      cs = self.model.add_feature('cross_section', uid='dummy')
 
 (BONUS)
 TODO: Fix the points distibution with the boxwing, there is an issue with tigl
@@ -132,10 +134,14 @@ class CsdGeometryImport:
         """
         Reads where the origin of the aircraft is and stores it into the class
         """
-        ogX = self.tixi.getDoubleElement("/cpacs/vehicles/aircraft/model/reference/point/x")
-        ogY = self.tixi.getDoubleElement("/cpacs/vehicles/aircraft/model/reference/point/y")
-        ogZ = self.tixi.getDoubleElement("/cpacs/vehicles/aircraft/model/reference/point/z")
-        self.origin = np.array([ogX, ogY, ogZ])
+        try:
+            ogX = self.tixi.getDoubleElement("/cpacs/vehicles/aircraft/model/reference/point/x")
+            ogY = self.tixi.getDoubleElement("/cpacs/vehicles/aircraft/model/reference/point/y")
+            ogZ = self.tixi.getDoubleElement("/cpacs/vehicles/aircraft/model/reference/point/z")
+            self.origin = np.array([ogX, ogY, ogZ])
+        except:
+            logger.error("No origin found in the CPACS file")
+            sys.exit()
 
     def getAllPoints(self):
         """
@@ -145,7 +151,34 @@ class CsdGeometryImport:
         self.computesWingsMeshPoints()
         self.computesFuselageMeshPoints()
         self.assembleMatrices()
+        # self.areasComparison()  # for debuig
+        self.computesWingConnexions()
         self.plotSectionsPoints()
+        
+    def areasComparison(self):
+        # if self.nFuselage > 0:
+        #     logger.debug("Fuselage initial area:\n "+str(self.fs_m_pointsInitArea[0]))
+        #     logger.debug("Fuselage final A:\n "+str(self.fs_m_pointsA[0]))
+        #     logger.debug("Fuselage final Iy:\n "+str(self.fs_m_pointsIy[0]))
+        #     logger.debug("Fuselage final Iz:\n "+str(self.fs_m_pointsIz[0]))
+        #     logger.debug("Fuselage final J:\n "+str(self.fs_m_pointsJ[0]))
+        #     logger.debug("Fuselage nodes names"+str(self.fs_m_pointsName[0]))
+        # for i in range(self.nWings):
+        #     logger.debug("Wing initial area:\n "+str(self.ws_m_pointsInitArea[i]))
+        #     logger.debug("Wing final A:\n "+str(self.ws_m_pointsA[i]))
+        #     logger.debug("Wing final Iy:\n "+str(self.ws_m_pointsIy[i]))
+        #     logger.debug("Wing final Iz:\n "+str(self.ws_m_pointsIz[i]))
+        #     logger.debug("Wing final J:\n "+str(self.ws_m_pointsJ[i]))
+        #     logger.debug("Wing nodes names"+str(self.ws_m_pointsName[i]))
+        N = len(self.aircraftNodesPoints)
+        for i in range(N):
+            logger.debug("Aircraft nodes:\n"+str(self.aircraftNodesPoints[i]))
+            logger.debug("Aircraft nodes names:\n"+str(self.aircraftNodesNames[i]))
+            logger.debug("Aircraft A:\n"+str(self.aircraftNodesA[i]))
+            logger.debug("Aircraft Iy:\n"+str(self.aircraftNodesIy[i]))
+            logger.debug("Aircraft Iz:\n"+str(self.aircraftNodesIz[i]))
+            logger.debug("Aircraft J:\n"+str(self.aircraftNodesJ[i]))
+        sys.exit()
         
     def getWingChordLinePoint(self,wingIndex,segmentIndex,eta,xsi):
         # tigl.wingGetUpperPoint(wingIndex, segmentIndex, eta -> y, xsi->x)
@@ -222,7 +255,7 @@ class CsdGeometryImport:
         self.userAskedNNodesWings = np.zeros(self.nWings)
         self.ws_m_points = []
         self.ws_m_pointsName = []
-        self.ws_m_pointsArea = []
+        self.ws_m_pointsInitArea = []
         for i in range(self.nWings):
             
             # Basic wing input check
@@ -290,7 +323,7 @@ class CsdGeometryImport:
             # from tigl
             w_m_points = np.empty((w_m_N_nodes,3))
             w_m_pointsName = []
-            w_m_pointsArea = np.empty(w_m_N_nodes)
+            w_m_pointsInitArea = np.empty(w_m_N_nodes)
             for j in range(w_m_N_nodes):
                 # finds in which segment the mesh point will be
                 relativePosition = w_m_relativePoints[j]
@@ -329,7 +362,7 @@ class CsdGeometryImport:
                 w_m_pointsName.append(name)
                 # Computes section area
                 area = self.computePointSectionArea(wingIndex,segmentIndex,eta,xsi)
-                w_m_pointsArea[j] = area
+                w_m_pointsInitArea[j] = area
                 
             # In tigl3wrapper.py the symmetry is defined as such
             # class TiglSymmetryAxis(object):
@@ -340,8 +373,8 @@ class CsdGeometryImport:
             symmetry = self.tigl.wingGetSymmetry(i+1)
             if symmetry > 0:
                 w_m_points_copy = np.copy(w_m_points)
-                w_m_pointsName_copy = w_m_pointsName
-                w_m_pointsArea = np.copy(w_m_pointsArea)
+                w_m_pointsName_copy = w_m_pointsName.copy()
+                w_m_pointsInitArea_c = np.copy(w_m_pointsInitArea)
                 if symmetry == 1:
                     index = 2
                 elif symmetry == 2:
@@ -352,18 +385,18 @@ class CsdGeometryImport:
                 # Computes symmetry
                 for k in range(w_m_N_nodes):
                     w_m_points_copy[k][index] = -w_m_points[k,index]
-                    w_m_pointsName_copy[k] += "sym"
+                    w_m_pointsName_copy[k] = w_m_pointsName_copy[k] + "sym"
                     # The -1 avoids copying two times the "same" point
                 w_m_points = np.concatenate((np.flip(w_m_points_copy[1:],axis=0),w_m_points))
                 rev = w_m_pointsName_copy[::-1]
-                w_m_pointsName = rev + w_m_pointsName
-                logger.debug(w_m_pointsArea)
-                logger.debug(np.flip(w_m_pointsArea))
-                w_m_pointsArea = np.concatenate((np.flip(w_m_pointsArea),w_m_pointsArea))
+                w_m_pointsName = rev[:-1] + w_m_pointsName
+                # logger.debug(w_m_pointsInitArea)
+                # logger.debug(np.flip(w_m_pointsInitArea_c))
+                w_m_pointsInitArea = np.concatenate((np.flip(w_m_pointsInitArea_c[1:],axis=0),w_m_pointsInitArea))
             
             logger.debug("Wing mesh points:\n"+str(w_m_points))
             self.ws_m_points.append(w_m_points)
-            self.ws_m_pointsArea.append(w_m_pointsArea)
+            self.ws_m_pointsInitArea.append(w_m_pointsInitArea)
             self.ws_m_pointsName.append(w_m_pointsName)
 
     def computesFuselageMeshPoints(self):
@@ -377,7 +410,7 @@ class CsdGeometryImport:
             f_m_N_nodes = int(self.userAskedNNodesFuselage)
             self.fs_m_points = []
             self.fs_m_pointsName = []
-            self.fs_m_pointsAera = []
+            self.fs_m_pointsInitArea = []
             logger.debug("Number of fuselage nodes asked: " + str(self.userAskedNNodesFuselage))
             if self.userAskedNNodesFuselage < 3:
                 logger.error("Not enough fuselage points (min 3)")
@@ -451,7 +484,7 @@ class CsdGeometryImport:
             # from tigl
             f_m_points = np.empty((f_m_N_nodes,3))
             f_m_pointsName = []
-            f_m_pointsArea = np.empty(f_m_N_nodes)
+            f_m_pointsInitArea = np.empty(f_m_N_nodes)
             for j in range(f_m_N_nodes):
                 # finds in which segment the mesh point will be
                 relativePosition = f_m_relativePoints[j]
@@ -501,15 +534,15 @@ class CsdGeometryImport:
                 f_m_pointsName.append(name)
                 # Computes section area
                 area = self.tigl.fuselageGetCrossSectionArea(f_sg_names[segmentIndex-1], eta)
-                f_m_pointsArea[j] = area
+                f_m_pointsInitArea[j] = area
             
             logger.debug("fuselage center points:\n"+str(f_m_points))
-            logger.debug("fuselage center area:\n"+str(f_m_pointsArea))
+            logger.debug("fuselage center area:\n"+str(f_m_pointsInitArea))
             logger.debug("fuselage points names:\n"+str(f_m_pointsName))
             # sys.exit()
             self.fs_m_points.append(f_m_points)
-            self.fs_m_pointsName.append(f_m_pointsArea)
-            self.fs_m_pointsAera.append(f_m_pointsName)
+            self.fs_m_pointsName.append(f_m_pointsName)
+            self.fs_m_pointsInitArea.append(f_m_pointsInitArea)
 
     def assembleMatrices(self):
         """
@@ -517,14 +550,228 @@ class CsdGeometryImport:
         Assembles each point CPACS area in an "CPACSarea" matrix/instance
         Assembles each point names into a "nodesNames" matrix/instance
         """
-        pass
-    
-    def computesConnexions():
+        # All nodes informations
+        self.aircraftNodesPoints = []
+        self.aircraftNodesNames = []
+        self.aircraftInitNodesAreas = [] # Will be destroid
+        self.aircraftNodesA = []
+        self.aircraftNodesIy = []
+        self.aircraftNodesIz = []
+        self.aircraftNodesJ = []
+        # More general information
+        self.aircraftBeamsMaterials = []
+        self.aircraftConnectedNodes = []
+        
+        self.computeProportionFuselage()
+        self.computeProportionWings()
+        
+        # adds fulseage infos to matrices if there is one
+        if self.nFuselage > 0:
+            self.aircraftNodesPoints.append(self.fs_m_points[0])
+            self.aircraftNodesNames.append(self.fs_m_pointsName[0])
+            self.aircraftInitNodesAreas.append(self.fs_m_pointsInitArea[0])
+            self.aircraftNodesA.append(self.fs_m_pointsA[0])
+            self.aircraftNodesIy.append(self.fs_m_pointsIy[0])
+            self.aircraftNodesIz.append(self.fs_m_pointsIz[0])
+            self.aircraftNodesJ.append(self.fs_m_pointsJ[0])
+
+        for i in range(self.nWings):
+            self.aircraftNodesPoints.append(self.ws_m_points[i])
+            self.aircraftNodesNames.append(self.ws_m_pointsName[i])
+            self.aircraftInitNodesAreas.append(self.ws_m_pointsInitArea[i])
+            self.aircraftNodesA.append(self.ws_m_pointsA[i])
+            self.aircraftNodesIy.append(self.ws_m_pointsIy[i])
+            self.aircraftNodesIz.append(self.ws_m_pointsIz[i])
+            self.aircraftNodesJ.append(self.ws_m_pointsJ[i])
+
+    def computeProportionFuselage(self):
+        """
+        Computes the area proportions witht the following procedure
+        1) get the biggest area of the fuselage
+        2) get the biggest area of the wing
+        3) checks if the user asks for a constant/linear/quadratic 
+           distribution.
+        4) Computes the local variable
+        5) Feeds it back to the fuselage mesh matrices
+        """
+        
+        # reads settings file for distribution        
+        if self.nFuselage > 0:
+            self.fs_m_pointsA = []
+            self.fs_m_pointsIy = []
+            self.fs_m_pointsIz = []
+            self.fs_m_pointsJ = []
+            inputMaxA = self.settings["fuselage"]["mechanicalProperties"]["A"]
+            inputMaxIy = self.settings["fuselage"]["mechanicalProperties"]["Iy"]
+            inputMaxIz = self.settings["fuselage"]["mechanicalProperties"]["Iz"]
+            inputMaxJ = self.settings["fuselage"]["mechanicalProperties"]["J"]
+            inputInterpolationType = self.settings["fuselage"]["FEM"]["mechanicalInterpolationType"]
+            logger.debug(self.fs_m_pointsInitArea[0])
+            index = np.argmax(self.fs_m_pointsInitArea[0])
+            logger.debug(index)
+            fuselageMaxArea = self.fs_m_pointsInitArea[0][index]
+
+            if inputInterpolationType == "constant":
+                exposant = 0
+            elif inputInterpolationType == "linear":
+                exposant = 1
+            elif inputInterpolationType == "quadratic":
+                exposant = 2
+            else:
+                logger.error("Fuselage mechanical properties distribution is")
+                logger.error("wrong. Accepted values are \"constant\",")
+                logger.error("\"linear\", \quadratic\"")
+                sys.exit()
+            
+            coef = np.empty(self.userAskedNNodesFuselage)
+            self.f_m_pointsA = np.empty(self.userAskedNNodesFuselage)
+            self.f_m_pointsIy = np.empty(self.userAskedNNodesFuselage)
+            self.f_m_pointsIz = np.empty(self.userAskedNNodesFuselage)
+            self.f_m_pointsJ = np.empty(self.userAskedNNodesFuselage)
+            for i in range(self.userAskedNNodesFuselage):
+                coef[i] = self.fs_m_pointsInitArea[0][i]/fuselageMaxArea
+                self.f_m_pointsA[i] = inputMaxA * coef[i]
+                self.f_m_pointsIy[i] = inputMaxIy * coef[i]**exposant
+                self.f_m_pointsIz[i] = inputMaxIz * coef[i]**exposant
+                self.f_m_pointsJ[i] = inputMaxJ * coef[i]**exposant
+            self.fs_m_pointsA.append(self.f_m_pointsA)
+            self.fs_m_pointsIy.append(self.f_m_pointsIy)
+            self.fs_m_pointsIz.append(self.f_m_pointsIz)
+            self.fs_m_pointsJ.append(self.f_m_pointsJ)
+        else:
+            logger.warning("No fuselage found")
+
+    def computeProportionWings(self):
+        """
+        Computes the area proportions witht the following procedure
+        1) get the biggest area of the fuselage
+        2) get the biggest area of the wing
+        3) checks if the user asks for a constant/linear/quadratic 
+           distribution.
+        4) Computes the local variable
+        5) Feeds it back to the wing mesh matrices
+        """
+        self.ws_m_pointsA = []
+        self.ws_m_pointsIy = []
+        self.ws_m_pointsIz = []
+        self.ws_m_pointsJ = []
+        for i in range(self.nWings):
+            wingIndex = i+1
+            wingNnodes = self.settings["wing"+str(wingIndex)]["FEM"]["nodesFEM"]
+            if self.tigl.wingGetSymmetry(i+1) != 0:
+                wingNnodes = 2*wingNnodes - 1
+            inputMaxA = self.settings["wing"+str(wingIndex)]["mechanicalProperties"]["A"]
+            inputMaxIy = self.settings["wing"+str(wingIndex)]["mechanicalProperties"]["Iy"]
+            inputMaxIz = self.settings["wing"+str(wingIndex)]["mechanicalProperties"]["Iz"]
+            inputMaxJ = self.settings["wing"+str(wingIndex)]["mechanicalProperties"]["J"]
+            inputInterpolationType = self.settings["wing"+str(wingIndex)]["FEM"]["mechanicalInterpolationType"]
+            index = np.argmax(self.ws_m_pointsInitArea[i])
+            wingMaxArea = self.ws_m_pointsInitArea[i][index]
+
+            if inputInterpolationType == "constant":
+                exposant = 0
+            elif inputInterpolationType == "linear":
+                exposant = 1
+            elif inputInterpolationType == "quadratic":
+                exposant = 2
+            else:
+                logger.error("Wing mechanical properties distribution is")
+                logger.error("wrong. Accepted values are \"constant\",")
+                logger.error("\"linear\", \quadratic\"")
+                sys.exit()
+            
+            coef = np.empty(wingNnodes)
+            self.w_m_pointsA = np.empty(wingNnodes)
+            self.w_m_pointsIy = np.empty(wingNnodes)
+            self.w_m_pointsIz = np.empty(wingNnodes)
+            self.w_m_pointsJ = np.empty(wingNnodes)
+            for j in range(wingNnodes):
+                coef[j] = self.ws_m_pointsInitArea[i][j]/wingMaxArea
+                self.w_m_pointsA[j] = inputMaxA * coef[j]
+                self.w_m_pointsIy[j] = inputMaxIy * coef[j]**exposant
+                self.w_m_pointsIz[j] = inputMaxIz * coef[j]**exposant
+                self.w_m_pointsJ[j] = inputMaxJ * coef[j]**exposant
+            self.ws_m_pointsA.append(self.w_m_pointsA)
+            self.ws_m_pointsIy.append(self.w_m_pointsIy)
+            self.ws_m_pointsIz.append(self.w_m_pointsIz)
+            self.ws_m_pointsJ.append(self.w_m_pointsJ)
+
+    def computesWingConnexions(self):
         """
         Computes each wing pair connexions.
         """
-        pass
-    
+        if self.nWings <= 1:
+            logger.info("No wing connexions needed")
+        elif self.nWings > 1 and self.nFuselage < 1:
+            logger.error("Multiple wings with no fusekage!")
+            sys.exit()
+        else:
+            ws_connextionsPoints = self.nWings + self.nFuselage
+            # if self.nFuselage > 0:
+            #     ws_connextionsPoints = self.nWings
+            # else:
+            #     ws_connextionsPoints = self.nWings -1
+            
+            # ws: wings
+            # d: distance
+            # L: left, R: right, c: center
+            ws_d_L = []
+            ws_d_L = []
+            ws_d_L = []
+            for i in range(ws_connextionsPoints):
+                """
+                for each wing there is 3 points that need to be taken into 
+                account:
+                    1) Left tip position[0]
+                    2) center [np.floor(nNodes/2))] (note symmetric wings always have odd number of points)
+                    3) right tip position[-1]
+                """
+                if self.nFuselage > 0:
+                    wingIndex = i+1
+                else:
+                    wingIndex = i
+
+                # # N = len(self.aircraftNodesPoints)
+                # c = int(np.floor(len(self.aircraftNodesPoints[wingIndex])/2))
+                # logger.debug("c = "+str(c))
+                # ws_identifiers = []
+                # for j in range(ws_connextionsPoints):
+                #     if wingIndex != j:
+                #         # Computes the distances between all point
+                #         # logger.debug(self.aircraftNodesPoints[wingIndex][0])
+                #         # logger.debug(self.aircraftNodesPoints[j])
+                #         # logger.debug(self.aircraftNodesPoints[j] - self.aircraftNodesPoints[wingIndex][0])
+                #         dist_l = np.linalg.norm(self.aircraftNodesPoints[j] - self.aircraftNodesPoints[wingIndex][0],axis=0)
+                #         dist_c = np.linalg.norm(self.aircraftNodesPoints[j] - self.aircraftNodesPoints[wingIndex][c],axis=0)
+                #         dist_r = np.linalg.norm(self.aircraftNodesPoints[j] - self.aircraftNodesPoints[wingIndex][-1],axis=0)
+                #         # Gets the index of the minimal distance between all point
+                #         index_l = np.argmin(dist_l)
+                #         index_c = np.argmin(dist_c)
+                #         index_r = np.argmin(dist_r)
+                #         indexes = np.array([index_l,index_c,index_r])
+                #         # gets the minimal distance
+                #         minDist_l = dist_l[index_l]
+                #         minDist_c = dist_c[index_c]
+                #         minDist_r = dist_r[index_r]
+                #         minDist = np.array([minDist_l,minDist_c,minDist_r])
+                #         k = np.argmin(minDist)
+                #         minimalDistance = minDist[k]
+                #         tab = np.array([0,c,1e6]) # TODO Correct the mistake
+                #         k = tab[k]
+                #         l = indexes[k]
+                #         # for wing i the minimal distance to object j is
+                #         # point k of the wing and point l of the object. 
+                #         # Minimal distance between these objects is: minimalDistance
+                #         # i = wing number
+                #         # j = object number (wing or fuselage)
+                #         # k = point on wing (l,c,r)
+                #         # minimalDistance: distance between both of these points
+                #         identifier = np.array([wingIndex,j,k,l,minimalDistance])
+                #         ws_identifiers.append(identifier)
+                #         logger.debug(ws_identifiers)
+                #         sys.exit()
+                # logger.debug(ws_identifiers)
+                # sys.exit()
     def plotSectionsPoints(self):
         # N = len(self.wingsSectionsCenters)
 
