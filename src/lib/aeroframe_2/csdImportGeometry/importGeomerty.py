@@ -26,8 +26,8 @@ OK TODO: compute 'J' for each points
 OK TODO: Add an savety for when there is no input origin.0
 OK TODO: solve the wing node name issue
 OK TODO: Verify if the areas correspond
+OK TODO: for wings find the attached nodes pairs
 
-TODO: for wings find the attached nodes pairs
 TODO: find a uid for each cross sections
       cs = self.model.add_feature('cross_section', uid='dummy')
 
@@ -38,17 +38,17 @@ TDOD: Take into account boxwings
 """
 
 import logging
-import tigl3.configuration
+# import tigl3.configuration
 from tixi3 import tixi3wrapper
 from tigl3 import tigl3wrapper
 from tigl3 import geometry
 import numpy as np
 from numpy.core.umath_tests import inner1d
-import math
-import scipy as sp
+# import math
+# import scipy as sp
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
-from scipy.spatial import ConvexHull,convex_hull_plot_2d
+from scipy.spatial import ConvexHull
 import sys
 from scipy.spatial.transform import Rotation as R
 
@@ -68,14 +68,13 @@ class CsdGeometryImport:
         # Aircraft absolute path
         self.aircraftPath = inputAircraftPath
         # JSON input file
-        self.settings = settings
 
         # Tixi and Tigl handler. Necessary to read the CPACS
         self.tixi = tixi3wrapper.Tixi3()
         self.tigl = tigl3wrapper.Tigl3()
         self.tixi.open(self.aircraftPath)
         self.tigl.open(self.tixi,"")
-
+        self.settings = settings
         # Number of fuselage instances, generally one, more could create
         # problems.
         try:
@@ -128,7 +127,6 @@ class CsdGeometryImport:
         except:
             logger.error("Not all CPACS wings where found in JSON setting file")
             sys.exit()
-
 
     def getOrigin(self):
         """
@@ -700,13 +698,16 @@ class CsdGeometryImport:
         """
         Computes each wing pair connexions.
         """
+        logger.warning("!!! WARINING !!!!")
+        logger.warning("BE CERTAIN THAT CPACS FILE HAS THE HORIZONTAL TAIL")
+        logger.warning("DEFINED BEFORE THE VERTICAL TAIL!!!!")
         if self.nWings <= 1:
             logger.info("No wing connexions needed")
         elif self.nWings > 1 and self.nFuselage < 1:
             logger.error("Multiple wings with no fusekage!")
             sys.exit()
         else:
-            ws_connextionsPoints = self.nWings + self.nFuselage
+            ws_connextionsPoints = self.nWings + self.nFuselage -1
             # if self.nFuselage > 0:
             #     ws_connextionsPoints = self.nWings
             # else:
@@ -715,9 +716,7 @@ class CsdGeometryImport:
             # ws: wings
             # d: distance
             # L: left, R: right, c: center
-            ws_d_L = []
-            ws_d_L = []
-            ws_d_L = []
+            connectedNodes = np.zeros((ws_connextionsPoints,5))
             for i in range(ws_connextionsPoints):
                 """
                 for each wing there is 3 points that need to be taken into 
@@ -730,48 +729,76 @@ class CsdGeometryImport:
                     wingIndex = i+1
                 else:
                     wingIndex = i
-
-                # # N = len(self.aircraftNodesPoints)
-                # c = int(np.floor(len(self.aircraftNodesPoints[wingIndex])/2))
+                # logger.debug("Wing index = "+str(wingIndex))
+                # N = len(self.aircraftNodesPoints[i])
+                currentWingNpoints = len(self.aircraftNodesPoints[wingIndex])
+                if currentWingNpoints > 2:
+                    c = int(np.floor(len(self.aircraftNodesPoints[wingIndex])/2))
+                else:
+                    c = 0
                 # logger.debug("c = "+str(c))
-                # ws_identifiers = []
-                # for j in range(ws_connextionsPoints):
-                #     if wingIndex != j:
-                #         # Computes the distances between all point
-                #         # logger.debug(self.aircraftNodesPoints[wingIndex][0])
-                #         # logger.debug(self.aircraftNodesPoints[j])
-                #         # logger.debug(self.aircraftNodesPoints[j] - self.aircraftNodesPoints[wingIndex][0])
-                #         dist_l = np.linalg.norm(self.aircraftNodesPoints[j] - self.aircraftNodesPoints[wingIndex][0],axis=0)
-                #         dist_c = np.linalg.norm(self.aircraftNodesPoints[j] - self.aircraftNodesPoints[wingIndex][c],axis=0)
-                #         dist_r = np.linalg.norm(self.aircraftNodesPoints[j] - self.aircraftNodesPoints[wingIndex][-1],axis=0)
-                #         # Gets the index of the minimal distance between all point
-                #         index_l = np.argmin(dist_l)
-                #         index_c = np.argmin(dist_c)
-                #         index_r = np.argmin(dist_r)
-                #         indexes = np.array([index_l,index_c,index_r])
-                #         # gets the minimal distance
-                #         minDist_l = dist_l[index_l]
-                #         minDist_c = dist_c[index_c]
-                #         minDist_r = dist_r[index_r]
-                #         minDist = np.array([minDist_l,minDist_c,minDist_r])
-                #         k = np.argmin(minDist)
-                #         minimalDistance = minDist[k]
-                #         tab = np.array([0,c,1e6]) # TODO Correct the mistake
-                #         k = tab[k]
-                #         l = indexes[k]
-                #         # for wing i the minimal distance to object j is
-                #         # point k of the wing and point l of the object. 
-                #         # Minimal distance between these objects is: minimalDistance
-                #         # i = wing number
-                #         # j = object number (wing or fuselage)
-                #         # k = point on wing (l,c,r)
-                #         # minimalDistance: distance between both of these points
-                #         identifier = np.array([wingIndex,j,k,l,minimalDistance])
-                #         ws_identifiers.append(identifier)
-                #         logger.debug(ws_identifiers)
-                #         sys.exit()
-                # logger.debug(ws_identifiers)
-                # sys.exit()
+                ws_identifiers = np.empty((ws_connextionsPoints,5)) 
+                logger.debug("="*30)
+                for j in range(ws_connextionsPoints+1):
+                    logger.debug("wingIndex,j = "+str(wingIndex)+" "+str(j))
+                    if wingIndex != j:
+                        logger.debug("True with wingIndex,j = "+str(wingIndex)+" "+str(j))
+                        # Computes the distances between all point
+                        dist_l = np.linalg.norm(self.aircraftNodesPoints[j] - self.aircraftNodesPoints[wingIndex][0], axis=1)
+                        if currentWingNpoints > 2:
+                            dist_c = np.linalg.norm(self.aircraftNodesPoints[j] - self.aircraftNodesPoints[wingIndex][c], axis=1)
+                        else:
+                            dist_c = dist_l
+                        dist_r = np.linalg.norm(self.aircraftNodesPoints[j] - self.aircraftNodesPoints[wingIndex][-1],axis=1)
+                        
+                        # Gets the index of the minimal distance between all point
+                        index_l = np.argmin(dist_l)
+                        if currentWingNpoints > 2:
+                            index_c = np.argmin(dist_c)
+                        else:
+                              index_c = index_l
+                        index_r = np.argmin(dist_r)
+                        indexes = np.array([index_l, index_c, index_r])
+                        
+                        # gets the minimal distance for each wing part
+                        minDist_l = dist_l[index_l]
+                        if currentWingNpoints > 2:
+                            minDist_c = dist_c[index_c]
+                        else:
+                            minDist_c = minDist_l
+                        minDist_r = dist_r[index_r]
+                        minDist = np.array([minDist_l,minDist_c,minDist_r])
+                        
+                        k = np.argmin(minDist)
+                        minimalDistance = minDist[k]                        
+                        l = indexes[k]
+                        r = len(self.aircraftNodesPoints[wingIndex])
+                        tab = np.array([0,c,r]) # TODO Correct the mistake
+                        k = tab[k]
+                        
+                        # minimalDistance: distance between both of these points
+                        identifier = np.array([wingIndex,j,k,l,minimalDistance])
+                        # logger.debug("Identifier \n"+str(identifier))
+                        if j < wingIndex:
+                            ws_identifiers[j] = identifier
+                        else:
+                            ws_identifiers[j-1] = identifier
+                index2 = np.argmin(ws_identifiers[:,4])
+                old = np.array([ws_identifiers[index2,2],
+                                ws_identifiers[index2,3],
+                                ws_identifiers[index2,0],
+                                ws_identifiers[index2,1],
+                                ws_identifiers[index2,4]])
+                if old in connectedNodes:
+                    logger.warning("Found a matching connexion")
+                    logger.debug(old)
+                    logger.debug(ws_identifiers)
+                    ws_identifiers = np.delete(ws_identifiers,index2,0)
+                    logger.debug(ws_identifiers)
+                    index2 = np.argmin(ws_identifiers[:,4])
+                connectedNodes[i] = ws_identifiers[index2]
+            logger.debug(connectedNodes)
+            sys.exit()
     def plotSectionsPoints(self):
         # N = len(self.wingsSectionsCenters)
 
