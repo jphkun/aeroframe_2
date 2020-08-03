@@ -149,14 +149,15 @@ def standard_run(args):
         csdGeometry.getAllPoints()
         # csdGeometry.plotSectionsPoints()
         
+        # Should do the RBF thing
+        # HERE
+        
         # FramAT part
-        # csd = framatWrapper.framat(csdGeometry)
-        # csd.csdRun()
+        csd = framatWrapper.framat(csdGeometry)
+        csd.csdRun()
         # csd.plotPoints()
         # logger.debug(csd_mesh.wingsSectionsCenters)
-        
-        
-        
+
         # TODO get path
         # TODO Upload path and aircraft to the mesher
         # csd = mesher()

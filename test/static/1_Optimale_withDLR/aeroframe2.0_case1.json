@@ -11,23 +11,23 @@
     "save_pkl": false,
     "fuselage": {
         "mechanicalProperties": {
-            "A": 1,
-            "Iy": 1,
-            "Iz": 1,
-            "J": 1
+            "A": 10,
+            "Iy": 10,
+            "Iz": 10,
+            "J": 10
         },
         "materialProperties": {
-            "E": 1,
-            "G": 1,
-            "rho": 1
+            "E": 4.1,
+            "G": 4.2,
+            "rho": 1.3
         },
         "FEM": {
             "mechanicalInterpolationType": "quadratic",
-            "nodesFEM": 20 
+            "nodesFEM": 5
         }
     },
     "wing1": {
-        "mechanicalCenter": 0.2,
+        "mechanicalCenter": 0.4,
         "mechanicalProperties": {
             "A": 1,
             "Iy": 1,
@@ -35,9 +35,9 @@
             "J": 1
         },
         "materialProperties": {
-            "E": 1,
-            "G": 1,
-            "rho": 1
+            "E": 2.1,
+            "G": 2.2,
+            "rho": 2.3
         },
         "FEM": {
             "mechanicalInterpolationType": "quadratic",
@@ -53,31 +53,31 @@
             "J": 1
         },
         "materialProperties": {
-            "E": 1,
-            "G": 1,
-            "rho": 1
+            "E": 1.1,
+            "G": 1.2,
+            "rho": 1.3
         },
         "FEM": {
             "mechanicalInterpolationType": "quadratic",
-            "nodesFEM": 5 
+            "nodesFEM": 3 
         }
     },
     "wing3": {
         "mechanicalCenter": 0.4,
         "mechanicalProperties": {
-            "A": 1,
-            "Iy": 1,
-            "Iz": 1,
-            "J": 1
+            "A": 10,
+            "Iy": 10,
+            "Iz": 10,
+            "J": 10
         },
         "materialProperties": {
-            "E": 1,
-            "G": 1,
-            "rho": 1
+            "E": 1.1,
+            "G": 1.2,
+            "rho": 1.3
         },
         "FEM": {
             "mechanicalInterpolationType": "quadratic",
-            "nodesFEM": 7 
+            "nodesFEM": 6 
         }
     },
     "Results": {

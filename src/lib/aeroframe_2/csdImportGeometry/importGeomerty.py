@@ -28,6 +28,7 @@ OK TODO: solve the wing node name issue
 OK TODO: Verify if the areas correspond
 OK TODO: for wings find the attached nodes pairs
 
+TODO: construct material matrix
 TODO: find a uid for each cross sections
       cs = self.model.add_feature('cross_section', uid='dummy')
 
@@ -41,7 +42,7 @@ import logging
 # import tigl3.configuration
 from tixi3 import tixi3wrapper
 from tigl3 import tigl3wrapper
-from tigl3 import geometry
+# from tigl3 import geometry
 import numpy as np
 from numpy.core.umath_tests import inner1d
 # import math
@@ -86,7 +87,6 @@ class CsdGeometryImport:
         except :
             logger.info("No fuselage found in CPACS file")
             sys.exit()
-        
         # Number of wings
         try:
             self.nWings = self.tigl.getWingCount()
@@ -94,8 +94,7 @@ class CsdGeometryImport:
         except:
             logger.error("No wings found in CPACS file")
             sys.exit()
-                    
-        
+
         # Reads JSON
         # Searches for fuselage instance
         fuselageSettings = []
@@ -112,8 +111,7 @@ class CsdGeometryImport:
             self.fuselageJsonExists = False
             logger.info("No fuselage instance found in JSON")
             sys.exit()
-            
-        
+
         # Searches for wing instance
         wingsSettings = []
         try:
@@ -151,8 +149,9 @@ class CsdGeometryImport:
         self.assembleMatrices()
         # self.areasComparison()  # for debuig
         self.computesWingConnexions()
-        self.plotSectionsPoints()
-        
+        self.readsMaterials()
+        # self.plotSectionsPoints()
+
     def areasComparison(self):
         # if self.nFuselage > 0:
         #     logger.debug("Fuselage initial area:\n "+str(self.fs_m_pointsInitArea[0]))
@@ -177,7 +176,7 @@ class CsdGeometryImport:
             logger.debug("Aircraft Iz:\n"+str(self.aircraftNodesIz[i]))
             logger.debug("Aircraft J:\n"+str(self.aircraftNodesJ[i]))
         sys.exit()
-        
+
     def getWingChordLinePoint(self,wingIndex,segmentIndex,eta,xsi):
         # tigl.wingGetUpperPoint(wingIndex, segmentIndex, eta -> y, xsi->x)
         up = self.tigl.wingGetUpperPoint(wingIndex,segmentIndex,eta,xsi)
@@ -186,7 +185,7 @@ class CsdGeometryImport:
         down = np.array(dw)
         center = 0.5*(upper + down)
         return center
-    
+
     def computePointSectionArea(self,wingIndex,segmentIndex,eta,xsi):
         """
         Computes the wing section area. No matter the ortientation of the wing
@@ -234,11 +233,11 @@ class CsdGeometryImport:
             wingSectionPoints = np.delete(wingSectionPoints,1,1)
             hull = ConvexHull(wingSectionPoints)
             area = hull.volume
-        
+
         logger.debug("Computed section area: "+str(area))
 
         return area
-                            
+
     def computesWingsMeshPoints(self):
         """
         Nomencalture:
@@ -255,7 +254,7 @@ class CsdGeometryImport:
         self.ws_m_pointsName = []
         self.ws_m_pointsInitArea = []
         for i in range(self.nWings):
-            
+
             # Basic wing input check
             self.userAskedNNodesWings[i] = self.settings["wing"+str(i+1)]["FEM"]["nodesFEM"]
             w_m_N_nodes = int(self.userAskedNNodesWings[i])
@@ -263,12 +262,12 @@ class CsdGeometryImport:
                 logger.error("Not enough points for wing"+str(i+1)+" (min 2)")
                 sys.exit()
 
-            logger.debug("Number of wing nodes asked: "+str(w_m_N_nodes))    
+            logger.debug("Number of wing nodes asked: "+str(w_m_N_nodes))
             # distance from leading edge
             xsi = self.settings["wing"+str(i+1)]["mechanicalCenter"]
             logger.debug("Wing"+str(i+1)+" mechanical center is: "+str(xsi))
             wingIndex = i+1
-            
+
             # Searches for each wing segment the start and end relative point
             w_N_sg = self.tigl.wingGetSegmentCount(i+1)
             w_N_sc = self.tigl.wingGetSectionCount(i+1)
@@ -276,14 +275,14 @@ class CsdGeometryImport:
             logger.debug("Wing"+str(i+1)+" has "+str(w_N_sc)+" sections")
             if w_m_N_nodes < w_N_sc:
                 logger.warning("Mesh underdetermined, less mesh points than actual CPACS sections")
-            
+
             # Gets each segments starting and ending points
             w_sg_points = np.empty((w_N_sg+1,3))
-            for j in range(w_N_sg):   
+            for j in range(w_N_sg):
                 w_sg_points[j] = self.getWingChordLinePoint(wingIndex,j+1,0,xsi)
             w_sg_points[-1] = self.getWingChordLinePoint(wingIndex,j+1,1,xsi)
             logger.debug("Wing"+str(wingIndex)+" segment points:\n"+str(w_sg_points))
-            
+
             # Gets each segments length
             w_sg_length = np.empty(w_N_sg)
             w_sg_relativePosition = np.empty(w_N_sg+1)
@@ -301,8 +300,8 @@ class CsdGeometryImport:
             # Computes mesh relative points
             w_m_relativePoints = np.linspace(0, w_length, w_m_N_nodes)
             logger.debug("Wing"+str(wingIndex)+" relative mesh points:\n"+str(w_m_relativePoints))
-            
-            # If the user askes more points that there in the CPACS file 
+
+            # If the user askes more points that there in the CPACS file
             # definitions the program automatically changes the position to the
             # closest known point. This features ensures that the simulations
             # will be made with maximal fidelity to the definintion.
@@ -314,9 +313,9 @@ class CsdGeometryImport:
                     diff = np.abs(w_m_relativePoints - w_sg_relativePosition[j])
                     index = np.argmin(diff)
                     w_m_relativePoints[index] = w_sg_relativePosition[j]
-            
+
             logger.debug("mesh relative pos:\n"+str(w_m_relativePoints))
-            
+
             # Computes the eta for each segment in order to get the mesh point
             # from tigl
             w_m_points = np.empty((w_m_N_nodes,3))
@@ -336,7 +335,7 @@ class CsdGeometryImport:
                 elif dist[segmentIndex-1] > 0:
                     case = 2
                     eta = w_sg_relativePosition[segmentIndex-1] - w_m_relativePoints[j]
-                    segmentIndex = segmentIndex -1
+                    segmentIndex = segmentIndex - 1
                     eta = 1 - (eta/w_sg_length[segmentIndex-1])
                 elif dist[segmentIndex-1] == 0.0 and segmentIndex == 1:
                     case = 3
@@ -361,7 +360,7 @@ class CsdGeometryImport:
                 # Computes section area
                 area = self.computePointSectionArea(wingIndex,segmentIndex,eta,xsi)
                 w_m_pointsInitArea[j] = area
-                
+
             # In tigl3wrapper.py the symmetry is defined as such
             # class TiglSymmetryAxis(object):
             # TIGL_NO_SYMMETRY = 0
@@ -379,7 +378,7 @@ class CsdGeometryImport:
                     index = 1
                 elif symmetry == 3:
                     index = 0
-                
+
                 # Computes symmetry
                 for k in range(w_m_N_nodes):
                     w_m_points_copy[k][index] = -w_m_points[k,index]
@@ -391,7 +390,7 @@ class CsdGeometryImport:
                 # logger.debug(w_m_pointsInitArea)
                 # logger.debug(np.flip(w_m_pointsInitArea_c))
                 w_m_pointsInitArea = np.concatenate((np.flip(w_m_pointsInitArea_c[1:],axis=0),w_m_pointsInitArea))
-            
+
             logger.debug("Wing mesh points:\n"+str(w_m_points))
             self.ws_m_points.append(w_m_points)
             self.ws_m_pointsInitArea.append(w_m_pointsInitArea)
@@ -399,7 +398,6 @@ class CsdGeometryImport:
 
     def computesFuselageMeshPoints(self):
         """
-        
         """
         # Uploads user mesh informations
         if self.nFuselage > 0:
@@ -414,9 +412,9 @@ class CsdGeometryImport:
                 logger.error("Not enough fuselage points (min 3)")
                 sys.exit()
 
-            logger.debug("Number of fuselage nodes asked: "+str(f_m_N_nodes))    
+            logger.debug("Number of fuselage nodes asked: "+str(f_m_N_nodes))
             fuselageIndex = 1
-            
+
             # Searches for each wing segment the start and end relative point
             f_N_sg = self.tigl.fuselageGetSegmentCount(fuselageIndex)
             f_N_sc = self.tigl.fuselageGetSectionCount(fuselageIndex)
@@ -424,7 +422,7 @@ class CsdGeometryImport:
             logger.debug("Fuselage has "+str(f_N_sc)+" sections")
             if f_m_N_nodes < f_N_sc:
                 logger.warning("Fuselage mesh underdetermined, less mesh points than actual CPACS sections")
-            
+
             # Gets each segments starting and ending points
             f_sg_points = np.empty((f_N_sg+1,3))
             f_sg_names = []
@@ -433,7 +431,7 @@ class CsdGeometryImport:
                 f_sg_points[j] = self.tigl.fuselageGetSectionCenter(f_sg_names[j], 0)
             f_sg_points[-1] = self.tigl.fuselageGetSectionCenter(f_sg_names[-1], 1)
             logger.debug("Fuselage segment points:\n"+str(f_sg_points))
-            
+
             # Gets each segments length
             f_sg_length = np.empty(f_N_sg)
             f_sg_relativePosition = np.empty(f_N_sg+1)
@@ -451,7 +449,7 @@ class CsdGeometryImport:
             # Computes mesh relative points
             f_m_relativePoints = np.linspace(0, f_length, f_m_N_nodes)
             logger.debug("Fuselage relative mesh points:\n"+str(f_m_relativePoints))
-            
+
             # Corrects node closet to the origin to be exactly on the same
             # x postion.
             dist = np.empty(f_N_sg)
@@ -462,14 +460,14 @@ class CsdGeometryImport:
                 index -= 1
             etaClamped = (self.origin[0] - f_sg_points[index][0])/f_sg_length[index]
             diff = np.empty(f_m_N_nodes)
-            
+
             logger.debug(f_sg_relativePosition[index])
             logger.debug(f_sg_relativePosition[index] + etaClamped)
             logger.debug(f_m_relativePoints)
-            
+
             for j in range(f_m_N_nodes):
                 diff[j] = np.abs(f_sg_relativePosition[index]+etaClamped - f_m_relativePoints[j])
-            
+
             closest = np.argmin(diff)
             logger.debug("Origin: "+str(self.origin))
             logger.debug("closest point:"+str(f_sg_points[index]))
@@ -490,7 +488,6 @@ class CsdGeometryImport:
                 segmentIndex = np.argmin(np.abs(dist))+1
                 # o--x-------o situations
                 if dist[segmentIndex-1] < 0:
-                    case = 1
                     eta = f_m_relativePoints[j] - f_sg_relativePosition[segmentIndex-1]
                     eta = (eta/f_sg_length[segmentIndex-1])
                     name = "f_n_"+str(j+1)
@@ -499,28 +496,25 @@ class CsdGeometryImport:
                         eta = etaClamped
                 # o--x-------o situation
                 elif dist[segmentIndex-1] > 0:
-                    case = 2
                     eta = f_sg_relativePosition[segmentIndex-1] - f_m_relativePoints[j]
-                    segmentIndex = segmentIndex -1
+                    segmentIndex = segmentIndex - 1
                     eta = 1 - (eta/f_sg_length[segmentIndex-1])
                     name = "f_n_"+str(j+1)
                     if j == closest:
-                        name = "f_n_"+str(j+1)+"_clamped"
+                        name = "f_n_clamped" # "f_n_"+str(j+1)+"_clamped"
                         eta = etaClamped
                 elif dist[segmentIndex-1] == 0.0 and segmentIndex == 1:
-                    case = 3
                     eta = 0
                     name = "f_n_"+str(j+1)
                     if j == closest:
-                        name = "f_n_"+str(j+1)+"_clamped"
+                        name = "f_n_clamped" # "f_n_"+str(j+1)+"_clamped"
                         eta = 0
                 elif dist[segmentIndex-1] == 0.0 and segmentIndex != 1:
-                    case = 4
                     eta = 1
                     segmentIndex -= 1
                     name = "f_n_"+str(j+1)
                     if j == closest:
-                        name = "f_n_"+str(j+1)+"_clamped"
+                        name = "f_n_clamped" # "f_n_"+str(j+1)+"_clamped"
                         eta = 1
                 else:
                     logger.error("Something wrong with CPACS file")
@@ -528,12 +522,12 @@ class CsdGeometryImport:
 
                 # Gets the fuselage center point
                 f_m_points[j] = self.tigl.fuselageGetSectionCenter(f_sg_names[segmentIndex-1], eta)
-                
+
                 f_m_pointsName.append(name)
                 # Computes section area
                 area = self.tigl.fuselageGetCrossSectionArea(f_sg_names[segmentIndex-1], eta)
                 f_m_pointsInitArea[j] = area
-            
+
             logger.debug("fuselage center points:\n"+str(f_m_points))
             logger.debug("fuselage center area:\n"+str(f_m_pointsInitArea))
             logger.debug("fuselage points names:\n"+str(f_m_pointsName))
@@ -551,7 +545,7 @@ class CsdGeometryImport:
         # All nodes informations
         self.aircraftNodesPoints = []
         self.aircraftNodesNames = []
-        self.aircraftInitNodesAreas = [] # Will be destroid
+        self.aircraftInitNodesAreas = []  # Will be destroid
         self.aircraftNodesA = []
         self.aircraftNodesIy = []
         self.aircraftNodesIz = []
@@ -559,10 +553,10 @@ class CsdGeometryImport:
         # More general information
         self.aircraftBeamsMaterials = []
         self.aircraftConnectedNodes = []
-        
+
         self.computeProportionFuselage()
         self.computeProportionWings()
-        
+
         # adds fulseage infos to matrices if there is one
         if self.nFuselage > 0:
             self.aircraftNodesPoints.append(self.fs_m_points[0])
@@ -582,18 +576,39 @@ class CsdGeometryImport:
             self.aircraftNodesIz.append(self.ws_m_pointsIz[i])
             self.aircraftNodesJ.append(self.ws_m_pointsJ[i])
 
+    def readsMaterials(self):
+        N = self.nWings + self.nFuselage
+        # uid='dummy')
+        # mat.set('E', 1)
+        # mat.set('G', 1)
+        # mat.set('rho', 1)
+        
+        for i in range(N):
+            if self.nFuselage > 0:
+                if i == 0:
+                    uid = "fuselage"
+                else:
+                    uid = "wing" + str(i)
+            else:
+                uid = "wing" + str(i+1)
+            E = self.settings[uid]["materialProperties"]["E"]
+            G = self.settings[uid]["materialProperties"]["G"]
+            rho =self.settings[uid]["materialProperties"]["rho"]
+            info = [uid,E,G,rho]
+            self.aircraftBeamsMaterials.append(info)
+
     def computeProportionFuselage(self):
         """
         Computes the area proportions witht the following procedure
         1) get the biggest area of the fuselage
         2) get the biggest area of the wing
-        3) checks if the user asks for a constant/linear/quadratic 
+        3) checks if the user asks for a constant/linear/quadratic
            distribution.
         4) Computes the local variable
         5) Feeds it back to the fuselage mesh matrices
         """
-        
-        # reads settings file for distribution        
+
+        # reads settings file for distribution
         if self.nFuselage > 0:
             self.fs_m_pointsA = []
             self.fs_m_pointsIy = []
@@ -618,9 +633,9 @@ class CsdGeometryImport:
             else:
                 logger.error("Fuselage mechanical properties distribution is")
                 logger.error("wrong. Accepted values are \"constant\",")
-                logger.error("\"linear\", \quadratic\"")
+                logger.error("\"linear\", \"quadratic\" ")
                 sys.exit()
-            
+
             coef = np.empty(self.userAskedNNodesFuselage)
             self.f_m_pointsA = np.empty(self.userAskedNNodesFuselage)
             self.f_m_pointsIy = np.empty(self.userAskedNNodesFuselage)
@@ -644,7 +659,7 @@ class CsdGeometryImport:
         Computes the area proportions witht the following procedure
         1) get the biggest area of the fuselage
         2) get the biggest area of the wing
-        3) checks if the user asks for a constant/linear/quadratic 
+        3) checks if the user asks for a constant/linear/quadratic
            distribution.
         4) Computes the local variable
         5) Feeds it back to the wing mesh matrices
@@ -675,9 +690,9 @@ class CsdGeometryImport:
             else:
                 logger.error("Wing mechanical properties distribution is")
                 logger.error("wrong. Accepted values are \"constant\",")
-                logger.error("\"linear\", \quadratic\"")
+                logger.error("\"linear\", \"quadratic\"")
                 sys.exit()
-            
+
             coef = np.empty(wingNnodes)
             self.w_m_pointsA = np.empty(wingNnodes)
             self.w_m_pointsIy = np.empty(wingNnodes)
@@ -707,19 +722,19 @@ class CsdGeometryImport:
             logger.error("Multiple wings with no fusekage!")
             sys.exit()
         else:
-            ws_connextionsPoints = self.nWings + self.nFuselage -1
+            ws_connextionsPoints = self.nWings + self.nFuselage - 1
             # if self.nFuselage > 0:
             #     ws_connextionsPoints = self.nWings
             # else:
             #     ws_connextionsPoints = self.nWings -1
-            
+
             # ws: wings
             # d: distance
             # L: left, R: right, c: center
             connectedNodes = np.zeros((ws_connextionsPoints,5))
             for i in range(ws_connextionsPoints):
                 """
-                for each wing there is 3 points that need to be taken into 
+                for each wing there is 3 points that need to be taken into
                 account:
                     1) Left tip position[0]
                     2) center [np.floor(nNodes/2))] (note symmetric wings always have odd number of points)
@@ -737,7 +752,7 @@ class CsdGeometryImport:
                 else:
                     c = 0
                 # logger.debug("c = "+str(c))
-                ws_identifiers = np.empty((ws_connextionsPoints,5)) 
+                ws_identifiers = np.empty((ws_connextionsPoints,5))
                 logger.debug("="*30)
                 for j in range(ws_connextionsPoints+1):
                     logger.debug("wingIndex,j = "+str(wingIndex)+" "+str(j))
@@ -750,16 +765,16 @@ class CsdGeometryImport:
                         else:
                             dist_c = dist_l
                         dist_r = np.linalg.norm(self.aircraftNodesPoints[j] - self.aircraftNodesPoints[wingIndex][-1],axis=1)
-                        
+
                         # Gets the index of the minimal distance between all point
                         index_l = np.argmin(dist_l)
                         if currentWingNpoints > 2:
                             index_c = np.argmin(dist_c)
                         else:
-                              index_c = index_l
+                            index_c = index_l
                         index_r = np.argmin(dist_r)
                         indexes = np.array([index_l, index_c, index_r])
-                        
+
                         # gets the minimal distance for each wing part
                         minDist_l = dist_l[index_l]
                         if currentWingNpoints > 2:
@@ -768,14 +783,14 @@ class CsdGeometryImport:
                             minDist_c = minDist_l
                         minDist_r = dist_r[index_r]
                         minDist = np.array([minDist_l,minDist_c,minDist_r])
-                        
+
                         k = np.argmin(minDist)
-                        minimalDistance = minDist[k]                        
+                        minimalDistance = minDist[k]
                         l = indexes[k]
                         r = len(self.aircraftNodesPoints[wingIndex])
-                        tab = np.array([0,c,r]) # TODO Correct the mistake
+                        tab = np.array([0,c,r])
                         k = tab[k]
-                        
+
                         # minimalDistance: distance between both of these points
                         identifier = np.array([wingIndex,j,k,l,minimalDistance])
                         # logger.debug("Identifier \n"+str(identifier))
@@ -789,7 +804,7 @@ class CsdGeometryImport:
                                 ws_identifiers[index2,0],
                                 ws_identifiers[index2,1],
                                 ws_identifiers[index2,4]])
-                if old in connectedNodes:
+                if old in connectedNodes and i>1:
                     logger.warning("Found a matching connexion")
                     logger.debug(old)
                     logger.debug(ws_identifiers)
@@ -797,8 +812,11 @@ class CsdGeometryImport:
                     logger.debug(ws_identifiers)
                     index2 = np.argmin(ws_identifiers[:,4])
                 connectedNodes[i] = ws_identifiers[index2]
-            logger.debug(connectedNodes)
-            sys.exit()
+                logger.debug("connected Nodes: \n"+str(connectedNodes[i]))
+            # logger.debug(connectedNodes)
+            self.aircraftConnectedNodes.append(connectedNodes)
+            # sys.exit()
+
     def plotSectionsPoints(self):
         # N = len(self.wingsSectionsCenters)
 
@@ -812,13 +830,13 @@ class CsdGeometryImport:
                        self.fs_m_points[0][:,2])
         for i in range(self.nWings):
             ax.scatter(self.ws_m_points[i][:,0],
-                        self.ws_m_points[i][:,1],
-                        self.ws_m_points[i][:,2])
+                       self.ws_m_points[i][:,1],
+                       self.ws_m_points[i][:,2])
         size = 10
         ax.set_xlim(-size+self.origin[0],size+self.origin[0])
         ax.set_ylim(-size+self.origin[1],size+self.origin[1])
         ax.set_zlim(-size+self.origin[2],size+self.origin[2])
         ax.set_xlabel('X Label')
         ax.set_ylabel('Y Label')
-        ax.set_zlabel('Z Label')        
+        ax.set_zlabel('Z Label')
         plt.show()
