@@ -4,6 +4,22 @@
 Created on Tue Jul 21 10:48:15 2020
 
 @author: Jean-Philippe Kuntzer
+
+TODO: Compute the error
+TODO: File management with csv deformation
+TODO: get CFD forces
+TODO: compute CFD moments
+TODO:
+OK TODO: make it work from the command line
+TODO do a better job with the settings files workflow
+TODO get json file
+TODO get all json variables
+TODO checks all JSON variables
+TODO checks folder structure and prints the potential errors
+TODO try except error management with setting file
+TODO add test to see if file exists
+TODO add test for filepath
+TODO make a features that makes the program run a save the results and mesh.
 """
 
 import logging
@@ -12,6 +28,7 @@ import json
 # import aeroframe_2.fileio.settings as Settings
 import aeroframe_2.deformation.functions as aeroDef
 import aeroframe_2.csdImportGeometry.importGeomerty as importGeomerty
+import aeroframe_2.informationTransfer.mapping as mapping
 import aeroframe_2.wrappers.framatWrapper as framatWrapper
 import pytornado.stdfun.run as cfd
 # import pytornado.fileio as io
@@ -79,59 +96,26 @@ def getSettings(inputFileAndPath):
     return settings
 
 
-def standard_run(args):
-    # OK TODO: make it work from the command line
-    # TODO do a better job with the settings files workflow
-    # TODO get json file
-    # TODO get all json variables
-    # TODO checks all JSON variables
-    # TODO checks folder structure and prints the potential errors
-    # TODO try except error management with setting file
-    # TODO add test to see if file exists
-    # TODO add test for filepath
-
-    # Starts simulation
-    logger.info(f"{__prog_name__} started")
-
-    # Simulation input file
-    logger.debug("Setting file path:\n" + args.cwd+"/"+args.run)
-    settingsFileAndPath = args.cwd + "/" + args.run
-    aeroframe_2_settings = getSettings(settingsFileAndPath)
-
-    # simulation.verify()
-    # logger.debug(aeroframe_2_settings)
+def meshComputation(args,aeroframe_2_settings):
+    ##########################################################################
+    #   Aerodynamic part mesh computation
+    ##########################################################################
+    # Pytornado meshing
     # All the accepted ways of writing pytornado in the json file
     pytornado = ["pytornado","Pytornado","pyTornado","PyTornado"]
-    # if aeroframe_2_settings["CFD_solver"] in pytornado:
-    #     # Command line simulation
-    #     pytornado_settings_file = args.cwd + "/CFD/settings/" + aeroframe_2_settings["CFD_settings_file"]
-    #     def_file_path = aeroframe_2_settings["deformation_file"]
-    #     dir_path = args.cwd
+    if aeroframe_2_settings["CFD_solver"] in pytornado:
+        # Command line simulation
+        pytornado_settings_file = args.cwd + "/CFD/settings/" + aeroframe_2_settings["CFD_settings_file"]
+        # dir_path = args.cwd
 
-    #     # Buids CFD mesh
-    #     lattice, vlmdata, settings, aircraft, cur_state, state = cfd.meshing(args,pytornado_settings_file)
-    #     logger.debug("Meshing done")
+        # Buids CFD mesh
+        lattice, vlmdata, settings, aircraft, cur_state, state = cfd.meshing(args,pytornado_settings_file)
+        logger.debug(" VLM meshing done")
 
-    #     # Deforms CFD mesh
-    #     file_path = args.cwd + "/" + def_file_path
-    #     logger.debug(file_path)
-    #     # Activates or diactivates function
-    #     if aeroframe_2_settings["deformation_activation"]:
-    #         deform_mesh(settings,lattice,file_path)
-
-    #     # Computes CFD solution
-    #     cfd.solver(lattice, vlmdata, settings, aircraft, cur_state, state)
-
-    #     if aeroframe_2_settings["deformation_activation"]:
-    #         if aeroframe_2_settings["save_pkl"]:
-    #             save_to_pkl(args.cwd, "activated", lattice, vlmdata)
-    #     else:
-    #         if aeroframe_2_settings["save_pkl"]:
-    #             save_to_pkl(args.cwd, "deactivated", lattice, vlmdata)
-
-
-    # TODO check if deformation is activated
-    # TODO have a specific mode for when the structural solver is external
+    ##########################################################################
+    #   Structure part mesh computation
+    ##########################################################################
+    # Structure beam meshing
     # All the accepted ways of writing FramAT in the json file
     framat = ["framat","Framat","FramAT","framAT"]
     if aeroframe_2_settings["CSD_solver"] in framat:
@@ -141,28 +125,97 @@ def standard_run(args):
         """
         logger.info("FramAT is chosen as the CSD solver")
         # Importing geometry
-        # logger.debug(args.cwd)
         aircraft_path = args.cwd + "/CFD/aircraft/" + aeroframe_2_settings["aircraft_file"]
-        # logger.debug(aeroframe_2_settings)
-        # logger.debug(aircraft_path)
         csdGeometry = importGeomerty.CsdGeometryImport(aircraft_path,aeroframe_2_settings)
         csdGeometry.getAllPoints()
         # csdGeometry.plotSectionsPoints()
+
+    return lattice, vlmdata, settings, aircraft, cur_state, state, csdGeometry
+
+
+def meshDeformation(args,aeroframe_2_settings,settings,lattice,csdGeometry):
+    """
+    Deforms the VLM mesh if asked to otherwise compute the transfer matrix.
+    """
+    # Deforms VLM mesh if the users asks to deform from an input file
+    if aeroframe_2_settings["deformation_from_file"]:
+        def_file_path = aeroframe_2_settings["deformation_file"]
+        file_path = args.cwd + "/" + def_file_path
+        logger.debug(file_path)
+        deform_mesh(settings,lattice,file_path)
+    
+    
+    framat = ["framat","Framat","FramAT","framAT"]
+    # Computes the radial basis function matrix
+    if aeroframe_2_settings["CSD_solver"] in framat:
+        mapping.mapper(lattice,csdGeometry)
         
-        # Should do the RBF thing
-        # HERE
-        
-        # FramAT part
-        csd = framatWrapper.framat(csdGeometry)
-        csd.csdRun()
-        # csd.plotPoints()
+    return settings, lattice
+
+
+def cfdComputation(lattice, vlmdata, settings, aircraft, cur_state, state):
+    cfd.solver(lattice, vlmdata, settings, aircraft, cur_state, state)
+    return lattice, vlmdata
+
+
+def saveCFDresults(args,settings,lattice,vlmdata):
+    if settings["deformation_activation"]:
+        if settings["save_pkl"]:
+            save_to_pkl(args.cwd, "activated", lattice, vlmdata)
+    else:
+        if settings["save_pkl"]:
+            save_to_pkl(args.cwd, "deactivated", lattice, vlmdata)
+
+
+def standard_run(args):
+    # Starts simulation
+    logger.info(f"{__prog_name__} started")
+
+    # Simulation input file
+    logger.debug("Setting file path:\n" + args.cwd+"/"+args.run)
+    settingsFileAndPath = args.cwd + "/" + args.run
+    aeroframe_2_settings = getSettings(settingsFileAndPath)
+
+    # Computes the necessary meshes
+    lattice, vlmdata, settings, aircraft, cur_state, state, csdGeometry = meshComputation(args,aeroframe_2_settings)
+
+    # Computes the deformation parameters.
+    # Deforms the VLM mesh if the deformation is imported from a file
+    settings,lattice = meshDeformation(args,aeroframe_2_settings,settings,lattice,csdGeometry)
+
+    # Computes the first CFD solution
+    lattice, vlmdata = cfdComputation(lattice, vlmdata, settings, aircraft, cur_state, state)
+
+    # saves results to pkl file if asked.
+    saveCFDresults(args,aeroframe_2_settings,lattice,vlmdata)
+
+    # TODO check if deformation is activated
+    # TODO have a specific mode for when the structural solver is external
+    # All the accepted ways of writing FramAT in the json file
+    # framat = ["framat","Framat","FramAT","framAT"]
+    # if aeroframe_2_settings["CSD_solver"] in framat:
+    #     """
+    #     Reads the cpacs file and gets the rough geometry. Geometry properties
+    #     are given by the user.
+    #     """
+    #     logger.info("FramAT is chosen as the CSD solver")
+    #     # Importing geometry
+    #     aircraft_path = args.cwd + "/CFD/aircraft/" + aeroframe_2_settings["aircraft_file"]
+    #     csdGeometry = importGeomerty.CsdGeometryImport(aircraft_path,aeroframe_2_settings)
+    #     csdGeometry.getAllPoints()
+    #     # csdGeometry.plotSectionsPoints()
+
+        # # FramAT part
+        # csd = framatWrapper.framat(csdGeometry)
+        # csd.csdRun()
+        # # csd.plotPoints()
         # logger.debug(csd_mesh.wingsSectionsCenters)
 
         # TODO get path
         # TODO Upload path and aircraft to the mesher
         # csd = mesher()
         #
-    
+
     # TODO 3D cfd Mesh
     # TODO structure mesh
 

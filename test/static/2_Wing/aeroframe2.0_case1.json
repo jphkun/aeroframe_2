@@ -1,6 +1,6 @@
 {
-    "CFD_settings_file": "OptimaleCFDsettings.json",
-    "CSD_settings_file": "OptimaleCSDsettings.json",
+    "CFD_settings_file": "Wing_5.json",
+    "CSD_settings_file": "Wing_5.json",
     "aircraft_file": "Wing_5.xml",
     "CFD_solver": "Pytornado",
     "CSD_solver": "FramAT",
@@ -28,42 +28,6 @@
     },
     "wing1": {
         "mechanicalCenter": 0.2,
-        "mechanicalProperties": {
-            "A": 1,
-            "Iy": 1,
-            "Iz": 1,
-            "J": 1
-        },
-        "materialProperties": {
-            "E": 1,
-            "G": 1,
-            "rho": 1
-        },
-        "FEM": {
-            "mechanicalInterpolationType": "constant",
-            "nodesFEM": 10 
-        }
-    },
-    "wing2": {
-        "mechanicalCenter": 0.4,
-        "mechanicalProperties": {
-            "A": 1,
-            "Iy": 1,
-            "Iz": 1,
-            "J": 1
-        },
-        "materialProperties": {
-            "E": 1,
-            "G": 1,
-            "rho": 1
-        },
-        "FEM": {
-            "mechanicalInterpolationType": "constant",
-            "nodesFEM": 10 
-        }
-    },
-    "wing3": {
-        "mechanicalCenter": 0.4,
         "mechanicalProperties": {
             "A": 1,
             "Iy": 1,

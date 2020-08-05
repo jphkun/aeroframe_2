@@ -1,25 +1,26 @@
 {
-    "CFD_settings_file": "OptimaleCFDsettings.json",
+    "CFD_settings_file": "Optimale.json",
     "CSD_settings_file": "OptimaleCSDsettings.json",
     "aircraft_file": "Optimale.xml",
     "CFD_solver": "Pytornado",
     "CSD_solver": "FramAT",
     "MaxIterationsNumber": 10,
     "Convergeance_tolerence": 0.001,
-    "deformation_activation": false,
+    "deformation_activation": true,
+    "deformation_from_file": false,
     "deformation_file": "CSD/deformation/Optimale_disp_dlr.csv",
     "save_pkl": false,
     "fuselage": {
         "mechanicalProperties": {
-            "A": 10,
-            "Iy": 10,
-            "Iz": 10,
-            "J": 10
+            "A": 0.032,
+            "Iy": 0.004, 
+            "Iz":  0.004, 
+            "J":  0.008
         },
         "materialProperties": {
-            "E": 4.1,
-            "G": 4.2,
-            "rho": 1.3
+            "E": 70e9,
+            "G": 26e9,
+            "rho": 2700
         },
         "FEM": {
             "mechanicalInterpolationType": "quadratic",
@@ -29,15 +30,15 @@
     "wing1": {
         "mechanicalCenter": 0.4,
         "mechanicalProperties": {
-            "A": 1,
-            "Iy": 1,
-            "Iz": 1,
-            "J": 1
+            "A": 0.006,
+            "Iy": 4e-5,
+            "Iz": 4e-5,
+            "J": 8e-5
         },
         "materialProperties": {
-            "E": 2.1,
-            "G": 2.2,
-            "rho": 2.3
+            "E": 70e9,
+            "G": 26e9,
+            "rho": 2700
         },
         "FEM": {
             "mechanicalInterpolationType": "quadratic",
@@ -47,15 +48,15 @@
     "wing2": {
         "mechanicalCenter": 0.4,
         "mechanicalProperties": {
-            "A": 1,
-            "Iy": 1,
-            "Iz": 1,
-            "J": 1
+            "A": 0.006,
+            "Iy": 4e-5,
+            "Iz": 4e-5,
+            "J": 8e-5
         },
         "materialProperties": {
-            "E": 1.1,
-            "G": 1.2,
-            "rho": 1.3
+            "E": 70e9,
+            "G": 26e9,
+            "rho": 2700
         },
         "FEM": {
             "mechanicalInterpolationType": "quadratic",
@@ -65,15 +66,15 @@
     "wing3": {
         "mechanicalCenter": 0.4,
         "mechanicalProperties": {
-            "A": 10,
-            "Iy": 10,
-            "Iz": 10,
-            "J": 10
+            "A": 0.006,
+            "Iy": 4e-5,
+            "Iz": 4e-5,
+            "J": 8e-5
         },
         "materialProperties": {
-            "E": 1.1,
-            "G": 1.2,
-            "rho": 1.3
+            "E": 70e9,
+            "G": 26e9,
+            "rho": 2700
         },
         "FEM": {
             "mechanicalInterpolationType": "quadratic",

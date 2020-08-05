@@ -30,8 +30,8 @@
 		}, 
 		"results": {
 		    "opt": ["cp"], 
-		    "show": false, 
-		    "save": false
+		    "show": true, 
+		    "save": true
         	}
     	}
 }
