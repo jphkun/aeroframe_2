@@ -1,7 +1,7 @@
 {
     "aero": {
-        "airspeed": 100,
-        "alpha": 2,
+        "airspeed": 10,
+        "alpha": 7,
         "altitude": null,
         "beta": 0,
         "density": 1.225,

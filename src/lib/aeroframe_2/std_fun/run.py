@@ -34,6 +34,7 @@ import pytornado.stdfun.run as cfd
 # import pytornado.fileio as io
 # import os
 import pickle
+import sys
 
 # import SU2_CFD
 
@@ -133,25 +134,38 @@ def meshComputation(args,aeroframe_2_settings):
     return lattice, vlmdata, settings, aircraft, cur_state, state, csdGeometry
 
 
-def meshDeformation(args,aeroframe_2_settings,settings,lattice,csdGeometry):
+def meshPreprocessing(args,aeroframe_2_settings,settings,lattice,csdGeometry,vlmdata):
     """
     Deforms the VLM mesh if asked to otherwise compute the transfer matrix.
     """
+    framat = ["framat","Framat","FramAT","framAT"]
     # Deforms VLM mesh if the users asks to deform from an input file
     if aeroframe_2_settings["deformation_from_file"]:
         def_file_path = aeroframe_2_settings["deformation_file"]
         file_path = args.cwd + "/" + def_file_path
         logger.debug(file_path)
         deform_mesh(settings,lattice,file_path)
-    
-    
-    framat = ["framat","Framat","FramAT","framAT"]
-    # Computes the radial basis function matrix
-    if aeroframe_2_settings["CSD_solver"] in framat:
-        mapping.mapper(lattice,csdGeometry)
-        
-    return settings, lattice
 
+    # Computes the radial basis function matrix
+    elif aeroframe_2_settings["CSD_solver"] in framat:
+        # Computes structural mesh
+        csd = framatWrapper.framat(csdGeometry)
+        csd.mesh()
+        # Computes transformation matrix
+        tranform = mapping.mapper(lattice,vlmdata,csdGeometry)
+        
+    return settings, lattice, csd, tranform
+
+def csdComputations(tranform,csd):
+    # apply loads
+    # run
+    tranform.aeroToStructure()
+    csd.run(tranform)
+    pass
+
+def meshDeformation():
+    # deforms CFD mesh from file
+    pass
 
 def cfdComputation(lattice, vlmdata, settings, aircraft, cur_state, state):
     cfd.solver(lattice, vlmdata, settings, aircraft, cur_state, state)
@@ -181,40 +195,34 @@ def standard_run(args):
 
     # Computes the deformation parameters.
     # Deforms the VLM mesh if the deformation is imported from a file
-    settings,lattice = meshDeformation(args,aeroframe_2_settings,settings,lattice,csdGeometry)
+    settings, lattice, csd, tranform = meshPreprocessing(args,aeroframe_2_settings,settings,lattice,csdGeometry,vlmdata)
 
     # Computes the first CFD solution
     lattice, vlmdata = cfdComputation(lattice, vlmdata, settings, aircraft, cur_state, state)
 
     # saves results to pkl file if asked.
     saveCFDresults(args,aeroframe_2_settings,lattice,vlmdata)
+    
+    # Panelwise forces are accessed this way
+    # logger.debug(vlmdata.panelwise["fx"])
+    # logger.debug(vlmdata.panelwise["fy"])
+    logger.debug(type(vlmdata.panelwise["fz"]))
 
-    # TODO check if deformation is activated
-    # TODO have a specific mode for when the structural solver is external
-    # All the accepted ways of writing FramAT in the json file
-    # framat = ["framat","Framat","FramAT","framAT"]
-    # if aeroframe_2_settings["CSD_solver"] in framat:
-    #     """
-    #     Reads the cpacs file and gets the rough geometry. Geometry properties
-    #     are given by the user.
-    #     """
-    #     logger.info("FramAT is chosen as the CSD solver")
-    #     # Importing geometry
-    #     aircraft_path = args.cwd + "/CFD/aircraft/" + aeroframe_2_settings["aircraft_file"]
-    #     csdGeometry = importGeomerty.CsdGeometryImport(aircraft_path,aeroframe_2_settings)
-    #     csdGeometry.getAllPoints()
-    #     # csdGeometry.plotSectionsPoints()
+    # Computes the first CSD solution
+    csdComputations(tranform,csd)
+    sys.exit()
 
+        ######################################################################
         # # FramAT part
         # csd = framatWrapper.framat(csdGeometry)
         # csd.csdRun()
         # # csd.plotPoints()
         # logger.debug(csd_mesh.wingsSectionsCenters)
-
+        ######################################################################
         # TODO get path
         # TODO Upload path and aircraft to the mesher
         # csd = mesher()
-        #
+        ######################################################################
 
     # TODO 3D cfd Mesh
     # TODO structure mesh

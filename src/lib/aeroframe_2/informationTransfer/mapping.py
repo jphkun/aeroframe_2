@@ -4,6 +4,9 @@
 Created on Tue Aug  4 13:56:01 2020
 
 @author: Jean-Philippe Kuntzer
+
+TODO: For the computation of the moment, distance must be computed in the x,y
+      plane.
 """
 
 import logging
@@ -17,86 +20,114 @@ logger = logging.getLogger(__name__)
 
 
 class mapper:
-    def __init__(self,lattice,csdGeometry):
+    def __init__(self,lattice,vlmdata,csdGeometry):
         self.geo = csdGeometry
         self.vlm = lattice
+        self.data = vlmdata
         self.geoP = csdGeometry.aircraftNodesPoints
-        self.sPoints = self.geoP[0]
-        self.aPoints = self.vlm.c
-
+        logger.debug("Lattice shape = "+str(self.vlm.p.shape))
+        logger.debug("Lattice shape = "+str(self.vlm.v.shape))
+        logger.debug("Lattice shape = "+str(self.vlm.c.shape))
+        sys.exit()
         # assembles all structural points into one vector for ease of use and
         # computation speed.
-        Np = len(self.geoP)
-        for i in range(Np-1):
-            self.sPoints = np.concatenate((self.sPoints, self.geoP[i+1]))
-
-        logger.debug("sPoint = \n" +str(self.sPoints))
-        logger.debug("vlm.c = \n" + str(self.vlm.c))
-        fun = "C2"
-        logger.debug(type(self.sPoints))
-        # Computes the matrix M
-        n = self.sPoints.shape
-        n = n[0]
-        M = np.empty((n,n))
-        for i in range(n):
-            for j in range(n):
-                x1 = self.sPoints[i]
-                x2 = self.sPoints[j]
-                M[i,j] = self.phi(x1,x2,fun)
+        # if self.geo.nFuselage > 0:
+        #     self.sPoints = self.geoP[1]
+        #     Np = len(self.geoP)-2
+        #     for i in range(Np):
+        #          self.sPoints = np.concatenate((self.sPoints, self.geoP[i+2]))
+        # else:
+        #     self.sPoints = self.geoP[0]
+        #     Np = len(self.geoP)-1
+        #     for i in range(Np):
+        #          self.sPoints = np.concatenate((self.sPoints, self.geoP[i+1]))
         
-        np.set_printoptions(precision=1)
-        logger.debug(M)
-        iM = np.linalg.inv(M)
-        # Computes the matrix Q
-        m = self.aPoints.shape
-        m = m[0]
-        Q = np.empty((n,m))
-        for i in range(n):
-            for j in range(m):
-                x1 = self.sPoints[i]
-                x2 = self.aPoints[j]
-                Q[i,j] = self.phi(x1,x2,fun)
-        A = Q.T
-        logger.debug("Q shape"+str(Q.shape))
-        logger.debug("A shape"+str(A.shape))
-        np.set_printoptions(precision=1)
-        logger.debug(M)
-        logger.debug(A)
-        # Computes coupling matrix H
-        self.H = np.matmul(A,iM)
+        self.aPoints = self.vlm.c
+        plotting = False
         
-        # tests the mapping:
-        dzs = np.empty(n)
-        for i in range(n):
-            dzs[i] = 0.01*self.sPoints[i,1]**2
-        dza = np.matmul(self.H,dzs)
-        # Plots line
-        fig = plt.figure()
-        ax = fig.add_subplot(111, projection='3d')
-        ax.scatter(self.sPoints[:,0],
-                   self.sPoints[:,1],
-                   self.sPoints[:,2],
-                   label='beam')
-        ax.scatter(self.sPoints[:,0],
-                   self.sPoints[:,1],
-                   self.sPoints[:,2]+dzs,
-                   label='deformed beam')
-        ax.scatter(self.aPoints[:,0],
-                   self.aPoints[:,1],
-                   self.aPoints[:,2],
-                   label='VLM')
-        ax.scatter(self.aPoints[:,0],
-                   self.aPoints[:,1],
-                   self.aPoints[:,2]+dza,
-                   label='deformed VLM')
-        val = 15
-        ax.set_xlim(-val,val)
-        ax.set_ylim(-val,val)
-        ax.set_zlim(-val,val)
-        ax.legend()
-        plt.show()
+        self.nBeams = len(self.geoP)
+        self.M = []
+        self.iM= []
+        self.A = []
+        self.H = []
+        for i in range(self.nBeams):
 
-        sys.exit()
+            # logger.debug("sPoint = \n" +str(self.sPoints))
+            # logger.debug("vlm.c = \n" + str(self.vlm.c))
+            # G,TPS,HMQ,HIMQ,C0,C2,C4,C6,EH
+            fun = "C2"
+            logger.debug(type(self.geoP[i]))
+            # Computes the matrix M
+            n = self.geoP[i].shape
+            n = n[0]
+            Mbeam = np.empty((n,n))
+            for k in range(n):
+                for j in range(n):
+                    x1 = self.geoP[i][k]
+                    x2 = self.geoP[i][j]
+                    Mbeam[k,j] = self.phi(x1,x2,fun)
+            self.M.append(Mbeam)
+            
+            # logger.debug("M = "+str(self.M))
+            # sys.exit()
+            # np.set_printoptions(precision=1)
+            # logger.debug(M)
+            self.iM.append(np.linalg.inv(self.M[i]))
+            # Computes the matrix Q
+            m = self.aPoints.shape
+            m = m[0]
+            Q = np.empty((n,m))
+            for k in range(n):
+                for j in range(m):
+                    x1 = self.geoP[i][k]
+                    x2 = self.aPoints[j]
+                    Q[k,j] = self.phi(x1,x2,fun)
+            
+            self.A.append(Q.T)
+            # logger.debug("Q shape:"+str(Q.shape))
+            # logger.debug("A shape:"+str(A.shape))
+            np.set_printoptions(precision=1)
+            # logger.debug("M = \n"+str(M))
+            # logger.debug("inv(M) = \n"+str(iM))
+            # logger.debug("A = \n"+str(A))
+        
+            # Computes coupling matrix H
+            self.H.append(np.matmul(self.A[i],self.iM[i]))
+            # logger.debug("H = \n"+str(self.H))
+            # tests the mapping:
+            # dzs = np.empty(n)
+            # for i in range(n):
+            #     dzs[i] = 0.01*self.sPoints[i,1]**2
+            # dza = np.matmul(self.H,dzs)
+        
+        # # # Plots line
+        # # if plotting:
+        # #     fig = plt.figure()
+        # #     ax = fig.add_subplot(111, projection='3d')
+        # #     ax.scatter(self.sPoints[:,0],
+        # #                self.sPoints[:,1],
+        # #                self.sPoints[:,2],
+        # #                label='beam')
+        # #     ax.scatter(self.sPoints[:,0],
+        # #                self.sPoints[:,1],
+        # #                self.sPoints[:,2]+dzs,
+        # #                label='deformed beam')
+        # #     ax.scatter(self.aPoints[:,0],
+        # #                self.aPoints[:,1],
+        # #                self.aPoints[:,2],
+        # #                label='VLM')
+        # #     ax.scatter(self.aPoints[:,0],
+        # #                self.aPoints[:,1],
+        # #                self.aPoints[:,2]+dza,
+        # #                label='deformed VLM')
+        # #     val = 15
+        # #     ax.set_xlim(-val,val)
+        # #     ax.set_ylim(-val,val)
+        # #     ax.set_zlim(-val,val)
+        # #     ax.legend()
+        # #     plt.show()
+
+        # sys.exit()
 
 
     def phi(self,x1,x2,fun):
@@ -134,6 +165,41 @@ class mapper:
             phi_x = np.pi*((1/12*r**3) - r*eps**2 + 4/3*eps**3)
         return phi_x
 
+    
+    def aeroToStructure(self):
+        self.sfx = []
+        self.sfy = []
+        self.sfz = []
+        for i in range(self.nBeams):
+            logger.debug("aeroToStructure")
+            afx = self.data.panelwise["fx"]
+            afy = self.data.panelwise["fy"]
+            afz = self.data.panelwise["fz"]
+            # nx = self.data.panelwise["fx"].shape
+            # ny = self.data.panelwise["fy"].shape
+            # nz = self.data.panelwise["fz"].shape
+            # logger.debug("nx = "+str(nx))
+            # logger.debug("ny = "+str(ny))
+            # logger.debug("nz = "+str(nz))
+            # N = self.vlm.c.shape
+            # logger.debug("N = "+str(N))
+            self.sfx.append(np.matmul(self.H[i].T,afx))
+            self.sfy.append(np.matmul(self.H[i].T,afy))
+            self.sfz.append(np.matmul(self.H[i].T,afz))
+            # snx = self.sfx[i].shape
+            # sny = self.sfy[i].shape
+            # snz = self.sfz[i].shape
+            # logger.debug("afx = \n"+str(afx))
+            # logger.debug("afy = \n"+str(afy))
+            # logger.debug("afz = \n"+str(afz))
+            # logger.debug("sfx = \n"+str(self.sfx))
+            # logger.debug("sfy = \n"+str(self.sfy))
+            # logger.debug("sfz = \n"+str(self.sfz))
+            # logger.debug(snx)
+            # logger.debug(sny)
+            # logger.debug(snz)
+            # sys.exit()
+            # pass
 # xs = np.array([[0,0,0],
 #                [0,1,0],
 #                [0,2,0],

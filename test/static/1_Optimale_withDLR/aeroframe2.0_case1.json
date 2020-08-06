@@ -13,9 +13,63 @@
     "fuselage": {
         "mechanicalProperties": {
             "A": 0.032,
-            "Iy": 0.004, 
-            "Iz":  0.004, 
+            "Iy": 0.004,
+            "Iz":  0.004,
             "J":  0.008
+        },
+        "materialProperties": {
+            "E": 70e9,
+            "G": 26e9,
+            "rho": 2700
+        },
+        "FEM": {
+            "mechanicalInterpolationType": "linear",
+            "nodesFEM":20
+        }
+    },
+    "wing1": {
+        "mechanicalCenter": 0.4,
+        "mechanicalProperties": {
+            "A": 0.006,
+            "Iy": 3.65E-05,
+            "Iz": 3.65E-05,
+            "J": 7.29E-05
+        },
+        "materialProperties": {
+            "E": 70e9,
+            "G": 26e9,
+            "rho": 2700
+        },
+        "FEM": {
+            "mechanicalInterpolationType": "linear",
+            "nodesFEM": 10
+        }
+    },
+    "wing2": {
+        "mechanicalCenter": 0.4,
+        "mechanicalProperties": {
+            "A": 0.006,
+            "Iy": 3.65E-05,
+            "Iz": 3.65E-05,
+            "J": 7.29E-05
+        },
+        "materialProperties": {
+            "E": 70e9,
+            "G": 26e9,
+            "rho": 2700
+        },
+        "FEM": {
+            "mechanicalInterpolationType": "linear",
+            "nodesFEM": 10
+        }
+    },
+    "wing3": {
+        "mechanicalCenter": 0.4,
+        "mechanicalProperties": {
+            "A": 0.006,
+            "Iy": 3.65E-05,
+            "Iz": 3.65E-05,
+            "J": 7.29E-05
         },
         "materialProperties": {
             "E": 70e9,
@@ -25,60 +79,6 @@
         "FEM": {
             "mechanicalInterpolationType": "quadratic",
             "nodesFEM": 5
-        }
-    },
-    "wing1": {
-        "mechanicalCenter": 0.4,
-        "mechanicalProperties": {
-            "A": 0.006,
-            "Iy": 4e-5,
-            "Iz": 4e-5,
-            "J": 8e-5
-        },
-        "materialProperties": {
-            "E": 70e9,
-            "G": 26e9,
-            "rho": 2700
-        },
-        "FEM": {
-            "mechanicalInterpolationType": "quadratic",
-            "nodesFEM": 10
-        }
-    },
-    "wing2": {
-        "mechanicalCenter": 0.4,
-        "mechanicalProperties": {
-            "A": 0.006,
-            "Iy": 4e-5,
-            "Iz": 4e-5,
-            "J": 8e-5
-        },
-        "materialProperties": {
-            "E": 70e9,
-            "G": 26e9,
-            "rho": 2700
-        },
-        "FEM": {
-            "mechanicalInterpolationType": "quadratic",
-            "nodesFEM": 3 
-        }
-    },
-    "wing3": {
-        "mechanicalCenter": 0.4,
-        "mechanicalProperties": {
-            "A": 0.006,
-            "Iy": 4e-5,
-            "Iz": 4e-5,
-            "J": 8e-5
-        },
-        "materialProperties": {
-            "E": 70e9,
-            "G": 26e9,
-            "rho": 2700
-        },
-        "FEM": {
-            "mechanicalInterpolationType": "quadratic",
-            "nodesFEM": 6 
         }
     },
     "Results": {

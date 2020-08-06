@@ -1,32 +1,30 @@
 {
-    "CFD_settings_file": "Wing_5.json",
-    "CSD_settings_file": "Wing_5.json",
-    "aircraft_file": "Wing_5.xml",
+    "CFD_settings_file": "straightWing.json",
+    "CSD_settings_file": "straightWing.json",
+    "aircraft_file": "straightWing.xml",
     "CFD_solver": "Pytornado",
     "CSD_solver": "FramAT",
     "MaxIterationsNumber": 10,
     "Convergeance_tolerence": 0.001,
     "deformation_activation": false,
     "deformation_from_file": false,
-    "deformation_file": "CSD/deformation/Optimale_disp_dlr.csv",
     "save_pkl": false,
     "wing1": {
         "mechanicalCenter": 0.3,
         "mechanicalProperties": {
-            "A": 0.006,
-            "Iy": 6.24624017757337E-07,
-            "Iz": 6.24624017757337E-07,
-            "J": 1.24924803551467E-06
-
+            "A": 0.6,
+            "Iy": 3.645E-05,
+            "Iz": 3.645E-05,
+            "J": 7.290E-05
         },
         "materialProperties": {
-            "E": 12e6,
-            "G": 6e6,
-            "rho": 1190
+            "E": 70e9,
+            "G": 26e9,
+            "rho": 2700
         },
         "FEM": {
-            "mechanicalInterpolationType": "quadratic",
-            "nodesFEM": 4
+            "mechanicalInterpolationType": "linear",
+            "nodesFEM": 10
         }
     },
     "Results": {

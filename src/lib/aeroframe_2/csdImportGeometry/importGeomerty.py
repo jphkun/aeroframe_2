@@ -308,11 +308,11 @@ class CsdGeometryImport:
             logger.debug("+"*20)
             logger.debug("wing relative pos:\n"+str(w_sg_relativePosition))
             logger.debug("mesh relative pos:\n"+str(w_m_relativePoints))
-            if w_N_sc <= w_m_N_nodes:
-                for j in range(w_N_sc):
-                    diff = np.abs(w_m_relativePoints - w_sg_relativePosition[j])
-                    index = np.argmin(diff)
-                    w_m_relativePoints[index] = w_sg_relativePosition[j]
+            # if w_N_sc <= w_m_N_nodes:
+            #     for j in range(w_N_sc):
+            #         diff = np.abs(w_m_relativePoints - w_sg_relativePosition[j])
+            #         index = np.argmin(diff)
+            #         w_m_relativePoints[index] = w_sg_relativePosition[j]
 
             logger.debug("mesh relative pos:\n"+str(w_m_relativePoints))
 
@@ -531,7 +531,7 @@ class CsdGeometryImport:
             logger.debug("fuselage center points:\n"+str(f_m_points))
             logger.debug("fuselage center area:\n"+str(f_m_pointsInitArea))
             logger.debug("fuselage points names:\n"+str(f_m_pointsName))
-            # sys.exit()
+
             self.fs_m_points.append(f_m_points)
             self.fs_m_pointsName.append(f_m_pointsName)
             self.fs_m_pointsInitArea.append(f_m_pointsInitArea)
@@ -753,7 +753,7 @@ class CsdGeometryImport:
                     c = 0
                 # logger.debug("c = "+str(c))
                 ws_identifiers = np.empty((ws_connextionsPoints,5))
-                logger.debug("="*30)
+
                 for j in range(ws_connextionsPoints+1):
                     logger.debug("wingIndex,j = "+str(wingIndex)+" "+str(j))
                     if wingIndex != j:
