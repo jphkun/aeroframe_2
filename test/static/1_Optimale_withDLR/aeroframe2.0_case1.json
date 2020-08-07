@@ -24,7 +24,7 @@
         },
         "FEM": {
             "mechanicalInterpolationType": "linear",
-            "nodesFEM":10
+            "nodesFEM":5
         }
     },
     "wing1": {
@@ -42,7 +42,7 @@
         },
         "FEM": {
             "mechanicalInterpolationType": "linear",
-            "nodesFEM": 15
+            "nodesFEM": 7
         }
     },
     "wing2": {
@@ -60,7 +60,7 @@
         },
         "FEM": {
             "mechanicalInterpolationType": "linear",
-            "nodesFEM": 10
+            "nodesFEM": 5
         }
     },
     "wing3": {
@@ -78,7 +78,7 @@
         },
         "FEM": {
             "mechanicalInterpolationType": "quadratic",
-            "nodesFEM": 5
+            "nodesFEM": 3
         }
     },
     "Results": {

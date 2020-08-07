@@ -31,7 +31,7 @@
 		"results": {
 		    "opt": ["cp"],
 		    "show": false,
-		    "save": false
+		    "save": true
         	}
     	}
 }

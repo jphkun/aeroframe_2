@@ -373,6 +373,7 @@ class Mesh_Def:
         # TODO make it simpler for future use
         
         path = str(settings.paths('f_deformation'))
+        framat = ["framat","Framat","FramAT","framAT"]
         logger.debug("Proceed to shape function selection")
         if settings.settings["deformation_method"] == "shape_1":
             logger.debug(settings.settings["deformation_method"])
@@ -382,6 +383,13 @@ class Mesh_Def:
             self.shape_2(settings)
         elif settings.settings["deformation_method"] == "load_from_csv":
             self.csv_deformation(settings)
+        # elif self.aeroframe["CSD_solver"] in framat:
+        #     ##################################################################
+        #     #
+        #     #   TODO compute all the new points
+        #     #
+        #     ##################################################################
+        #     self.framatConverter()
         else:
             logger.error("No shape function selected")
         # else:

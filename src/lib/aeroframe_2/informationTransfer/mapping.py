@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 
 class mapper:
-    def __init__(self,lattice,vlmdata,csdGeometry):
+    def __init__(self,lattice,vlmdata,csdGeometry,csd):
         # For debug purposes
         plotting = False
         np.set_printoptions(precision=3)
@@ -29,6 +29,7 @@ class mapper:
         self.vlm = lattice
         self.data = vlmdata
         self.geoP = csdGeometry.aircraftNodesPoints
+        self.csd = csd
         # Separates lattice.c into each wing instances
         self.wingsPoints = []
         self.limitsStart = []
@@ -38,15 +39,18 @@ class mapper:
             # Gets the data for separating the wing points
             listing = list(lattice.bookkeeping_by_wing_uid.get(i)[0][1])
             init = listing[0]
+            logger.debug("init = "+str(init))
             N = len(list(lattice.bookkeeping_by_wing_uid.get(i)))-1
             # logger.debug(N)
-            listing = list(lattice.bookkeeping_by_wing_uid.get(i)[N][1])
-            panels = lattice.bookkeeping_by_wing_uid.get(i)[N][2]
+            listing = list(lattice.bookkeeping_by_wing_uid.get(i)[-1][1])
+            panels = lattice.bookkeeping_by_wing_uid.get(i)[-1][2]
             # takes care of last segment
-            if number == 1:
-                end = listing[-1]
-            else:
-                end = listing[-1] + panels
+            # if number == 1:
+            #     end = listing[-1]
+            # else:
+            end = listing[-1] + panels +1
+            logger.debug("number = "+str(number))
+            logger.debug("end = "+str(end))
             self.limitsStart.append(init)
             self.limitsEnd.append(end)
             # Appends the separated points
@@ -57,21 +61,21 @@ class mapper:
             # logger.debug("\n")
             number -= 1
 
-        # Plot for debug purposes
-        if plotting:
-            fig = plt.figure("figure 1")
-            ax = fig.add_subplot(111, projection='3d')
-            for i in range(len(self.wingsPoints)):
-                ax.scatter(self.wingsPoints[i][:,0],
-                            self.wingsPoints[i][:,1],
-                            self.wingsPoints[i][:,2],
-                            label='Wing '+str(i+1))
-            val = 15
-            ax.set_xlim(-val,val)
-            ax.set_ylim(-val,val)
-            ax.set_zlim(-val,val)
-            ax.legend()
-            plt.show()
+        # # Plot for debug purposes
+        # if plotting:
+        #     fig = plt.figure("figure 1")
+        #     ax = fig.add_subplot(111, projection='3d')
+        #     for i in range(len(self.wingsPoints)):
+        #         ax.scatter(self.wingsPoints[i][:,0],
+        #                     self.wingsPoints[i][:,1],
+        #                     self.wingsPoints[i][:,2],
+        #                     label='Wing '+str(i+1))
+        #     val = 15
+        #     ax.set_xlim(-val,val)
+        #     ax.set_ylim(-val,val)
+        #     ax.set_zlim(-val,val)
+        #     ax.legend()
+        #     plt.show()
 
         # Computes transformations matrices
         self.aPoints = self.vlm.c
@@ -100,6 +104,8 @@ class mapper:
             m = self.wingsPoints[i].shape
             m = m[0]
             Q = np.zeros((n,m))
+            logger.debug("n = "+str(n))
+            logger.debug("m = "+str(m))
             for k in range(n):
                 for j in range(m):
                     x1 = self.geoP[i + self.geo.nFuselage][k]
@@ -107,7 +113,10 @@ class mapper:
                     Q[k,j] = self.phi(x1,x2,fun)
             self.A.append(Q.T)
             self.H.append(np.matmul(self.A[i],self.iM[i]))
-
+            logger.debug(self.vlm.c.shape)
+            logger.debug("A "+str(self.A[0].shape))
+            logger.debug("iM"+str(self.iM[0].shape))
+            logger.debug("H "+str(self.H[0].shape))
             # tests the mapping:
             n = self.geoP[i + self.geo.nFuselage].shape
             n = n[0]
@@ -118,33 +127,33 @@ class mapper:
             dza = np.matmul(self.H[i],self.dzsGlob[i])
             self.dzaGlob.append(dza)
 
-        # Plots line
-        if plotting:
-            fig = plt.figure("figure 2")
-            ax = fig.add_subplot(111, projection='3d')
-            for p in range(len(self.wingsPoints)):
-                # ax.scatter(self.geoP[p + self.geo.nFuselage][:,0],
-                #             self.geoP[p + self.geo.nFuselage][:,1],
-                #             self.geoP[p + self.geo.nFuselage][:,2],
-                #             label='beam wing '+str(p+1))
-                # ax.scatter(self.geoP[p + self.geo.nFuselage][:,0],
-                #             self.geoP[p + self.geo.nFuselage][:,1],
-                #             self.geoP[p + self.geo.nFuselage][:,2]+self.dzsGlob[i],
-                            # label='deformed beam wing '+str(p+1))
-                ax.scatter(self.wingsPoints[p][:,0],
-                           self.wingsPoints[p][:,1],
-                           self.wingsPoints[p][:,2],
-                           label='undeformed wing'+str(p+1))
-                ax.scatter(self.wingsPoints[p][:,0],
-                           self.wingsPoints[p][:,1],
-                           self.wingsPoints[p][:,2]+self.dzaGlob[p],
-                           label='deformed wing'+str(p+1))
-            val = 15
-            ax.set_xlim(-val,val)
-            ax.set_ylim(-val,val)
-            ax.set_zlim(-val,val)
-            ax.legend()
-            plt.show()
+        # # Plots line
+        # if plotting:
+        #     fig = plt.figure("figure 2")
+        #     ax = fig.add_subplot(111, projection='3d')
+        #     for p in range(len(self.wingsPoints)):
+        #         # ax.scatter(self.geoP[p + self.geo.nFuselage][:,0],
+        #         #             self.geoP[p + self.geo.nFuselage][:,1],
+        #         #             self.geoP[p + self.geo.nFuselage][:,2],
+        #         #             label='beam wing '+str(p+1))
+        #         # ax.scatter(self.geoP[p + self.geo.nFuselage][:,0],
+        #         #             self.geoP[p + self.geo.nFuselage][:,1],
+        #         #             self.geoP[p + self.geo.nFuselage][:,2]+self.dzsGlob[i],
+        #                     # label='deformed beam wing '+str(p+1))
+        #         ax.scatter(self.wingsPoints[p][:,0],
+        #                    self.wingsPoints[p][:,1],
+        #                    self.wingsPoints[p][:,2],
+        #                    label='undeformed wing'+str(p+1))
+        #         ax.scatter(self.wingsPoints[p][:,0],
+        #                    self.wingsPoints[p][:,1],
+        #                    self.wingsPoints[p][:,2]+self.dzaGlob[p],
+        #                    label='deformed wing'+str(p+1))
+        #     val = 15
+        #     ax.set_xlim(-val,val)
+        #     ax.set_ylim(-val,val)
+        #     ax.set_zlim(-val,val)
+        #     ax.legend()
+        #     plt.show()
 
     def phi(self,x1,x2,fun):
         """
@@ -187,9 +196,9 @@ class mapper:
         self.sfx = []
         self.sfy = []
         self.sfz = []
-        self.afx = []  # self.data.panelwise["fx"]
-        self.afy = []  # self.data.panelwise["fy"]
-        self.afz = []  # self.data.panelwise["fz"]
+        self.afx = []
+        self.afy = []
+        self.afz = []
         # separates froces for each wings
         N = len(self.wingsPoints)
         for i in range(N):
@@ -199,204 +208,98 @@ class mapper:
             self.afy.append(self.data.panelwise["fy"][start:end])
             self.afz.append(self.data.panelwise["fz"][start:end])
         
+        # Computes the forces that act on the structure
         for i in range(N):
             logger.debug("aeroToStructure")
             self.sfx.append(np.matmul(self.H[i].T,self.afx[i]))
             self.sfy.append(np.matmul(self.H[i].T,self.afy[i]))
             self.sfz.append(np.matmul(self.H[i].T,self.afz[i]))
         logger.debug("sfx = \n"+str(self.sfx))
-            # pass
-# xs = np.array([[0,0,0],
-#                [0,1,0],
-#                [0,2,0],
-#                [0,3,0]])
-# n = xs.shape
-
-# # Plots line
-# fig = plt.figure()
-# ax = fig.add_subplot(111, projection='3d')
-# ax.scatter(xs[:,0],xs[:,1],xs[:,2], label='beam')
-
-
-# def phi(x1,x2,eps):
-#     norm = np.linalg.norm(x1-x2)
-#     r = norm
-#     # Gaussian: np.exp(eps*norm)**2
-#     # tin plate: r**2 * np.log(r)
-#     # multiquadratic: (1+(eps*r)**2)**0.5
-#     return (1+(eps*r)**2)**0.5
-
-# # print(xs)
-# # print("\n")
-# # P = np.ones((1,n[0]))
-# # P = np.concatenate((P,xs.T))
-# # # 4xN
-# # print("P")
-# # print(P)
-# # print("\n")
-# # p_shape = P.shape
-
-# eps = 1
-# M = np.empty((n[0],n[0]))
-# for i in range(n[0]):
-#     for j in range(n[0]):
-#         M[i,j] = phi(xs[i],xs[j],eps)        
-# print("M")
-# print(M)
-# print("\n")
-
-# # zeros = np.zeros((p_shape[0],p_shape[0]))
-# # Css1 = np.concatenate((zeros, P.T),axis=0)
-# # print(Css1)
-# # Css2 = np.concatenate((P, M),axis=0)
-# # Css = np.concatenate((Css1,Css2),axis=1)
-
-# # np.set_printoptions(precision=1)
-# # print("Css")
-# # print(Css)
-# # print("\n")
-
-# deltaZs = np.array([0.0,
-#                     0.1,
-#                     0.2,
-#                     0.4])
-# deltaZs = 0.5*deltaZs
-# deltaTxs = np.array([0.0,
-#                      0.1,
-#                      0.2,
-#                      0.4]) 
-# deltaTxs = 0.5*deltaTxs
-
-# eigs = np.linalg.eig(M)
-# print("eigs")
-# print(eigs[0])
-# print("\n")
-# invM = np.linalg.inv(M)
-# print("inv")
-# print(invM)
-# print("\n")
-
-# # _lambda = np.matmul(invM, deltaXs)
-# # print("Lambda")
-# # print(_lambda)
-# # print(_lambda.shape)
-# # print("\n")
-
-# # Plots surface points
-# xa = np.array([[-1,0,0],
-#                [-1,1,0],
-#                [-1,2,0],
-#                [-1,3,0],
-#                [-1,0.5,0],
-#                [-1,1.5,0],
-#                [-1,2.5,0],
-#                [-1,3.5,0],
-#                [ 1,0,0],
-#                [ 1,1,0],
-#                [ 1,2,0],
-#                [ 1,3,0],
-#                [ 1,0.5,0],
-#                [ 1,1.5,0],
-#                [ 1,2.5,0],
-#                [ 1,3.5,0],
-#                [ 0,0,0],
-#                [ 0,1,0],
-#                [ 0,2,0],
-#                [ 0,3,0],
-#                [ 0,0.5,0],
-#                [ 0,1.5,0],
-#                [ 0,2.5,0],
-#                [ 0,3.5,0]])
-# ax.scatter(xa[:,0],xa[:,1],xa[:,2], label='surface')
-# m = xa.shape
-
-# # print("xa")
-# # print(xa)
-# # print("\n")
-# # Q = np.ones((1,m[0]))
-# # Q = np.concatenate((Q,xa.T))
-# # # 4xN
-# # print("Q")
-# # print(Q)
-# # q_shape = Q.shape
-# # print(q_shape)
-# # print("\n")
-# eps = 1
-# As = np.empty((n[0],m[0]))
-# for i in range(n[0]):
-#     for j in range(m[0]):
-#         As[i,j] = phi(xa[i],xa[j],eps)
-
-# print("A")
-# print(As)
-
-# As_shape = As.shape
-# # print(k_shape)
-# # print("\n")
-# # As = np.concatenate((Q.T, K.T),axis=1)
-# # print("As")
-# # print(As.shape)
-# # print(As)
-# H_s = np.matmul(As.T,invM)
-# print("H_s")
-# print(H_s)
-# print("\n")
-# deltaZa = np.matmul(H_s,deltaZs)
-# deltaTxa = np.matmul(H_s,deltaTxs)
-# print("Delta X")
-# print(deltaZa)
-# print("Delta T")
-# print(deltaTxa)
-# print("\n")
-
-# def tranferRotation(p,b,deltaTxa):
-#     # Finds the two closest points
-#     # Computes the vector of the beam
-#     # Computes the distance
-#     # Multiply the distance by deltaTxa
-#     # WARNING: Il faut savoir si il est à gauche ou à droite de la ligne
     
-#     # Finds the two point
-#     N = len(b)
-#     dist = np.empty(N)
-#     for i in range(N):
-#         dist[i] = np.linalg.norm(p-b[i])
-#     index1 = np.argmin(dist)
-#     print("index1",index1)
-#     print("dist 1 = ",dist)
-#     dist[index1] = 1e15
-#     index2 = np.argmin(dist)
-#     print("index2",index2)
-#     print("dist 2 = ",dist)
-    
-#     # Computes the line director vector
-#     u = b[index1]-b[index2]
-#     AB = p-b[index1]
-#     crossProduct = np.cross(AB,u)
+    def structureToAero(self):
+        """
+        """
+        plotting = False
+        self.sux = []
+        self.suy = []
+        self.suz = []
+        self.stx = []
+        self.sty = []
+        self.stz = []
+        
+        self.aux = []
+        self.auy = []
+        self.auz = []
+        self.atx = []
+        self.aty = []
+        self.atz = []
+        # separates froces for each wings
+        self.Us = []
+        self.Ts = []
+        self.Ua = []
+        self.Ta = []
+        # number of beams
+        N = len(self.geoP)
+        logger.debug("N = "+str(N))
+        old = 0
+        
+        for i in range(N):
+            # Number of node for each beams
+            # logger.debug()
+            M = len(self.geoP[i])
+            self.sux.append(self.csd.results.get('tensors').get('comp:U')["ux"][old:old+M])
+            self.suy.append(self.csd.results.get('tensors').get('comp:U')["uy"][old:old+M])
+            self.suz.append(self.csd.results.get('tensors').get('comp:U')["uz"][old:old+M])
+            old += M
+        for i in range(N-self.geo.nFuselage):
+            self.aux.append(np.matmul(self.H[i],self.sux[i+self.geo.nFuselage]))
+            self.auy.append(np.matmul(self.H[i],self.suy[i+self.geo.nFuselage]))
+            self.auz.append(np.matmul(self.H[i],self.suz[i+self.geo.nFuselage]))
+        logger.debug(self.suz[0])
+        logger.debug(self.auz[0])
+        # sys.exit()
+        # Assembles the displacements into a big vector
+        N = len(self.vlm.c)
+        self.displacements = np.empty((N,3))
+        N = len(self.geoP)
+        logger.debug("N = "+str(N))
+        old = 0
+        for i in range(N-self.geo.nFuselage):
+            logger.debug(i+self.geo.nFuselage)
+            M = len(self.aux[i])
+            for j in range(M):
+                self.displacements[old+j][0] = self.aux[i][j]
+                self.displacements[old+j][1] = self.auy[i][j]
+                self.displacements[old+j][2] = self.auz[i][j]
+            old = old + M
+        # Plots
 
-#     if LA.norm(u) == 0: u = 1e10
-#     d = LA.norm(crossProduct)/LA.norm(u)
-#     print("p = ",p)
-#     print("b1 = ",b[index1])
-#     print("b2 = ",b[index2])
-#     print("d = ",d)
-#     print("cross",crossProduct)
-#     print("\n")
-#     if p[0] < b[index1,0]:
-#         dz = d*deltaTxa
-#     else:
-#         dz = -d*deltaTxa
-#     return dz
-# N = len(xa)
-# dz = np.empty(N)
-# for i in range(N):
-#     dz[i] = tranferRotation(xa[i], xs, deltaTxa[i])
-# ax.scatter(xa[:,0],
-#            xa[:,1],
-#            xa[:,2]+deltaZa[:]+dz[:], label='surface deformed')
-# val = 3
-# ax.set_xlim(-val,val)
-# ax.set_ylim(-val,val)
-# ax.set_zlim(-val,val)
-# ax.legend()
-# plt.show()
+        if plotting:
+            fig = plt.figure("figure 2")
+            ax = fig.add_subplot(111, projection='3d')
+            # for p in range(len(self.wingsPoints)):
+            #     ax.scatter(self.wingsPoints[p][:,0],
+            #                 self.wingsPoints[p][:,1],
+            #                 self.wingsPoints[p][:,2],
+            #                 label='undeformed wing'+str(p+1))
+            #     ax.scatter(self.wingsPoints[p][:,0]+self.aux[p],
+            #                 self.wingsPoints[p][:,1]+self.auy[p],
+            #                 self.wingsPoints[p][:,2]+self.auz[p],
+            #                 label='deformed wing'+str(p+1))
+            ax.scatter(self.vlm.c[:,0],
+                        self.vlm.c[:,1],
+                        self.vlm.c[:,2],
+                        label='wing')
+            ax.scatter(self.vlm.c[:,0] + self.displacements[:,0],
+                        self.vlm.c[:,1] + self.displacements[:,1],
+                        self.vlm.c[:,2] + self.displacements[:,2],
+                        label='deformed wing')
+            val = 15
+            ax.set_xlim(-val,val)
+            ax.set_ylim(-val,val)
+            ax.set_zlim(-val,val)
+            ax.legend()
+            plt.show()
+    def deformVLM(self):
+        pass
+            

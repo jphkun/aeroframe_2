@@ -49,17 +49,18 @@ class framat:
         logger.error("="*20)
         
         # TODO add a user input if he wants or not to see the results
-        self.postProcessing()
+        # self.postProcessing()
         logger.error("="*20)
         self.results = self.model.run()
+        self.eraseLoad(tranform)
         # <User space for ('node', 'orientation', 'material', 'cross_section', 'point_load', 'point_mass', 'distr_load', 'nelem')>
-        logger.debug("model material = "+str(self.model.get("material")[0].get("E")))
-        logger.debug("model material = "+str(self.model.get("material")[0].get("E")))
-        logger.debug("model material = "+str(self.model.get("beam")[0].get("node")))
-        logger.debug("Stiffness matrix K = \n"+str(self.results.get('tensors').get('K')))
-        logger.debug("Mass matrix M = \n"+str(self.results.get('tensors').get('M')))
-        logger.debug("Min displacement = "+str(np.min(self.results.get('tensors').get('U'))))
-        logger.debug("Max displacement = "+str(np.max(self.results.get('tensors').get('U'))))
+        # logger.debug("model material = "+str(self.model.get("material")[0].get("E")))
+        # logger.debug("model material = "+str(self.model.get("material")[0].get("E")))
+        # logger.debug("model material = "+str(self.model.get("beam")[0].get("node")))
+        # logger.debug("Stiffness matrix K = \n"+str(self.results.get('tensors').get('K')))
+        # logger.debug("Mass matrix M = \n"+str(self.results.get('tensors').get('M')))
+        # logger.debug("Min displacement = "+str(np.min(self.results.get('tensors').get('U'))))
+        # logger.debug("Max displacement = "+str(np.max(self.results.get('tensors').get('U'))))
 
     def checkResults(self):
         logger.debug(self.results[""])
@@ -185,6 +186,26 @@ class framat:
                 fy = coef*tranform.sfy[i][j]
                 fz = coef*tranform.sfz[i][j]
                 self.beams[i + self.geo.nFuselage].add('point_load', {'at': name, 'load': [fx, fy, fz, 0, 0, 0]})
+
+    def eraseLoad(self,tranform):
+        logger.debug(tranform.afx)
+        
+        # Number of beams
+        N = len(tranform.afx)
+        logger.debug(N)
+        
+        for i in range(N):
+            M = len(self.geo.aircraftNodesPoints[i + self.geo.nFuselage])
+            for j in range(M):
+                name = self.geo.aircraftNodesNames[i + self.geo.nFuselage][j]
+                logger.debug(name)
+                logger.debug(tranform.sfx[i][j])
+                coef = 1
+                fx = coef*tranform.sfx[i][j]
+                fy = coef*tranform.sfy[i][j]
+                fz = coef*tranform.sfz[i][j]
+                self.beams[i + self.geo.nFuselage].add('point_load', {'at': name, 'load': [-fx, -fy, -fz, 0, 0, 0]})
+
 
     def imposeBC(self):
         # ===== BOUNDARY CONDITIONS =====
