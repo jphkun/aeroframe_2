@@ -21,114 +21,130 @@ logger = logging.getLogger(__name__)
 
 class mapper:
     def __init__(self,lattice,vlmdata,csdGeometry):
+        # For debug purposes
+        plotting = False
+        np.set_printoptions(precision=3)
+        # Assembles matrices
         self.geo = csdGeometry
         self.vlm = lattice
         self.data = vlmdata
         self.geoP = csdGeometry.aircraftNodesPoints
-        logger.debug("Lattice shape = "+str(self.vlm.p.shape))
-        logger.debug("Lattice shape = "+str(self.vlm.v.shape))
-        logger.debug("Lattice shape = "+str(self.vlm.c.shape))
-        sys.exit()
-        # assembles all structural points into one vector for ease of use and
-        # computation speed.
-        # if self.geo.nFuselage > 0:
-        #     self.sPoints = self.geoP[1]
-        #     Np = len(self.geoP)-2
-        #     for i in range(Np):
-        #          self.sPoints = np.concatenate((self.sPoints, self.geoP[i+2]))
-        # else:
-        #     self.sPoints = self.geoP[0]
-        #     Np = len(self.geoP)-1
-        #     for i in range(Np):
-        #          self.sPoints = np.concatenate((self.sPoints, self.geoP[i+1]))
-        
+        # Separates lattice.c into each wing instances
+        self.wingsPoints = []
+        self.limitsStart = []
+        self.limitsEnd = []
+        number = len(lattice.bookkeeping_by_wing_uid)
+        for i in lattice.bookkeeping_by_wing_uid:
+            # Gets the data for separating the wing points
+            listing = list(lattice.bookkeeping_by_wing_uid.get(i)[0][1])
+            init = listing[0]
+            N = len(list(lattice.bookkeeping_by_wing_uid.get(i)))-1
+            # logger.debug(N)
+            listing = list(lattice.bookkeeping_by_wing_uid.get(i)[N][1])
+            panels = lattice.bookkeeping_by_wing_uid.get(i)[N][2]
+            # takes care of last segment
+            if number == 1:
+                end = listing[-1]
+            else:
+                end = listing[-1] + panels
+            self.limitsStart.append(init)
+            self.limitsEnd.append(end)
+            # Appends the separated points
+            self.wingsPoints.append(lattice.c[init:end])
+            # logger.debug("Initial position"+str(init))
+            # logger.debug("Final position"+str(listing[-1]))
+            # logger.debug("Final position"+str(end))
+            # logger.debug("\n")
+            number -= 1
+
+        # Plot for debug purposes
+        if plotting:
+            fig = plt.figure("figure 1")
+            ax = fig.add_subplot(111, projection='3d')
+            for i in range(len(self.wingsPoints)):
+                ax.scatter(self.wingsPoints[i][:,0],
+                            self.wingsPoints[i][:,1],
+                            self.wingsPoints[i][:,2],
+                            label='Wing '+str(i+1))
+            val = 15
+            ax.set_xlim(-val,val)
+            ax.set_ylim(-val,val)
+            ax.set_zlim(-val,val)
+            ax.legend()
+            plt.show()
+
+        # Computes transformations matrices
         self.aPoints = self.vlm.c
-        plotting = False
-        
-        self.nBeams = len(self.geoP)
-        self.M = []
         self.iM= []
         self.A = []
         self.H = []
-        for i in range(self.nBeams):
-
-            # logger.debug("sPoint = \n" +str(self.sPoints))
-            # logger.debug("vlm.c = \n" + str(self.vlm.c))
-            # G,TPS,HMQ,HIMQ,C0,C2,C4,C6,EH
+        # For debugging
+        self.dzsGlob = []
+        self.dzaGlob = []
+        for i in range(len(self.wingsPoints)):
+            # Computes the matrix M and then invert it
+            # permitted choices are: G,TPS,HMQ,HIMQ,C0,C2,C4,C6,EH see below
+            # the definition
             fun = "C2"
-            logger.debug(type(self.geoP[i]))
-            # Computes the matrix M
-            n = self.geoP[i].shape
+            n = self.geoP[i + self.geo.nFuselage].shape
             n = n[0]
-            Mbeam = np.empty((n,n))
+            Mbeam = np.zeros((n,n))
             for k in range(n):
                 for j in range(n):
-                    x1 = self.geoP[i][k]
-                    x2 = self.geoP[i][j]
+                    x1 = self.geoP[i + self.geo.nFuselage][k]
+                    x2 = self.geoP[i + self.geo.nFuselage][j]
                     Mbeam[k,j] = self.phi(x1,x2,fun)
-            self.M.append(Mbeam)
-            
-            # logger.debug("M = "+str(self.M))
-            # sys.exit()
-            # np.set_printoptions(precision=1)
-            # logger.debug(M)
-            self.iM.append(np.linalg.inv(self.M[i]))
+            self.iM.append(np.linalg.inv(Mbeam))
+
             # Computes the matrix Q
-            m = self.aPoints.shape
+            m = self.wingsPoints[i].shape
             m = m[0]
-            Q = np.empty((n,m))
+            Q = np.zeros((n,m))
             for k in range(n):
                 for j in range(m):
-                    x1 = self.geoP[i][k]
-                    x2 = self.aPoints[j]
+                    x1 = self.geoP[i + self.geo.nFuselage][k]
+                    x2 = self.wingsPoints[i][j]
                     Q[k,j] = self.phi(x1,x2,fun)
-            
             self.A.append(Q.T)
-            # logger.debug("Q shape:"+str(Q.shape))
-            # logger.debug("A shape:"+str(A.shape))
-            np.set_printoptions(precision=1)
-            # logger.debug("M = \n"+str(M))
-            # logger.debug("inv(M) = \n"+str(iM))
-            # logger.debug("A = \n"+str(A))
-        
-            # Computes coupling matrix H
             self.H.append(np.matmul(self.A[i],self.iM[i]))
-            # logger.debug("H = \n"+str(self.H))
+
             # tests the mapping:
-            # dzs = np.empty(n)
-            # for i in range(n):
-            #     dzs[i] = 0.01*self.sPoints[i,1]**2
-            # dza = np.matmul(self.H,dzs)
-        
-        # # # Plots line
-        # # if plotting:
-        # #     fig = plt.figure()
-        # #     ax = fig.add_subplot(111, projection='3d')
-        # #     ax.scatter(self.sPoints[:,0],
-        # #                self.sPoints[:,1],
-        # #                self.sPoints[:,2],
-        # #                label='beam')
-        # #     ax.scatter(self.sPoints[:,0],
-        # #                self.sPoints[:,1],
-        # #                self.sPoints[:,2]+dzs,
-        # #                label='deformed beam')
-        # #     ax.scatter(self.aPoints[:,0],
-        # #                self.aPoints[:,1],
-        # #                self.aPoints[:,2],
-        # #                label='VLM')
-        # #     ax.scatter(self.aPoints[:,0],
-        # #                self.aPoints[:,1],
-        # #                self.aPoints[:,2]+dza,
-        # #                label='deformed VLM')
-        # #     val = 15
-        # #     ax.set_xlim(-val,val)
-        # #     ax.set_ylim(-val,val)
-        # #     ax.set_zlim(-val,val)
-        # #     ax.legend()
-        # #     plt.show()
+            n = self.geoP[i + self.geo.nFuselage].shape
+            n = n[0]
+            dzs = np.zeros(n)
+            for k in range(n):
+                dzs[k] = 0.01 * self.geoP[i + self.geo.nFuselage][k,1]**2
+            self.dzsGlob.append(dzs)
+            dza = np.matmul(self.H[i],self.dzsGlob[i])
+            self.dzaGlob.append(dza)
 
-        # sys.exit()
-
+        # Plots line
+        if plotting:
+            fig = plt.figure("figure 2")
+            ax = fig.add_subplot(111, projection='3d')
+            for p in range(len(self.wingsPoints)):
+                # ax.scatter(self.geoP[p + self.geo.nFuselage][:,0],
+                #             self.geoP[p + self.geo.nFuselage][:,1],
+                #             self.geoP[p + self.geo.nFuselage][:,2],
+                #             label='beam wing '+str(p+1))
+                # ax.scatter(self.geoP[p + self.geo.nFuselage][:,0],
+                #             self.geoP[p + self.geo.nFuselage][:,1],
+                #             self.geoP[p + self.geo.nFuselage][:,2]+self.dzsGlob[i],
+                            # label='deformed beam wing '+str(p+1))
+                ax.scatter(self.wingsPoints[p][:,0],
+                           self.wingsPoints[p][:,1],
+                           self.wingsPoints[p][:,2],
+                           label='undeformed wing'+str(p+1))
+                ax.scatter(self.wingsPoints[p][:,0],
+                           self.wingsPoints[p][:,1],
+                           self.wingsPoints[p][:,2]+self.dzaGlob[p],
+                           label='deformed wing'+str(p+1))
+            val = 15
+            ax.set_xlim(-val,val)
+            ax.set_ylim(-val,val)
+            ax.set_zlim(-val,val)
+            ax.legend()
+            plt.show()
 
     def phi(self,x1,x2,fun):
         """
@@ -167,38 +183,28 @@ class mapper:
 
     
     def aeroToStructure(self):
+       
         self.sfx = []
         self.sfy = []
         self.sfz = []
-        for i in range(self.nBeams):
+        self.afx = []  # self.data.panelwise["fx"]
+        self.afy = []  # self.data.panelwise["fy"]
+        self.afz = []  # self.data.panelwise["fz"]
+        # separates froces for each wings
+        N = len(self.wingsPoints)
+        for i in range(N):
+            start = self.limitsStart[i]
+            end = self.limitsEnd[i]
+            self.afx.append(self.data.panelwise["fx"][start:end])
+            self.afy.append(self.data.panelwise["fy"][start:end])
+            self.afz.append(self.data.panelwise["fz"][start:end])
+        
+        for i in range(N):
             logger.debug("aeroToStructure")
-            afx = self.data.panelwise["fx"]
-            afy = self.data.panelwise["fy"]
-            afz = self.data.panelwise["fz"]
-            # nx = self.data.panelwise["fx"].shape
-            # ny = self.data.panelwise["fy"].shape
-            # nz = self.data.panelwise["fz"].shape
-            # logger.debug("nx = "+str(nx))
-            # logger.debug("ny = "+str(ny))
-            # logger.debug("nz = "+str(nz))
-            # N = self.vlm.c.shape
-            # logger.debug("N = "+str(N))
-            self.sfx.append(np.matmul(self.H[i].T,afx))
-            self.sfy.append(np.matmul(self.H[i].T,afy))
-            self.sfz.append(np.matmul(self.H[i].T,afz))
-            # snx = self.sfx[i].shape
-            # sny = self.sfy[i].shape
-            # snz = self.sfz[i].shape
-            # logger.debug("afx = \n"+str(afx))
-            # logger.debug("afy = \n"+str(afy))
-            # logger.debug("afz = \n"+str(afz))
-            # logger.debug("sfx = \n"+str(self.sfx))
-            # logger.debug("sfy = \n"+str(self.sfy))
-            # logger.debug("sfz = \n"+str(self.sfz))
-            # logger.debug(snx)
-            # logger.debug(sny)
-            # logger.debug(snz)
-            # sys.exit()
+            self.sfx.append(np.matmul(self.H[i].T,self.afx[i]))
+            self.sfy.append(np.matmul(self.H[i].T,self.afy[i]))
+            self.sfz.append(np.matmul(self.H[i].T,self.afz[i]))
+        logger.debug("sfx = \n"+str(self.sfx))
             # pass
 # xs = np.array([[0,0,0],
 #                [0,1,0],

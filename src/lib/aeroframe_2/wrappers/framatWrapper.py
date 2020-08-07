@@ -5,8 +5,10 @@ Created on Wed Jul 29 09:54:08 2020
 
 @author: Jean-Philippe Kuntzer
 
-# TODO: clamp the wings
+# OK TODO: clamp the wings
 # TODO: correct the sections
+# TODO: correct the mesh points
+# TODO: correct force
 """
 import logging
 import numpy as np
@@ -42,26 +44,15 @@ class framat:
         self.computesCsdMesh()
 
     def run(self,tranform):
+        self.imposeBC()
         self.applysLoad(tranform)
         logger.error("="*20)
-        self.imposeBC()
+        
         # TODO add a user input if he wants or not to see the results
         self.postProcessing()
         logger.error("="*20)
         self.results = self.model.run()
         # <User space for ('node', 'orientation', 'material', 'cross_section', 'point_load', 'point_mass', 'distr_load', 'nelem')>
-        # logger.debug("model A = "+str(self.model.get("cross_section")[0].get("A")))
-        # logger.debug("model Iy = "+str(self.model.get("cross_section")[0].get("Iy")))
-        # logger.debug("model Iz = "+str(self.model.get("cross_section")[0].get("Iz")))
-        # logger.debug("model J = "+str(self.model.get("cross_section")[0].get("J")))
-        # logger.debug("model A = "+str(self.model.get("cross_section")[10].get("A")))
-        # logger.debug("model Iy = "+str(self.model.get("cross_section")[10].get("Iy")))
-        # logger.debug("model Iz = "+str(self.model.get("cross_section")[10].get("Iz")))
-        # logger.debug("model J = "+str(self.model.get("cross_section")[10].get("J")))
-        # logger.debug("model A = "+str(self.model.get("cross_section")[-1].get("A")))
-        # logger.debug("model Iy = "+str(self.model.get("cross_section")[-1].get("Iy")))
-        # logger.debug("model Iz = "+str(self.model.get("cross_section")[-1].get("Iz")))
-        # logger.debug("model J = "+str(self.model.get("cross_section")[-1].get("J")))
         logger.debug("model material = "+str(self.model.get("material")[0].get("E")))
         logger.debug("model material = "+str(self.model.get("material")[0].get("E")))
         logger.debug("model material = "+str(self.model.get("beam")[0].get("node")))
@@ -119,7 +110,7 @@ class framat:
         """
         """
         self.beams = []
-        
+        np.set_printoptions(precision=3)
         # Number of beams
         N = len(self.geo.aircraftNodesPoints)
         for i in range(N):
@@ -131,34 +122,38 @@ class framat:
                 point = self.geo.aircraftNodesPoints[i][j].tolist()
                 logger.debug("point = "+str(point))
                 name = self.geo.aircraftNodesNames[i][j]
+                logger.debug("name = "+str(name))
                 self.beams[i].add("node",point,uid=name)
             
             name1 = self.geo.aircraftNodesNames[i][0]
             name2 = self.geo.aircraftNodesNames[i][-1]
             uid = name1 + "_cross_section"
+            logger.debug("uid = "+str(uid))
+            logger.debug("name 1 = "+str(name1))
+            logger.debug("name 2 = "+str(name2))
             self.beams[i].add('cross_section', {'from': name1,
                                                 'to': name2,
                                                 'uid': uid})
-            logger.debug("uid = "+str(uid))
+            # sys.exit()
             
-            # WARNING this bit of code should be indented one more time.
-            # It should be nested inside the second for loop
-            # # Adds the cross_section feature to each points
-            # if j+1 < int(np.floor(M/2)) + 2:
-                
-            #     name1 = self.geo.aircraftNodesNames[i][j]
-            #     name2 = self.geo.aircraftNodesNames[i][j+1]
-            #     uid = name2 + "_cross_section"
-            #     self.beams[i].add('cross_section', {'from': name1,
-            #                                         'to': name2,
-            #                                         'uid': uid})
-            # else:
-            #     name1 = self.geo.aircraftNodesNames[i][j-1]
-            #     name2 = self.geo.aircraftNodesNames[i][j]
-            #     uid = name1 + "_cross_section"
-            #     self.beams[i].add('cross_section', {'from': name1,
-            #                                         'to': name2,
-            #                                         'uid': uid})
+                # # WARNING this bit of code should be indented one more time.
+                # # It should be nested inside the second for loop
+                # # Adds the cross_section feature to each points
+                # if j+1 < int(np.floor(M/2)) + 2:
+                    
+                #     name1 = self.geo.aircraftNodesNames[i][j]
+                #     name2 = self.geo.aircraftNodesNames[i][j+1]
+                #     uid = name2 + "_cross_section"
+                #     self.beams[i].add('cross_section', {'from': name1,
+                #                                         'to': name2,
+                #                                         'uid': uid})
+                # else:
+                #     name1 = self.geo.aircraftNodesNames[i][j-1]
+                #     name2 = self.geo.aircraftNodesNames[i][j]
+                #     uid = name1 + "_cross_section"
+                #     self.beams[i].add('cross_section', {'from': name1,
+                #                                         'to': name2,
+                #                                         'uid': uid})
             
             # Would be perfect but doesn't work
             # self.beams[i].add('cross_section', {'at': name,'uid': uid})
@@ -173,82 +168,23 @@ class framat:
             self.beams[i].add('orientation',{'from': a, 'to': b, 'up': [0, 0, 1]})
 
     def applysLoad(self,tranform):
-        if self.geo.nFuselage > 0:
-            # Number of beams
-            N = len(self.geo.aircraftNodesPoints)
-            for i in range(N):
-                # Number of beams in point
-                if i != 0:
-                    M = len(self.geo.aircraftNodesPoints[i])
-                    for j in range(M):
-                        name = self.geo.aircraftNodesNames[i][j]
-                        coef = 1e-7
-                        fx = coef * tranform.sfx[i-1][j]
-                        fy = coef * tranform.sfy[i-1][j]
-                        fz = coef * tranform.sfz[i-1][j]
-                        self.beams[i].add('point_load', {'at': name, 
-                                                'load': [fx, fy, fz, 0, 0, 0]})
-            # sys.exit()
-        else:
-            N = len(self.geo.aircraftNodesPoints)
-            for i in range(N):
-                M = len(self.geo.aircraftNodesPoints[i])
-                for j in range(M):
-                    name = self.geo.aircraftNodesNames[i][j]
-                    coef = 1  # 1e-4
-                    fx = coef * tranform.sfx[i][j]
-                    fy = coef * tranform.sfy[i][j]
-                    fz = coef * tranform.sfz[i][j]
-                    self.beams[i].add('point_load', {'at': name, 
-                                            'load': [fx, fy, fz, 0, 0, 0]})
-
-
-                # name = self.geo.aircraftNodesNames[i][-1]
-                # coef = 1
-                # fx = coef * tranform.sfx[i+j]
-                # fy = coef * tranform.sfy[i+j]
-                # fz = coef * tranform.sfz[i+j]
-                # self.beams[i].add('point_load', {'at': name, 
-                #                         'load': [fx, fy, fz, 0, 0, 0]})
-
-        # else:
-        #     N = len(self.geo.aircraftNodesPoints)
-        #     for i in range(N):
-        #         M = len(self.geo.aircraftNodesPoints[i])
-        #         for j in range(M):
-        #             name = self.geo.aircraftNodesNames[i][j]
-        #             coef = 1  # 1e-4
-        #             fx = coef * tranform.sfx[i+j]
-        #             fy = coef * tranform.sfy[i+j]
-        #             fz = coef * tranform.sfz[i+j]
-        #             self.beams[i].add('point_load', {'at': name, 
-        #                                     'load': [fx, fy, fz, 0, 0, 0]})
-        # if self.geo.nFuselage > 0:
-        #     name1 = self.geo.aircraftNodesNames[1][0]
-        #     name2 = self.geo.aircraftNodesNames[1][-1]
-        #     index = 1
-        #     self.beams[index].add('distr_load', {'from': name1,
-        #                         'to': name2,
-        #                         'load': [0, 0, -2e-3, 0, 0, 0]})
-        #     name1 = self.geo.aircraftNodesNames[2][0]
-        #     name2 = self.geo.aircraftNodesNames[2][-1]
-        #     index = 2
-        #     self.beams[index].add('distr_load', {'from': name1,
-        #                         'to': name2,
-        #                         'load': [0, 0, 0.5, 0, 0, 0]})
-        #     name1 = self.geo.aircraftNodesNames[3][0]
-        #     name2 = self.geo.aircraftNodesNames[3][-1]
-        #     index = 3
-        #     self.beams[index].add('distr_load', {'from': name1,
-        #                         'to': name2,
-        #                         'load': [0, 0, 0, 0, 0, 0]})
-        # else:
-        #     name1 = self.geo.aircraftNodesNames[0][0]
-        #     name2 = self.geo.aircraftNodesNames[0][-1]
-        #     index = 0
-        #     self.beams[index].add('distr_load', {'from': name1,
-        #                         'to': name2,
-        #                         'load': [0, 0, 2, 0, 0, 0]})
+        logger.debug(tranform.afx)
+        
+        # Number of beams
+        N = len(tranform.afx)
+        logger.debug(N)
+        
+        for i in range(N):
+            M = len(self.geo.aircraftNodesPoints[i + self.geo.nFuselage])
+            for j in range(M):
+                name = self.geo.aircraftNodesNames[i + self.geo.nFuselage][j]
+                logger.debug(name)
+                logger.debug(tranform.sfx[i][j])
+                coef = 1
+                fx = coef*tranform.sfx[i][j]
+                fy = coef*tranform.sfy[i][j]
+                fz = coef*tranform.sfz[i][j]
+                self.beams[i + self.geo.nFuselage].add('point_load', {'at': name, 'load': [fx, fy, fz, 0, 0, 0]})
 
     def imposeBC(self):
         # ===== BOUNDARY CONDITIONS =====
@@ -278,8 +214,8 @@ class framat:
                 bc.add('connect',{'node1': name1,
                                   'node2': name2,
                                   'fix':['all']})
-                logger.debug("Connects node"+name1)
-                logger.debug("connects node"+name2)
+                logger.debug("Connects node: "+name1)
+                logger.debug("connects node: "+name2)
                 logger.debug("="*30)
         else:
             name = "w_n_clamped"
@@ -292,5 +228,5 @@ class framat:
         pp = self.model.set_feature('post_proc')
         pp.set('plot_settings', {'show': True})
         # pp.add('plot', ['undeformed', 'deformed', 'node_uids', 'nodes', 'forces'])
-        pp.add('plot', ['undeformed', 'deformed', 'nodes', 'forces'])
+        pp.add('plot', ['undeformed', 'deformed', 'nodes',])
         

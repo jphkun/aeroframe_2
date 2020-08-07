@@ -196,9 +196,11 @@ def standard_run(args):
     # Computes the deformation parameters.
     # Deforms the VLM mesh if the deformation is imported from a file
     settings, lattice, csd, tranform = meshPreprocessing(args,aeroframe_2_settings,settings,lattice,csdGeometry,vlmdata)
-
+    
     # Computes the first CFD solution
     lattice, vlmdata = cfdComputation(lattice, vlmdata, settings, aircraft, cur_state, state)
+
+
 
     # saves results to pkl file if asked.
     saveCFDresults(args,aeroframe_2_settings,lattice,vlmdata)
@@ -206,7 +208,7 @@ def standard_run(args):
     # Panelwise forces are accessed this way
     # logger.debug(vlmdata.panelwise["fx"])
     # logger.debug(vlmdata.panelwise["fy"])
-    logger.debug(type(vlmdata.panelwise["fz"]))
+    # logger.debug(type(vlmdata.panelwise["fz"]))
 
     # Computes the first CSD solution
     csdComputations(tranform,csd)

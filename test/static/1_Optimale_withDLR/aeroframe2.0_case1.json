@@ -12,10 +12,10 @@
     "save_pkl": false,
     "fuselage": {
         "mechanicalProperties": {
-            "A": 0.032,
-            "Iy": 0.004,
-            "Iz":  0.004,
-            "J":  0.008
+            "A": 0.006,
+            "Iy": 3.65E-01,
+            "Iz": 3.65E-01,
+            "J": 7.29E-01
         },
         "materialProperties": {
             "E": 70e9,
@@ -24,16 +24,16 @@
         },
         "FEM": {
             "mechanicalInterpolationType": "linear",
-            "nodesFEM":20
+            "nodesFEM":10
         }
     },
     "wing1": {
         "mechanicalCenter": 0.4,
         "mechanicalProperties": {
             "A": 0.006,
-            "Iy": 3.65E-05,
-            "Iz": 3.65E-05,
-            "J": 7.29E-05
+            "Iy": 3.65E-02,
+            "Iz": 3.65E-02,
+            "J": 7.29E-02
         },
         "materialProperties": {
             "E": 70e9,
@@ -42,16 +42,16 @@
         },
         "FEM": {
             "mechanicalInterpolationType": "linear",
-            "nodesFEM": 10
+            "nodesFEM": 15
         }
     },
     "wing2": {
         "mechanicalCenter": 0.4,
         "mechanicalProperties": {
             "A": 0.006,
-            "Iy": 3.65E-05,
-            "Iz": 3.65E-05,
-            "J": 7.29E-05
+            "Iy": 3.65E-02,
+            "Iz": 3.65E-02,
+            "J": 7.29E-02
         },
         "materialProperties": {
             "E": 70e9,
