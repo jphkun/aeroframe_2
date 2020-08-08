@@ -38,21 +38,26 @@ class framat:
 
     def mesh(self):
         # Does all the necessary step to get a useful mesh
+        logger.info("FramAT meshing process started")
         self.loadMaterials()
-        logger.error("="*20)
         self.loadGeometryPropertiesFromJson()
         self.computesCsdMesh()
+        logger.info("FramAT mesh completed")
 
     def run(self,tranform):
+        """
+        Function that applies BC, apply the external loads.
+        """
         self.imposeBC()
         self.applysLoad(tranform)
-        logger.error("="*20)
-        
         # TODO add a user input if he wants or not to see the results
         # self.postProcessing()
-        logger.error("="*20)
+        logger.debug("Framat solver stars computing")
+        logger.debug(tranform.afx)
+        logger.debug(self.geo)
         self.results = self.model.run()
         self.eraseLoad(tranform)
+        logger.debug("Framat solver finised computing")
         # <User space for ('node', 'orientation', 'material', 'cross_section', 'point_load', 'point_mass', 'distr_load', 'nelem')>
         # logger.debug("model material = "+str(self.model.get("material")[0].get("E")))
         # logger.debug("model material = "+str(self.model.get("material")[0].get("E")))
@@ -135,7 +140,7 @@ class framat:
             self.beams[i].add('cross_section', {'from': name1,
                                                 'to': name2,
                                                 'uid': uid})
-            # sys.exit()
+
             
                 # # WARNING this bit of code should be indented one more time.
                 # # It should be nested inside the second for loop

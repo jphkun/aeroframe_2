@@ -20,30 +20,30 @@ logger = logging.getLogger(__name__)
 
 
 class mapper:
-    def __init__(self,lattice,vlmdata,csdGeometry,csd):
+    def __init__(self,pytornadoVariables,preMeshedStructre,csdSolverClassVar):
         # For debug purposes
         plotting = False
         np.set_printoptions(precision=3)
         # Assembles matrices
-        self.geo = csdGeometry
-        self.vlm = lattice
-        self.data = vlmdata
-        self.geoP = csdGeometry.aircraftNodesPoints
-        self.csd = csd
+        self.geo = preMeshedStructre
+        self.lattice = pytornadoVariables[0]
+        self.VLMdata = pytornadoVariables[1]
+        self.geoP = preMeshedStructre.aircraftNodesPoints
+        self.csd = csdSolverClassVar
         # Separates lattice.c into each wing instances
         self.wingsPoints = []
         self.limitsStart = []
         self.limitsEnd = []
-        number = len(lattice.bookkeeping_by_wing_uid)
-        for i in lattice.bookkeeping_by_wing_uid:
+        number = len(self.lattice.bookkeeping_by_wing_uid)
+        for i in self.lattice.bookkeeping_by_wing_uid:
             # Gets the data for separating the wing points
-            listing = list(lattice.bookkeeping_by_wing_uid.get(i)[0][1])
+            listing = list(self.lattice.bookkeeping_by_wing_uid.get(i)[0][1])
             init = listing[0]
             logger.debug("init = "+str(init))
-            N = len(list(lattice.bookkeeping_by_wing_uid.get(i)))-1
+            N = len(list(self.lattice.bookkeeping_by_wing_uid.get(i)))-1
             # logger.debug(N)
-            listing = list(lattice.bookkeeping_by_wing_uid.get(i)[-1][1])
-            panels = lattice.bookkeeping_by_wing_uid.get(i)[-1][2]
+            listing = list(self.lattice.bookkeeping_by_wing_uid.get(i)[-1][1])
+            panels = self.lattice.bookkeeping_by_wing_uid.get(i)[-1][2]
             # takes care of last segment
             # if number == 1:
             #     end = listing[-1]
@@ -54,7 +54,7 @@ class mapper:
             self.limitsStart.append(init)
             self.limitsEnd.append(end)
             # Appends the separated points
-            self.wingsPoints.append(lattice.c[init:end])
+            self.wingsPoints.append(self.lattice.c[init:end])
             # logger.debug("Initial position"+str(init))
             # logger.debug("Final position"+str(listing[-1]))
             # logger.debug("Final position"+str(end))
@@ -78,7 +78,7 @@ class mapper:
         #     plt.show()
 
         # Computes transformations matrices
-        self.aPoints = self.vlm.c
+        self.aPoints = self.lattice.c
         self.iM= []
         self.A = []
         self.H = []
@@ -113,7 +113,7 @@ class mapper:
                     Q[k,j] = self.phi(x1,x2,fun)
             self.A.append(Q.T)
             self.H.append(np.matmul(self.A[i],self.iM[i]))
-            logger.debug(self.vlm.c.shape)
+            logger.debug(self.lattice.c.shape)
             logger.debug("A "+str(self.A[0].shape))
             logger.debug("iM"+str(self.iM[0].shape))
             logger.debug("H "+str(self.H[0].shape))
@@ -192,30 +192,33 @@ class mapper:
 
     
     def aeroToStructure(self):
-       
+        """
+        Compute the forces for the structure solver from the CFD solver.
+        """
+        logger.debug("aeroToStructure")       
         self.sfx = []
         self.sfy = []
         self.sfz = []
         self.afx = []
         self.afy = []
         self.afz = []
+
         # separates froces for each wings
         N = len(self.wingsPoints)
         for i in range(N):
             start = self.limitsStart[i]
             end = self.limitsEnd[i]
-            self.afx.append(self.data.panelwise["fx"][start:end])
-            self.afy.append(self.data.panelwise["fy"][start:end])
-            self.afz.append(self.data.panelwise["fz"][start:end])
-        
+            self.afx.append(self.VLMdata.panelwise["fx"][start:end])
+            self.afy.append(self.VLMdata.panelwise["fy"][start:end])
+            self.afz.append(self.VLMdata.panelwise["fz"][start:end])
+
         # Computes the forces that act on the structure
         for i in range(N):
-            logger.debug("aeroToStructure")
             self.sfx.append(np.matmul(self.H[i].T,self.afx[i]))
             self.sfy.append(np.matmul(self.H[i].T,self.afy[i]))
             self.sfz.append(np.matmul(self.H[i].T,self.afz[i]))
         logger.debug("sfx = \n"+str(self.sfx))
-    
+
     def structureToAero(self):
         """
         """
@@ -259,7 +262,7 @@ class mapper:
         logger.debug(self.auz[0])
         # sys.exit()
         # Assembles the displacements into a big vector
-        N = len(self.vlm.c)
+        N = len(self.lattice.c)
         self.displacements = np.empty((N,3))
         N = len(self.geoP)
         logger.debug("N = "+str(N))
@@ -286,13 +289,13 @@ class mapper:
             #                 self.wingsPoints[p][:,1]+self.auy[p],
             #                 self.wingsPoints[p][:,2]+self.auz[p],
             #                 label='deformed wing'+str(p+1))
-            ax.scatter(self.vlm.c[:,0],
-                        self.vlm.c[:,1],
-                        self.vlm.c[:,2],
+            ax.scatter(self.lattice.c[:,0],
+                        self.lattice.c[:,1],
+                        self.lattice.c[:,2],
                         label='wing')
-            ax.scatter(self.vlm.c[:,0] + self.displacements[:,0],
-                        self.vlm.c[:,1] + self.displacements[:,1],
-                        self.vlm.c[:,2] + self.displacements[:,2],
+            ax.scatter(self.lattice.c[:,0] + self.displacements[:,0],
+                        self.lattice.c[:,1] + self.displacements[:,1],
+                        self.lattice.c[:,2] + self.displacements[:,2],
                         label='deformed wing')
             val = 15
             ax.set_xlim(-val,val)

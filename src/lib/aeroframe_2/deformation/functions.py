@@ -13,6 +13,7 @@ from numpy import linalg as LA
 from numpy.core.umath_tests import inner1d
 from scipy.spatial.transform import Rotation as R
 from scipy.interpolate import Rbf
+import sys
 
 
 logger = logging.getLogger(__name__)
@@ -20,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 class Mesh_Def:
 
-    def __init__(self, lattice,file=None):
+    def __init__(self,args,aeroframeSettings,lattice):
         """
         *_p : lattice points
         *r_ p: lattice points reshaped array for ease of use
@@ -32,16 +33,11 @@ class Mesh_Def:
         f_a : final area of each individual panels
         u_* : defomation of the given type of point. follows the same naming
               pattern as for the previous 5 items
-        ----------
-        lattice : TYPE
-            DESCRIPTION.
-
-        Returns
-        -------
-        None.
-
         """
-        self.file = file
+        #         
+        self.args = args
+        self.aeroframeSettings = aeroframeSettings
+        self.lattice = lattice
         
         # stores lattice shapes (only theses two are needed, the others are
         # of identical shape)
@@ -250,8 +246,64 @@ class Mesh_Def:
         # s = self.f_v.shape
         # var = self.f_v.reshape(s[0]*s[1],s[2]) - self.i_v.reshape(s[0]*s[1],s[2])
         # logger.debug(np.max(var[:,0]))
+    
+    def framatDeformation(self,transform):
+        x = self.i_c[:,0]
+        y = self.i_c[:,1]
+        z = self.i_c[:,2]
+        logger.debug("x: \n"+str(x))
+        logger.debug("tranform.uax = \n"+str(transform.aux))
 
-    def csv_deformation(self,settings):
+        d = transform.displacements
+        
+        logger.debug("x.shape = "+str(x.shape))
+        logger.debug("y.shape = "+str(y.shape))
+        logger.debug("z.shape = "+str(z.shape))
+        logger.debug("d.shape = "+str(d.shape))
+        logger.debug(transform.displacements)
+        # sys.exit()
+        # s = dataset.shape
+
+        # Sorts out which type of FEM simulation was done (beam or shell)
+        # TODO: separate the airplane if half using the x axis. At the moment
+        #       there is an issue with the center of the airplane.
+        
+        logger.info("Input deformation data is of type surface")
+        # interpolates the points (lattice.p)
+        rbfi = Rbf(x,y,z,d,function='linear',mode="N-D")
+        self.u_p = rbfi(self.ir_p[:,0],self.ir_p[:,1],self.ir_p[:,2])
+
+        # interpolates the vortex horseshoe points (lattice.v)
+        for i in range(len(self.ir_v)):
+            if (i % 4) == 1:
+                self.u_v[i] = rbfi(self.ir_v[i,0],
+                                    self.ir_v[i,1],
+                                    self.ir_v[i,2])
+                self.u_v[i-1] = self.u_v[i]
+            elif (i % 4) == 2:
+                self.u_v[i] = rbfi(self.ir_v[i,0],
+                                    self.ir_v[i,1],
+                                    self.ir_v[i,2])
+                self.u_v[i+1] = self.u_v[i]
+        # interpolates the collocation points (lattice.c)
+        self.u_c = rbfi(self.i_c[:,0],self.i_c[:,1],self.i_c[:,2])
+
+        # interpolates the bound leg mid-points (lattice.blm)
+        self.u_b = rbfi(self.i_b[:,0],self.i_b[:,1],self.i_b[:,2])
+        
+        # Feed values to the deformed points (f for final).
+        self.fr_p = self.ir_p + self.u_p
+        self.f_p = self.i_p + self.u_p.reshape(self.s_p[0],
+                                                self.s_p[1],
+                                                self.s_p[2])
+        self.fr_v = self.ir_v + self.u_v
+        self.f_v = self.i_v + self.u_v.reshape(self.s_v[0],
+                                                self.s_v[1],
+                                                self.s_v[2])
+        self.f_c = self.i_c + self.u_c
+        self.f_b = self.i_b + self.u_b
+    
+    def CSVDeformation(self):
         """
         Loads a displacement file of format .csv and up
 
@@ -265,11 +317,12 @@ class Mesh_Def:
               with beams.
         """
         logger.debug("=== csv deformation function called ===")
-        path = self.file
+        # Path of the deformation file from the current working directory
+        pathFromCWD = self.aeroframeSettings["deformation_file"]
+        path = self.args.cwd + "/" + pathFromCWD
+        logger.debug("Input deformation csv file path is: \n"+str(path))
         if path is None:
             logger.error("NO DEFORMATION FILE")
-        
-        logger.debug(path)
         try:
             dataset = pd.read_csv(path)
             dataset = dataset.to_numpy()
@@ -282,8 +335,7 @@ class Mesh_Def:
 
             # angle = angle - corrector
         except FileNotFoundError:
-            logger.error("No such deformation file or directiory" + str(path))
-
+            logger.error("No such deformation file or directiory:\n" + str(path))
         # h = list(disp.columns.values)
         # N_headers = len(h)
 
@@ -337,7 +389,7 @@ class Mesh_Def:
         # self.f_b[np.abs(self.f_b) < val] = 0
         # # self.f_a[np.abs(self.f_a) < val] = val
 
-    def deformation(self,settings):
+    def deformation(self,acceptedNames,transform=None):
         """
         This function deforms the mesh, computes the new parameters p, v, c, n
         a. The newly computed parameters are then fed back into the lattice
@@ -370,32 +422,23 @@ class Mesh_Def:
         u, s, vh_i = LA.svd(mat)
 
         # user input choice
-        # TODO make it simpler for future use
-        
-        path = str(settings.paths('f_deformation'))
-        framat = ["framat","Framat","FramAT","framAT"]
-        logger.debug("Proceed to shape function selection")
-        if settings.settings["deformation_method"] == "shape_1":
-            logger.debug(settings.settings["deformation_method"])
-            self.shape_1(settings)
-        elif settings.settings["deformation_method"] == "shape_2":
-            logger.debug(settings.settings["deformation_method"])
-            self.shape_2(settings)
-        elif settings.settings["deformation_method"] == "load_from_csv":
-            self.csv_deformation(settings)
-        # elif self.aeroframe["CSD_solver"] in framat:
-        #     ##################################################################
-        #     #
-        #     #   TODO compute all the new points
-        #     #
-        #     ##################################################################
-        #     self.framatConverter()
+        ######################################################################
+        # Old way of doing things. Might be useful for debugging
+        #
+        # if settings.settings["deformation_method"] == "shape_1":
+        #     logger.debug(settings.settings["deformation_method"])
+        #     self.shape_1(settings)
+        # elif settings.settings["deformation_method"] == "shape_2":
+        #     logger.debug(settings.settings["deformation_method"])
+        #     self.shape_2(settings)
+        ######################################################################
+        if self.aeroframeSettings["CSD_solver"] in acceptedNames[1]:
+            self.CSVDeformation()
+        elif self.aeroframeSettings["CSD_solver"] in acceptedNames[2]:
+            self.framatDeformation(transform)
         else:
             logger.error("No shape function selected")
-        # else:
-        #     # TODO implement the deformation via CSV file here
-        #     logger.error("Deformation from file")
-        #     self.csv_deformation(settings)
+            sys.exit()
 
         # Computes the deformed reference frame by using the same SVD proprety
         # as before.

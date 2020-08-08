@@ -1,11 +1,11 @@
 {
     "CFD_settings_file": "Optimale.json",
     "CSD_settings_file": "OptimaleCSDsettings.json",
-    "aircraft_file": "Optimale.xml",
+    "aircraftFile": "Optimale.xml",
     "CFD_solver": "Pytornado",
     "CSD_solver": "FramAT",
     "MaxIterationsNumber": 10,
-    "Convergeance_tolerence": 0.001,
+    "ConvergeanceTolerence": 0.001,
     "deformation_activation": true,
     "deformation_from_file": false,
     "deformation_file": "CSD/deformation/Optimale_disp_dlr.csv",
@@ -24,16 +24,16 @@
         },
         "FEM": {
             "mechanicalInterpolationType": "linear",
-            "nodesFEM":5
+            "nodesFEM":6
         }
     },
     "wing1": {
         "mechanicalCenter": 0.4,
         "mechanicalProperties": {
             "A": 0.006,
-            "Iy": 3.65E-02,
-            "Iz": 3.65E-02,
-            "J": 7.29E-02
+            "Iy": 3.65E-01,
+            "Iz": 3.65E-01,
+            "J": 7.29E-01
         },
         "materialProperties": {
             "E": 70e9,
@@ -49,9 +49,9 @@
         "mechanicalCenter": 0.4,
         "mechanicalProperties": {
             "A": 0.006,
-            "Iy": 3.65E-02,
-            "Iz": 3.65E-02,
-            "J": 7.29E-02
+            "Iy": 3.65E-01,
+            "Iz": 3.65E-01,
+            "J": 7.29E-01
         },
         "materialProperties": {
             "E": 70e9,
@@ -67,9 +67,9 @@
         "mechanicalCenter": 0.4,
         "mechanicalProperties": {
             "A": 0.006,
-            "Iy": 3.65E-05,
-            "Iz": 3.65E-05,
-            "J": 7.29E-05
+            "Iy": 3.65E-02,
+            "Iz": 3.65E-02,
+            "J": 7.29E-02
         },
         "materialProperties": {
             "E": 70e9,

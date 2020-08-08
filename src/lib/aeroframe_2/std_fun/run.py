@@ -143,26 +143,18 @@ def meshComputation(args,aeroframe_2_settings):
     return lattice, vlmdata, settings, aircraft, cur_state, state, csdGeometry
 
 
-def meshPreprocessing(args,aeroframe_2_settings,settings,lattice,csdGeometry,vlmdata):
+def meshPreprocessing(args,aeroframeSettings,settings,lattice,csdGeometry,vlmdata):
     """
     Deforms the VLM mesh if asked to otherwise compute the transfer matrix.
     """
-    framat = ["framat","Framat","FramAT","framAT"]
-    # Deforms VLM mesh if the users asks to deform from an input file
-    if aeroframe_2_settings["deformation_from_file"]:
-        def_file_path = aeroframe_2_settings["deformation_file"]
-        file_path = args.cwd + "/" + def_file_path
-        logger.debug(file_path)
-        deform_mesh(settings,lattice,file_path,aeroframe_2_settings)
 
     # Computes the radial basis function matrix
-    elif aeroframe_2_settings["CSD_solver"] in framat:
-        # Computes structural mesh
-        csd = framatWrapper.framat(csdGeometry)
-        csd.mesh()
-        # Computes transformation matrix
-        transform = mapping.mapper(lattice,vlmdata,csdGeometry,csd)
-        
+    # Computes structural mesh
+    csd = framatWrapper.framat(csdGeometry)
+    csd.mesh()
+    # Computes transformation matrix
+    transform = mapping.mapper(lattice,vlmdata,csdGeometry,csd)
+    
     return settings, lattice, csd, transform
 
 def csdComputations(transform,csd):
@@ -192,12 +184,15 @@ def saveCFDresults(args,settings,lattice,vlmdata):
             save_to_pkl(args.cwd, "deactivated", lattice, vlmdata)
 
 
-def plotMesh(lattice):
+def plotMesh(var):
+    """
+    For debugging purposes
+    """
     fig = plt.figure("figure 2")
     ax = fig.add_subplot(111, projection='3d')
-    ax.scatter(lattice.c[:,0],
-               lattice.c[:,1],
-               lattice.c[:,2],
+    ax.scatter(var[:,0],
+               var[:,1],
+               var[:,2],
                label='wing')
     val = 15
     ax.set_xlim(-val,val)
@@ -206,29 +201,268 @@ def plotMesh(lattice):
     ax.legend()
     plt.show()
 
+def pytornadoMeshing(args, aeroframeSettings):
+    """
+    Calls pytornado functions to build up a lattice (which is basically the 
+    mesh and our point of interest for aeroelasticity) and all other 
+    variables/instances needed by pytornado.
+    """
+    # Virtual command line setting file input path. the "args" contains the
+    # rest of the needed information
+    pytornadoSttings = args.cwd \
+                       + "/CFD/settings/" \
+                       + aeroframeSettings["CFD_settings_file"]
+    # Buids CFD mesh
+    lattice,vlmdata,settings,aircraft,cur_state,state = cfd.meshing(args,pytornadoSttings)
+    # Join all the variables for ease of use.
+    pytornadoVariables = [lattice, vlmdata, settings, aircraft, cur_state, state]
+    logger.info("Pytornado meshing done")
+    
+    return pytornadoSttings, pytornadoVariables
+
+def csvDeformation(args,pytornadoSettings,aeroframeSettings,pytornadoVariables):
+    """
+    Deforms the VLM mesh from a csv file
+    """
+    # Extract the vlm mesh
+    lattice = pytornadoVariables[0]
+    # Feeds all the needed settings in order to read the .csv deformation file
+    # and then be able to deform the mesh (basically compute the new normnal
+    # vector).
+    mesh_def = aeroDef.Mesh_Def(args,aeroframeSettings,lattice)
+    
+    # Calls the deformation function that computes the new points positions
+    mesh_def.deformation()
+    
+    # Feeds the result back to an understandable pytornado mesh. The idea is
+    # not to touch any unwanted variable, hence the action of feeding back the
+    # new point to the old lattice variable.
+    lattice.p = mesh_def.f_p
+    lattice.v = mesh_def.f_v
+    lattice.c = mesh_def.f_c
+    lattice.bound_leg_midpoints = mesh_def.f_b
+    lattice.n = mesh_def.f_n
+    lattice.a = mesh_def.f_a
+
+    # For ease of use and code readability
+    pytornadoVariables[0] = lattice
+    return pytornadoVariables
+
+def feeder(pytornadoVariables,meshDeformation):
+    """
+    Transfers the deformed mesh points to pytornadoVariables.
+    """
+    pytornadoVariables[0].p = meshDeformation.f_p
+    pytornadoVariables[0].v = meshDeformation.f_v
+    pytornadoVariables[0].c = meshDeformation.f_c
+    pytornadoVariables[0].a = meshDeformation.f_a
+    pytornadoVariables[0].bound_leg_midpoints = meshDeformation.f_b
+    pytornadoVariables[0].n = meshDeformation.f_n
+
+    return pytornadoVariables
+
+def forcesToCsv(args,cfdSolution):
+    """
+    Writes the results to a csv file.
+    """
+    # Computes the path
+    path = args.cwd + "/CSD/results/panelwiseForces.csv"
+    headers = "x;y;z;fx;fy;fz"
+    # Gets simulation values
+    panelCoordinates = cfdSolution["lattice"].c
+    panelFx = cfdSolution["vlmdata"].panelwise['fx']
+    panelFy = cfdSolution["vlmdata"].panelwise['fy']
+    panelFz = cfdSolution["vlmdata"].panelwise['fz']
+
+    results = np.array([panelCoordinates[:,0],
+                        panelCoordinates[:,1],
+                        panelCoordinates[:,2],
+                        panelFx,
+                        panelFy,
+                        panelFz])
+
+    np.savetxt(path, results.T, delimiter=';', header=headers)
+    logger.info("Simulation finised")
+
+def solverPytornadoCSV(args, aeroframeSettings, acceptedNames):
+    """
+    The workflow is as follows:
+        1) TODO: Verifies that the input file contains all the necessary 
+           information.
+        2) Builds CFD mesh.
+        3) Deforms CFD mesh.
+        4) Computes CFD problem.
+        5) Extract panelwise forces and saves them into a csv file.
+    """
+    # Step 1) Verifying input
+    # TODO: verify all parameters one by one
+    
+    # Step 2) pytornado meshing
+    pytornadoSettings, pytornadoVariables = pytornadoMeshing(args, aeroframeSettings)
+    
+    # Step 3) Deforms CFD mesh
+    lattice = pytornadoVariables[0]
+    meshDeformation = aeroDef.Mesh_Def(args,aeroframeSettings,lattice)
+    meshDeformation.deformation(acceptedNames)
+    pytornadoVariables = feeder(pytornadoVariables,meshDeformation)
+
+    # Step 4) Computes the CFD problem
+    cfdSolution = cfd.solver(pytornadoVariables)
+    
+    # Step 5) Saves panelwise forces results
+    forcesToCsv(args,cfdSolution)
+    logger.info("End of simulation")
+    sys.exit()
+
+def solverPytornadoFramat(args, aeroframeSettings, acceptedNames):
+    """
+    The workflow is as follows:
+        1) TODO: Verifies that the input file contains all the necessary 
+           information.
+        2)  Builds CFD mesh.
+        3)  Reads CPACS files and computes the nodes of pseudo 1D structural 
+            mesh.
+        4)  Builds CSD instance in FramAT.
+        5)  Computes the transformation matrices
+        6)  Computes CFD problem.
+        7)  Enters the aeroelastic loop.
+        8)  Projects the loads on CSD instance.
+        9)  Computes CSD solution
+        10) Deforms the CFD mesh.
+        11) Computes the norm of the displacement error
+        12) Computes new CFD problem.
+        13) loops back to point 6).
+    """
+    # Step 1: File verification
+    # TODO: verify all parameters one by one
+    
+    # Step 2) pytornado meshing
+    pytornadoSettings, pytornadoVariables = pytornadoMeshing(args, aeroframeSettings)
+    
+    # Step 3)  Reads CPACS files and computes the nodes of pseudo 1D structural
+    #          mesh. Aeroframe function pre-meshes the aircraft to get each 
+    #          structure node.
+    preMeshedStructre = importGeomerty.CsdGeometryImport(args,aeroframeSettings)
+    preMeshedStructre.getAllPoints()
+
+    # Step 4) feeds the computed nodes to the structure solver and builds a
+    # structure mesh
+    csdSolverClassVar = framatWrapper.framat(preMeshedStructre)
+    csdSolverClassVar.mesh()
+
+    # Step 5) feeds the computed nodes to a mapping function which computes the
+    # tranformation matrices (based on RBF)
+    transform = mapping.mapper(pytornadoVariables,preMeshedStructre,csdSolverClassVar)
+
+    # Step 6) Computes CFD problem.
+    cfdSolution = cfd.solver(pytornadoVariables)
+    pytornadoVariablesInit = copy.deepcopy(pytornadoVariables)
+    # Setp 7) Aeroelastic loop.
+    convergence = False
+    N = aeroframeSettings["MaxIterationsNumber"]
+    i = 0
+    maxDisplacement = np.array([0])
+    error = []
+    while (i < N or convergence):
+        # basic user comminication
+        logger.debug("aeroelastic loop number: "+str(i))
+        
+        # Makes a copy to avoid memory linked mistakes
+        transformCurrent = transform
+        csdSolverClassVarCurrent = csdSolverClassVar
+        # Step 8) Projects the loads on CSD instance.
+        transformCurrent.aeroToStructure()
+        
+        # Step 9) Compute structure solution
+        csdSolverClassVarCurrent.run(transformCurrent)
+        
+        # Step 9) deforms the CFD mesh. Computes beam deformation
+        latticeCurrent = pytornadoVariablesInit[0]
+        meshDeformation = aeroDef.Mesh_Def(args,aeroframeSettings,latticeCurrent)
+
+        # Step 10) computes new aerodynamic points
+        transformCurrent.structureToAero()
+        meshDeformation.deformation(acceptedNames,transformCurrent)
+        pytornadoVariables = feeder(pytornadoVariables,meshDeformation)
+        # Step 11) Computes the norm of the displacement error
+        # TODO find a clean way to do it
+        maxDisplacement = np.append(maxDisplacement, np.max(transform.displacements))
+        error.append(np.abs(maxDisplacement[-1] - maxDisplacement[-2]))
+        logger.debug("\n"*30)
+        logger.info("Max error between two iteration: "+str(error))
+        
+        tol = aeroframeSettings["ConvergeanceTolerence"]
+        logger.debug(type(tol))
+        logger.debug(type(error))
+        logger.debug("\n"*30)
+        if error[-1] <= tol:
+            sys.exit()
+        # Step 12) Deforms the CFD mesh.
+        pytornadoVariables = cfd.solver(pytornadoVariables)
+
+        i += 1
+    sys.exit()
 
 def standard_run(args):
+    """
+    Master function which selects the solvers
+    """
     # Starts simulation
     logger.info(f"{__prog_name__} started")
 
     # Simulation input file
     logger.debug("Setting file path:\n" + args.cwd+"/"+args.run)
     settingsFileAndPath = args.cwd + "/" + args.run
-    aeroframe_2_settings = getSettings(settingsFileAndPath)
-
+    aeroframeSettings = getSettings(settingsFileAndPath)
+    
+    # Calls the correct solver in function of the user input. Supported choice
+    # at this point of the development are:
+    # 1) CFD solver: pytornado
+    #    CSD solver: .csv file -> from external solver 
+    #                file structure should be a surface of points for each 
+    #                lines: x;y;z;dx;dy;dz
+    # 2) CFD solver: pytornado
+    #    CSD solver: FramAT
+    logger.info("CFD solver will be: "+str(aeroframeSettings["CFD_solver"]))
+    logger.info("CsD solver will be: "+str(aeroframeSettings["CSD_solver"]))
+    
+    # accepted solver notations. Add solvers after. DO NOT CHANGE THE ORDER.
+    # Theses variables are used in many classes and the order matters. Change
+    # them only if you know what you are doing. If you want to add a new solver
+    # just add the solver accepted names after the existing lists.
+    pytornado = ["pytornado","Pytornado","pyTornado","PyTornado"]
+    deformationFromFile = ["dff","deformationFromFile"]
+    framat = ["framat","Framat","FramAT","framAT"]
+    # Assembles all the accepted names for ease of use
+    acceptedNames = [pytornado,deformationFromFile,framat]
+    # Reads user input
+    cfdSolver = aeroframeSettings["CFD_solver"]
+    csdSolver = aeroframeSettings["CSD_solver"]
+    
+    # Chooses the solvers form what the user input asks.
+    if cfdSolver in acceptedNames[0] and csdSolver in acceptedNames[1]:
+        logger.info("CFD with pytornado and external CSD solver")
+        solverPytornadoCSV(args, aeroframeSettings, acceptedNames)
+    elif cfdSolver in acceptedNames[0] and csdSolver in acceptedNames[2]:
+        logger.info("CFD with pytornado and CSD with FramAT")
+        solverPytornadoFramat(args, aeroframeSettings, acceptedNames)
+    else:
+        logger.error("CFD solver or/and CSD solver not supported")
+        sys.exit()
+    sys.exit()
     # Computes the necessary meshes
-    lattice, vlmdata, settings, aircraft, cur_state, state, csdGeometry = meshComputation(args,aeroframe_2_settings)
+    lattice, vlmdata, settings, aircraft, cur_state, state, csdGeometry = meshComputation(args,aeroframeSettings)
 
     # Computes the deformation parameters.
     # Deforms the VLM mesh if the deformation is imported from a file
-    settings, lattice, csd, transformOriginal = meshPreprocessing(args,aeroframe_2_settings,settings,lattice,csdGeometry,vlmdata)
+    settings, lattice, csd, transformOriginal = meshPreprocessing(args,aeroframeSettings,settings,lattice,csdGeometry,vlmdata)
     
     # Computes the first CFD solution
     lattice, vlmdata = cfdComputation(lattice, vlmdata, settings, aircraft, cur_state, state)
 
     # saves results to pkl file if asked.
-    saveCFDresults(args,aeroframe_2_settings,lattice,vlmdata)
-    for i in range(3):
+    saveCFDresults(args,aeroframeSettings,lattice,vlmdata)
+    for i in range(15):
         # Computes the first CSD solution
         # transformCurrent = copy.deepcopy(transformOriginal)
         transformCurrent = transformOriginal
@@ -260,35 +494,5 @@ def standard_run(args):
         latticeCurrent, vlmdata = cfdComputation(latticeCurrent, vlmdata, settings, aircraft, cur_state, state)
     
         # saves results to pkl file if asked.
-        saveCFDresults(args,aeroframe_2_settings,latticeCurrent,vlmdata)
+        saveCFDresults(args,aeroframeSettings,latticeCurrent,vlmdata)
     sys.exit()
-
-        ######################################################################
-        # # FramAT part
-        # csd = framatWrapper.framat(csdGeometry)
-        # csd.csdRun()
-        # # csd.plotPoints()
-        # logger.debug(csd_mesh.wingsSectionsCenters)
-        ######################################################################
-        # TODO get path
-        # TODO Upload path and aircraft to the mesher
-        # csd = mesher()
-        ######################################################################
-
-    # TODO 3D cfd Mesh
-    # TODO structure mesh
-
-
-# if __name__ == "__main__":
-#     main()
-
-
-# -TODO get p
-# -TODO get v
-# -TODO get c
-# -TODO get b
-# -TODO get n
-# -TODO get a
-# -TODO get what is in between. it looks like something wrong lives here
-# -TODO get RHS
-# -TODO get Downwash

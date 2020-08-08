@@ -59,7 +59,7 @@ logger = logging.getLogger(__name__)
 
 class CsdGeometryImport:
 
-    def __init__(self,inputAircraftPath,settings):
+    def __init__(self,args,aeroframeSettings):
         """
         Initializes the instance and stores the values of the CPACS file to the
         handle into the class.
@@ -67,15 +67,15 @@ class CsdGeometryImport:
         Getwingcount
         """
         # Aircraft absolute path
-        self.aircraftPath = inputAircraftPath
-        # JSON input file
+        inputAircraftPath = args.cwd +"/CFD/aircraft/" + aeroframeSettings["aircraftFile"]
+        logger.debug("inputAircraftPath \n"+str(inputAircraftPath))
 
         # Tixi and Tigl handler. Necessary to read the CPACS
         self.tixi = tixi3wrapper.Tixi3()
         self.tigl = tigl3wrapper.Tigl3()
-        self.tixi.open(self.aircraftPath)
+        self.tixi.open(inputAircraftPath)
         self.tigl.open(self.tixi,"")
-        self.settings = settings
+        self.settings = aeroframeSettings
         # Number of fuselage instances, generally one, more could create
         # problems.
         try:
@@ -100,7 +100,7 @@ class CsdGeometryImport:
         fuselageSettings = []
         try:
             for i in range(self.nFuselage):
-                fuselageSettings.append(settings["fuselage"])
+                fuselageSettings.append(self.settings["fuselage"])
             self.fuselageJsonExists = True
             if len(fuselageSettings) != self.nFuselage:
                 logger.error("JSON fuselage instances number do not match CPACS file")
@@ -116,7 +116,7 @@ class CsdGeometryImport:
         wingsSettings = []
         try:
             for i in range(self.nWings):
-                wingsSettings.append(settings["wing" + str(i+1)])
+                wingsSettings.append(self.settings["wing" + str(i+1)])
             if len(wingsSettings) != self.nWings:
                 logger.error("JSON wings instances number do not match CPACS file")
                 sys.exit()
