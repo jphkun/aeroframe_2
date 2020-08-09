@@ -13,9 +13,9 @@
     "fuselage": {
         "mechanicalProperties": {
             "A": 0.006,
-            "Iy": 3.65E-01,
-            "Iz": 3.65E-01,
-            "J": 7.29E-01
+            "Iy": 8E-03,
+            "Iz": 8E-03,
+            "J": 16E-03
         },
         "materialProperties": {
             "E": 70e9,
@@ -23,17 +23,17 @@
             "rho": 2700
         },
         "FEM": {
-            "mechanicalInterpolationType": "linear",
-            "nodesFEM":6
+            "mechanicalInterpolationType": "constant",
+            "nodesFEM":12
         }
     },
     "wing1": {
         "mechanicalCenter": 0.4,
         "mechanicalProperties": {
             "A": 0.006,
-            "Iy": 3.65E-01,
-            "Iz": 3.65E-01,
-            "J": 7.29E-01
+            "Iy": 4E-04,
+            "Iz": 4E-04,
+            "J": 8E-03
         },
         "materialProperties": {
             "E": 70e9,
@@ -41,17 +41,17 @@
             "rho": 2700
         },
         "FEM": {
-            "mechanicalInterpolationType": "linear",
-            "nodesFEM": 7
+            "mechanicalInterpolationType": "constant",
+            "nodesFEM": 16
         }
     },
     "wing2": {
-        "mechanicalCenter": 0.4,
+        "mechanicalCenter": 0.5,
         "mechanicalProperties": {
             "A": 0.006,
-            "Iy": 3.65E-01,
-            "Iz": 3.65E-01,
-            "J": 7.29E-01
+            "Iy": 3.65E-04,
+            "Iz": 3.65E-04,
+            "J": 7.29E-04
         },
         "materialProperties": {
             "E": 70e9,
@@ -59,17 +59,17 @@
             "rho": 2700
         },
         "FEM": {
-            "mechanicalInterpolationType": "linear",
-            "nodesFEM": 5
+            "mechanicalInterpolationType": "constant",
+            "nodesFEM": 10
         }
     },
     "wing3": {
         "mechanicalCenter": 0.4,
         "mechanicalProperties": {
             "A": 0.006,
-            "Iy": 3.65E-02,
-            "Iz": 3.65E-02,
-            "J": 7.29E-02
+            "Iy": 3.65E-04,
+            "Iz": 3.65E-04,
+            "J": 7.29E-04
         },
         "materialProperties": {
             "E": 70e9,
@@ -77,8 +77,8 @@
             "rho": 2700
         },
         "FEM": {
-            "mechanicalInterpolationType": "quadratic",
-            "nodesFEM": 3
+            "mechanicalInterpolationType": "constant",
+            "nodesFEM": 6
         }
     },
     "Results": {

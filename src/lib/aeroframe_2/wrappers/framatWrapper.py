@@ -33,7 +33,7 @@ class framat:
     #     self.computesCsdMesh()
     #     self.applysLoad()
     #     self.imposeBC()
-    #     self.postProcessing()
+        self.postProcessing()
     #     self.results = self.model.run()
 
     def mesh(self):
@@ -130,36 +130,38 @@ class framat:
                 name = self.geo.aircraftNodesNames[i][j]
                 logger.debug("name = "+str(name))
                 self.beams[i].add("node",point,uid=name)
-            
-            name1 = self.geo.aircraftNodesNames[i][0]
-            name2 = self.geo.aircraftNodesNames[i][-1]
-            uid = name1 + "_cross_section"
-            logger.debug("uid = "+str(uid))
-            logger.debug("name 1 = "+str(name1))
-            logger.debug("name 2 = "+str(name2))
-            self.beams[i].add('cross_section', {'from': name1,
-                                                'to': name2,
-                                                'uid': uid})
+
+                # WARNING this bit of code should be indented one more time.
+                # It should be nested inside the second for loop
+                # Adds the cross_section feature to each points
+                if j+1 < int(np.floor(M/2)) + 2:
+                    
+                    name1 = self.geo.aircraftNodesNames[i][j]
+                    name2 = self.geo.aircraftNodesNames[i][j+1]
+                    uid = name2 + "_cross_section"
+                    self.beams[i].add('cross_section', {'from': name1,
+                                                        'to': name2,
+                                                        'uid': uid})
+                else:
+                    name1 = self.geo.aircraftNodesNames[i][j-1]
+                    name2 = self.geo.aircraftNodesNames[i][j]
+                    uid = name1 + "_cross_section"
+                    self.beams[i].add('cross_section', {'from': name1,
+                                                        'to': name2,
+                                                        'uid': uid})
+
+            # name1 = self.geo.aircraftNodesNames[i][0]
+            # name2 = self.geo.aircraftNodesNames[i][-1]
+            # uid = name1 + "_cross_section"
+            # logger.debug("uid = "+str(uid))
+            # logger.debug("name 1 = "+str(name1))
+            # logger.debug("name 2 = "+str(name2))
+            # self.beams[i].add('cross_section', {'from': name1,
+            #                                     'to': name2,
+            #                                     'uid': uid})
 
             
-                # # WARNING this bit of code should be indented one more time.
-                # # It should be nested inside the second for loop
-                # # Adds the cross_section feature to each points
-                # if j+1 < int(np.floor(M/2)) + 2:
-                    
-                #     name1 = self.geo.aircraftNodesNames[i][j]
-                #     name2 = self.geo.aircraftNodesNames[i][j+1]
-                #     uid = name2 + "_cross_section"
-                #     self.beams[i].add('cross_section', {'from': name1,
-                #                                         'to': name2,
-                #                                         'uid': uid})
-                # else:
-                #     name1 = self.geo.aircraftNodesNames[i][j-1]
-                #     name2 = self.geo.aircraftNodesNames[i][j]
-                #     uid = name1 + "_cross_section"
-                #     self.beams[i].add('cross_section', {'from': name1,
-                #                                         'to': name2,
-                #                                         'uid': uid})
+
             
             # Would be perfect but doesn't work
             # self.beams[i].add('cross_section', {'at': name,'uid': uid})
@@ -254,5 +256,5 @@ class framat:
         pp = self.model.set_feature('post_proc')
         pp.set('plot_settings', {'show': True})
         # pp.add('plot', ['undeformed', 'deformed', 'node_uids', 'nodes', 'forces'])
-        pp.add('plot', ['undeformed', 'deformed', 'nodes',])
+        pp.add('plot', ['undeformed', 'deformed', 'nodes', 'forces'])
         
