@@ -1,3 +1,13 @@
 [3306:3306:0809/102112.485032:ERROR:zygote_communication_linux.cc(292)] Failed to send GetTerminationStatus message to zygote
 [3306:3306:0809/102112.515003:ERROR:zygote_communication_linux.cc(292)] Failed to send GetTerminationStatus message to zygote
 [3306:3306:0809/102112.515845:ERROR:zygote_communication_linux.cc(292)] Failed to send GetTerminationStatus message to zygote
+libpng warning: bKGD: invalid
+libpng warning: bKGD: invalid
+libpng warning: bKGD: invalid
+libpng warning: bKGD: invalid
+libpng warning: bKGD: invalid
+libpng warning: bKGD: invalid
+libpng warning: bKGD: invalid
+libpng warning: bKGD: invalid
+libpng warning: bKGD: invalid
+libpng warning: bKGD: invalid

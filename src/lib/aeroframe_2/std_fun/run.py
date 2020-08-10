@@ -363,6 +363,7 @@ def solverPytornadoFramat(args, aeroframeSettings, acceptedNames):
     i = 0
     maxDisplacement = np.array([0])
     error = []
+    absoluteDisplacement = []
     tol = aeroframeSettings["ConvergeanceTolerence"]
     while (i < N):
         # basic user comminication
@@ -390,6 +391,7 @@ def solverPytornadoFramat(args, aeroframeSettings, acceptedNames):
         # TODO one can add a convergence graph
         maxDisplacement = np.append(maxDisplacement, np.max(transform.displacements))
         error.append(np.abs(maxDisplacement[-1] - maxDisplacement[-2]))
+        absoluteDisplacement.append(np.abs(maxDisplacement[-1] - maxDisplacement[0]))
         logger.info("Max error between two iteration: "+str(error))
         # Step 12) Deforms the CFD mesh.
         pytornadoVariables = cfd.solver(pytornadoVariables)
@@ -401,10 +403,13 @@ def solverPytornadoFramat(args, aeroframeSettings, acceptedNames):
             logger.info("Simulation has converged")
             i = N
     # Writes a file which contains the error for each timestep
-    path = args.cwd + "/error.csv"
+    N = len(error)
+    path = args.cwd + "/results.csv"    
     MyFile=open(path,"w")
-    for element in error:
-         MyFile.write(str(element))
+    MyFile.write("Relative error; max displacement")
+    MyFile.write("\n")
+    for i in range(N):
+         MyFile.write(str(error[i])+";"+str(absoluteDisplacement[i]))
          MyFile.write("\n")
     MyFile.close()
     sys.exit()
