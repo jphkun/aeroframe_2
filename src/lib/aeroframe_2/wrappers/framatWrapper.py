@@ -33,7 +33,7 @@ class framat:
     #     self.computesCsdMesh()
     #     self.applysLoad()
     #     self.imposeBC()
-        self.postProcessing()
+    #     self.postProcessing()
     #     self.results = self.model.run()
 
     def mesh(self):
@@ -188,11 +188,15 @@ class framat:
                 name = self.geo.aircraftNodesNames[i + self.geo.nFuselage][j]
                 logger.debug(name)
                 logger.debug(tranform.sfx[i][j])
-                coef = 1
-                fx = coef*tranform.sfx[i][j]
-                fy = coef*tranform.sfy[i][j]
-                fz = coef*tranform.sfz[i][j]
-                self.beams[i + self.geo.nFuselage].add('point_load', {'at': name, 'load': [fx, fy, fz, 0, 0, 0]})
+                coefF = 1 # for debugging
+                fx = coefF*tranform.sfx[i][j]
+                fy = coefF*tranform.sfy[i][j]
+                fz = coefF*tranform.sfz[i][j]
+                coefM = 1 # for debugging
+                mx = coefM*tranform.smx[i][j]
+                my = coefM*tranform.smy[i][j]
+                mz = coefM*tranform.smz[i][j]
+                self.beams[i + self.geo.nFuselage].add('point_load', {'at': name, 'load': [fx, fy, fz, mx, my, mz]})
 
     def eraseLoad(self,tranform):
         logger.debug(tranform.afx)
@@ -211,7 +215,11 @@ class framat:
                 fx = coef*tranform.sfx[i][j]
                 fy = coef*tranform.sfy[i][j]
                 fz = coef*tranform.sfz[i][j]
-                self.beams[i + self.geo.nFuselage].add('point_load', {'at': name, 'load': [-fx, -fy, -fz, 0, 0, 0]})
+                coefM = 1 # for debugging
+                mx = coefM*tranform.smx[i][j]
+                my = coefM*tranform.smy[i][j]
+                mz = coefM*tranform.smz[i][j]
+                self.beams[i + self.geo.nFuselage].add('point_load', {'at': name, 'load': [-fx, -fy, -fz, -mx, -my, -mz]})
 
 
     def imposeBC(self):

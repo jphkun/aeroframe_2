@@ -305,14 +305,18 @@ class CsdGeometryImport:
             # definitions the program automatically changes the position to the
             # closest known point. This features ensures that the simulations
             # will be made with maximal fidelity to the definintion.
-            logger.debug("+"*20)
-            logger.debug("wing relative pos:\n"+str(w_sg_relativePosition))
-            logger.debug("mesh relative pos:\n"+str(w_m_relativePoints))
-            if w_N_sc <= w_m_N_nodes:
-                for j in range(w_N_sc):
-                    diff = np.abs(w_m_relativePoints - w_sg_relativePosition[j])
-                    index = np.argmin(diff)
-                    w_m_relativePoints[index] = w_sg_relativePosition[j]
+            #
+            #   After some testing it looks like this feature induces errors
+            #   instead of erasing them.
+            #
+            # logger.debug("+"*20)
+            # logger.debug("wing relative pos:\n"+str(w_sg_relativePosition))
+            # logger.debug("mesh relative pos:\n"+str(w_m_relativePoints))
+            # if w_N_sc <= w_m_N_nodes:
+            #     for j in range(w_N_sc):
+            #         diff = np.abs(w_m_relativePoints - w_sg_relativePosition[j])
+            #         index = np.argmin(diff)
+            #         w_m_relativePoints[index] = w_sg_relativePosition[j]
 
             logger.debug("mesh relative pos:\n"+str(w_m_relativePoints))
 

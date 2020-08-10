@@ -4,7 +4,7 @@
     "aircraftFile": "straightWing.xml",
     "CFD_solver": "Pytornado",
     "CSD_solver": "FramAT",
-    "MaxIterationsNumber": 5,
+    "MaxIterationsNumber": 10,
     "ConvergeanceTolerence": 0.001,
     "deformation_activation": false,
     "deformation_from_file": false,

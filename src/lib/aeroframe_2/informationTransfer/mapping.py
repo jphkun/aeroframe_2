@@ -247,14 +247,13 @@ class mapper:
             self.smy.append(np.matmul(self.H[i].T,self.amy[i]))
             self.smz.append(np.matmul(self.H[i].T,self.amz[i]))
         
-        logger.debug("sfx = \n"+str(self.sfx))
-        logger.debug("sfy = \n"+str(self.sfy))
-        logger.debug("sfz = \n"+str(self.sfz))
+        # logger.debug("sfx = \n"+str(self.sfx))
+        # logger.debug("sfy = \n"+str(self.sfy))
+        # logger.debug("sfz = \n"+str(self.sfz))
         
-        logger.debug("smx = \n"+str(self.smx))
-        logger.debug("smy = \n"+str(self.smy))
-        logger.debug("smz = \n"+str(self.smz))
-        sys.exit()
+        # logger.debug("smx = \n"+str(self.smx))
+        # logger.debug("smy = \n"+str(self.smy))
+        # logger.debug("smz = \n"+str(self.smz))
 
     def computeMoments(self):
         """
@@ -368,10 +367,15 @@ class mapper:
                             self.distanceMatrix[i][:,0]*self.afz[i])
             self.amz.append(self.distanceMatrix[i][:,0]*self.afy[i] +
                             self.distanceMatrix[i][:,1]*self.afx[i])
-            
-            logger.debug(self.amx[i].shape)
-            logger.debug(self.amz[i].shape)
-            logger.debug(self.amy[i].shape)
+
+            # In order to limit the numerical error
+            self.amx[i][np.abs(self.amx[i])<1e-7] = 0.
+            self.amy[i][np.abs(self.amy[i])<1e-7] = 0.
+            self.amz[i][np.abs(self.amz[i])<1e-7] = 0.
+
+            # logger.debug(self.amx[i].shape)
+            # logger.debug(self.amz[i].shape)
+            # logger.debug(self.amy[i].shape)
 
     def structureToAero(self):
         """
@@ -399,7 +403,7 @@ class mapper:
 
         # number of beams
         N = len(self.geoP)
-        logger.debug("N = "+str(N))
+        # logger.debug("N = "+str(N))
         old = 0
         
         # Separates the results for each wing. This leads to an amazing quality
@@ -411,33 +415,52 @@ class mapper:
             self.sux.append(self.csd.results.get('tensors').get('comp:U')["ux"][old:old+M])
             self.suy.append(self.csd.results.get('tensors').get('comp:U')["uy"][old:old+M])
             self.suz.append(self.csd.results.get('tensors').get('comp:U')["uz"][old:old+M])
+            
+            self.stx.append(self.csd.results.get('tensors').get('comp:U')["thx"][old:old+M])
+            self.sty.append(self.csd.results.get('tensors').get('comp:U')["thy"][old:old+M])
+            self.stz.append(self.csd.results.get('tensors').get('comp:U')["thz"][old:old+M])
             old += M
         
-        # Computes the aerodynamic displacements
+        # Computes the aerodynamic displacements and the aerodynamic angles
         for i in range(N-self.geo.nFuselage):
             self.aux.append(np.matmul(self.H[i],self.sux[i+self.geo.nFuselage]))
             self.auy.append(np.matmul(self.H[i],self.suy[i+self.geo.nFuselage]))
             self.auz.append(np.matmul(self.H[i],self.suz[i+self.geo.nFuselage]))
-        # Outputs the results for debugging
-        logger.debug(self.suz[0])
-        logger.debug(self.auz[0])
-
+            
+            self.atx.append(np.matmul(self.H[i],self.stx[i+self.geo.nFuselage]))
+            self.aty.append(np.matmul(self.H[i],self.sty[i+self.geo.nFuselage]))
+            self.atz.append(np.matmul(self.H[i],self.stz[i+self.geo.nFuselage]))
+        
         # Assembles the displacements into a big vector
         N = len(self.lattice.c)
         self.displacements = np.empty((N,3))
         N = len(self.geoP)
-        logger.debug("N = "+str(N))
+        # logger.debug("N = "+str(N))
         old = 0
+        coef1 = 1  # for debugging
+        coef2 = 1  # for debugging
         for i in range(N-self.geo.nFuselage):
-            logger.debug(i+self.geo.nFuselage)
+            # logger.debug(i+self.geo.nFuselage)
             M = len(self.aux[i])
             for j in range(M):
-                self.displacements[old+j][0] = self.aux[i][j]
-                self.displacements[old+j][1] = self.auy[i][j]
-                self.displacements[old+j][2] = self.auz[i][j]
+                # Displacements due to moments:
+                dmx = self.aty[i][j] * self.distanceMatrix[i][:,2] + \
+                      self.atz[i][j] * self.distanceMatrix[i][:,1]
+                dmy = self.atx[i][j] * self.distanceMatrix[i][:,2] + \
+                      self.atz[i][j] * self.distanceMatrix[i][:,0]
+                dmz = self.atx[i][j] * self.distanceMatrix[i][:,1] + \
+                      self.aty[i][j] * self.distanceMatrix[i][:,0]
+                self.displacements[old+j][0] = coef1*self.aux[i][j] + coef2*dmx[j]
+                self.displacements[old+j][1] = coef1*self.auy[i][j] + coef2*dmy[j]
+                self.displacements[old+j][2] = coef1*self.auz[i][j] + coef2*dmz[j]
             old = old + M
+        logger.debug(self.aux[i].shape)
+        logger.debug(self.distanceMatrix[i][:,2].shape)
+        logger.debug(dmx.shape)
+        logger.debug(dmy.shape)
+        logger.debug(dmz.shape)
+        # sys.exit()
         # Plots
-
         if plotting:
             fig = plt.figure("figure 2")
             ax = fig.add_subplot(111, projection='3d')
@@ -464,6 +487,7 @@ class mapper:
             ax.set_zlim(-val,val)
             ax.legend()
             plt.show()
+        # sys.exit()
     def deformVLM(self):
         pass
             
