@@ -262,7 +262,7 @@ def feeder(pytornadoVariables,meshDeformation):
 
     return pytornadoVariables
 
-def forcesToCsv(args,cfdSolution):
+def forcesToCsv(args,pytornadoVariables,results):
     """
     Writes the results to a csv file.
     """
@@ -270,10 +270,10 @@ def forcesToCsv(args,cfdSolution):
     path = args.cwd + "/CSD/results/panelwiseForces.csv"
     headers = "x;y;z;fx;fy;fz"
     # Gets simulation values
-    panelCoordinates = cfdSolution["lattice"].c
-    panelFx = cfdSolution["vlmdata"].panelwise['fx']
-    panelFy = cfdSolution["vlmdata"].panelwise['fy']
-    panelFz = cfdSolution["vlmdata"].panelwise['fz']
+    panelCoordinates = pytornadoVariables[0].c
+    panelFx = results["vlmdata"].panelwise['fx']
+    panelFy = results["vlmdata"].panelwise['fy']
+    panelFz = results["vlmdata"].panelwise['fz']
 
     results = np.array([panelCoordinates[:,0],
                         panelCoordinates[:,1],
@@ -308,10 +308,10 @@ def solverPytornadoCSV(args, aeroframeSettings, acceptedNames):
     pytornadoVariables = feeder(pytornadoVariables,meshDeformation)
 
     # Step 4) Computes the CFD problem
-    cfdSolution = cfd.solver(pytornadoVariables)
+    pytornadoVariables, results = cfd.solver(pytornadoVariables)
     
     # Step 5) Saves panelwise forces results
-    forcesToCsv(args,cfdSolution)
+    forcesToCsv(args,pytornadoVariables,results)
     logger.info("End of simulation")
     sys.exit()
 
@@ -442,7 +442,7 @@ def standard_run(args):
     # them only if you know what you are doing. If you want to add a new solver
     # just add the solver accepted names after the existing lists.
     pytornado = ["pytornado","Pytornado","pyTornado","PyTornado"]
-    deformationFromFile = ["dff","deformationFromFile"]
+    deformationFromFile = ["dff","deformationFromFile","external"]
     framat = ["framat","Framat","FramAT","framAT"]
     # Assembles all the accepted names for ease of use
     acceptedNames = [pytornado,deformationFromFile,framat]
