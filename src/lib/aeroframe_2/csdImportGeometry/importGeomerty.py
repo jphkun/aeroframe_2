@@ -31,6 +31,7 @@ OK TODO: for wings find the attached nodes pairs
 TODO: construct material matrix
 TODO: find a uid for each cross sections
       cs = self.model.add_feature('cross_section', uid='dummy')
+TODO: Get the CPACS UIDs for each beam instance
 
 (BONUS)
 TODO: Fix the points distibution with the boxwing, there is an issue with tigl
@@ -76,11 +77,14 @@ class CsdGeometryImport:
         self.tixi.open(inputAircraftPath)
         self.tigl.open(self.tixi,"")
         self.settings = aeroframeSettings
+        self.beamNames = []
         # Number of fuselage instances, generally one, more could create
         # problems.
         try:
             self.nFuselage = self.tigl.getFuselageCount()
             logger.info("CPACS file fuselage count: " + str(self.nFuselage))
+            # for i in range(self.nFuselage):
+            #     self.beamNames.append(self.tigl.)
             if self.nFuselage > 1:
                 logger.error("Too many fuselages")
                 sys.exit()
