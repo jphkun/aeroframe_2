@@ -78,26 +78,36 @@ class CsdGeometryImport:
         self.tigl.open(self.tixi,"")
         self.settings = aeroframeSettings
         self.beamNames = []
+        self.aircraftPartsUIDs = []
+        
+        # Fuselage related operations
         # Number of fuselage instances, generally one, more could create
         # problems.
         try:
             self.nFuselage = self.tigl.getFuselageCount()
             logger.info("CPACS file fuselage count: " + str(self.nFuselage))
-            # for i in range(self.nFuselage):
-            #     self.beamNames.append(self.tigl.)
             if self.nFuselage > 1:
                 logger.error("Too many fuselages")
                 sys.exit()
         except :
             logger.info("No fuselage found in CPACS file")
             sys.exit()
-        # Number of wings
+        
+        # Gets the UIDs for each fuselgae name
+        for i in range(self.nFuselage):
+            self.aircraftPartsUIDs.append(self.tigl.fuselageGetUID(i+1))
+        
+        # Wing related operations
         try:
             self.nWings = self.tigl.getWingCount()
             logger.info("CPACS file wing count: "+str(self.nWings))
         except:
             logger.error("No wings found in CPACS file")
             sys.exit()
+        # Gets the UIDs for each fuselgae name
+        for i in range(self.nWings):
+            self.aircraftPartsUIDs.append(self.tigl.wingGetUID(i+1))
+        logger.info("Aircraft parts names: \n"+str(self.aircraftPartsUIDs))
 
         # Reads JSON
         # Searches for fuselage instance
@@ -129,6 +139,7 @@ class CsdGeometryImport:
         except:
             logger.error("Not all CPACS wings where found in JSON setting file")
             sys.exit()
+
 
     def getOrigin(self):
         """

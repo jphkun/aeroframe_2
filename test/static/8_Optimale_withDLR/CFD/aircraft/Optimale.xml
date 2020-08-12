@@ -7039,7 +7039,7 @@
               <aeroPerformanceMap>
                 <altitude mapType="vector">0</altitude>
                 <machNumber mapType="vector">0.3</machNumber>
-                <angleOfAttack mapType="vector">0.0</angleOfAttack>
+                <angleOfAttack mapType="vector">2.0</angleOfAttack>
                 <angleOfSideslip mapType="vector">0.0</angleOfSideslip>
               </aeroPerformanceMap>
             </aeroMap>

@@ -34,7 +34,9 @@ import aeroframe_2.csdImportGeometry.importGeomerty as importGeomerty
 import aeroframe_2.informationTransfer.mapping as mapping
 import aeroframe_2.informationTransfer.mappingSU2 as mappingSU2
 import aeroframe_2.wrappers.framatWrapper as framatWrapper
+import aeroframe_2.wrappers.framatWrapperSU2 as framatWrapperSU2
 import pytornado.stdfun.run as cfd
+import ceasiompy.SU2Run.su2run as SU2_fsi
 import numpy as np
 # import pytornado.fileio as io
 # import os
@@ -44,7 +46,8 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import copy
 import pandas as pd
-
+import os
+from ceasiompy.SU2Run.func.extractloads import extract_loads
 # import SU2_CFD
 
 # TODO take the information from the args parameters
@@ -289,32 +292,76 @@ def solverSU2Framat(args, aeroframeSettings, acceptedNames):
     Function called when the user desires to couple the CFD solver SU2
     and the structure solver FramAT.
     """
-    # TODO Step 1) Checks the entry data.
+    # TODO Step ) Checks the entry data.
+    
+    # Step 1) Runs SU2 in order to get the aerodynamcs loads.
+    # Case s2etup
+    config_path = aeroframeSettings["SU2ConfigPath"]
+    wkdir = args.cwd + "/CFD/Case00_alt0_mach0.3_aoa2.0_aos0.0/"
+    nb_proc = 3
+    logger.debug("Configuration path: \n"+str(config_path))
+    logger.debug("nb of proc: \n"+str(nb_proc))
+    logger.debug("WKDIR: \n"+str(wkdir))
+
+    # TODO: Correct MESH_FILENAME into the input file
+    # TODO: Uncomment in the future:
+    # # Runs a single SU2 simulation
+    #SU2_fsi.run_SU2_single(config_path, wkdir, nb_proc)
+    # # Extracts the aerodynamics loads and separates them by aircraft parts
+    # # for instance fuselage, wing, vertical tail, horizonzal tail.
+    #extract_loads(wkdir)
+    # SU2_fsi.run_SU2_fsi(config_path, wkdir, nb_proc)
+    # TODO: In the loop this function should be used
+    # run_SU2_fsi()
     
     # Step 2) Reads CFD data from CSV file
     logger.debug("Inside the folder")
-    path = aeroframeSettings["CFDResultFile"]
-    logger.debug(path)
-    SU2Data = pd.read_csv(path)
+    forceFilePath = wkdir + "force.csv"
+    logger.debug(forceFilePath)
+    SU2Data = pd.read_csv(forceFilePath)
 
     # Step 3)  Reads CPACS files and computes the nodes of pseudo 1D structural
     #          mesh. Aeroframe function pre-meshes the aircraft to get each
     #          structure node.
     preMeshedStructre = importGeomerty.CsdGeometryImport(args,aeroframeSettings)
     preMeshedStructre.getAllPoints()
+    logger.info("Structure mesh points computed")
 
-    # Step 4) feeds the computed nodes to the structure solver and builds a
+    # Step ) feeds the computed nodes to the structure solver and builds a
     # structure mesh
-    csdSolverClassVar = framatWrapper.framat(preMeshedStructre)
+    csdSolverClassVar = framatWrapperSU2.framat(preMeshedStructre)
     csdSolverClassVar.mesh()
+    logger.info("FramAT mesh computed")
 
-    # Step 5) feeds the computed nodes to a mapping function which computes the
+    # Step ) feeds the computed nodes to a mapping function which computes the
     # tranformation matrices (based on RBF)
     logger.debug("Next step is transformation")
     transform = mappingSU2.mapper(SU2Data,preMeshedStructre,csdSolverClassVar)
     transform.computesTransformationsMatrices()
-    transform.aeroToStructure()
 
+    # Setp 7) Aeroelastic loop.
+    N = aeroframeSettings["MaxIterationsNumber"]
+    i = 0
+    maxDisplacement = np.array([0])
+    error = []
+    absoluteDisplacement = []
+    tol = aeroframeSettings["ConvergeanceTolerence"]
+    while (i < N):
+        N = 1
+        # basic user comminication
+        logger.debug("aeroelastic loop number: "+str(i))
+
+        # Makes a copy to avoid memory linked mistakes
+        transformCurrent = transform
+        csdSolverClassVarCurrent = csdSolverClassVar
+        # Step ) Projects the loads on CSD instance.
+        transformCurrent.aeroToStructure()
+        # Step ) Compute structure solution
+        csdSolverClassVarCurrent.run(transformCurrent)
+
+        # # Step ) computes new aerodynamic points
+        transformCurrent.structureToAero()
+        sys.exit()
 def standard_run(args):
     """
     Master function which selects the solvers

@@ -4,8 +4,8 @@
 "deformation": true,
 "deformation_method": "load_from_csv",
 "deformation_file": "Optimale_disp_dlr.csv",
-"vlm_autopanels_c": 5,
-"vlm_autopanels_s": 20,
+"vlm_autopanels_c": 10,
+"vlm_autopanels_s": 40,
 "save_results": {
 	"global": true,
 	"panelwise": true,

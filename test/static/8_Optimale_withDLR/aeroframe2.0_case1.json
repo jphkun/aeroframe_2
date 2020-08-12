@@ -3,6 +3,7 @@
     "CSD_settings_file": "OptimaleCSDsettings.json",
     "aircraftFile": "Optimale.xml",
     "CFD_solver": "SU2",
+    "SU2ConfigPath":"/home/cfse2/Documents/aeroframe_2/test/static/8_Optimale_withDLR/CFD/Case00_alt0_mach0.3_aoa2.0_aos0.0/ConfigCFD.cfg",
     "CFDResultFile": "/home/cfse2/Documents/CEASIOMpy/ceasiompy/WKDIR/CEASIOMpy_Run_2020-08-11_13-43-27/Case00_alt0_mach0.3_aoa2.0_aos0.0/force.csv",
     "CSD_solver": "FramAT",
     "MaxIterationsNumber": 20,
