@@ -1,4 +1,4 @@
-Opening /home/cfse2/Documents/CEASIOMpy/ceasiompy/WKDIR/CEASIOMpy_Run_2020-08-11_13-43-27/SUMO/ToolOutput.smesh.
+Opening /home/cfse2/Documents/CEASIOMpy/ceasiompy/WKDIR/CEASIOMpy_Run_2020-08-13_15-31-18/SUMO/ToolOutput.smesh.
   Initializing memorypools.
   tetrahedron per block: 8188.
   Size of a point: 128 bytes.
@@ -11,47 +11,47 @@ Delaunizing vertices...
   Permuting vertices.
   Sorting vertices.
   Incrementally inserting vertices.
-Delaunay seconds:  0.181894
-  Point sorting seconds:  0.004022
+Delaunay seconds:  0.197613
+  Point sorting seconds:  0.004205
 Creating surface mesh ...
   62030 (93045) subfaces (segments).
-Surface mesh seconds:  0.048782
+Surface mesh seconds:  0.048893
 Recovering boundaries...
   Recovering segments.
   93045 (0) segments are recovered (missing).
   Recovering facets.
   62030 (0) subfaces are recovered (missing).
-Boundary recovery seconds:  0.181692
-  Segment recovery seconds:  0.114164
-  Facet recovery seconds:  0.067528
+Boundary recovery seconds:  0.184271
+  Segment recovery seconds:  0.115605
+  Facet recovery seconds:  0.068666
 Removing exterior tetrahedra ...
-Exterior tets removal seconds:  0.061712
+Exterior tets removal seconds:  0.062675
 Recovering Delaunayness...
   Initial obj = 1184047535109.4028
   Final obj  = 1184047535109.4028
-Delaunay recovery seconds:  0.068026
+Delaunay recovery seconds:  0.068354
 Refining mesh...
   Min radius-edge ratio = 1.16.
   Min dihedral   angle = 0.
   Splitting bad quality tets.
   Added 103384 (0,0,103384) Steiner points.
   Performed 239 flips.
-Refinement seconds:  2.99176
+Refinement seconds:  3.03546
 Optimizing mesh...
   Optimization level  = 2.
   Optimization scheme = 7.
   Number of iteration = 3.
   Min_Max dihed angle = 165.
   Removed 6400 edges.
-Optimization seconds:  0.201942
+Optimization seconds:  0.218386
 
-Writing /home/cfse2/Documents/CEASIOMpy/ceasiompy/WKDIR/CEASIOMpy_Run_2020-08-11_13-43-27/SUMO/ToolOutput.1.node.
-Writing /home/cfse2/Documents/CEASIOMpy/ceasiompy/WKDIR/CEASIOMpy_Run_2020-08-11_13-43-27/SUMO/ToolOutput.1.ele.
-Writing /home/cfse2/Documents/CEASIOMpy/ceasiompy/WKDIR/CEASIOMpy_Run_2020-08-11_13-43-27/SUMO/ToolOutput.1.face.
-Writing /home/cfse2/Documents/CEASIOMpy/ceasiompy/WKDIR/CEASIOMpy_Run_2020-08-11_13-43-27/SUMO/ToolOutput.1.edge.
+Writing /home/cfse2/Documents/CEASIOMpy/ceasiompy/WKDIR/CEASIOMpy_Run_2020-08-13_15-31-18/SUMO/ToolOutput.1.node.
+Writing /home/cfse2/Documents/CEASIOMpy/ceasiompy/WKDIR/CEASIOMpy_Run_2020-08-13_15-31-18/SUMO/ToolOutput.1.ele.
+Writing /home/cfse2/Documents/CEASIOMpy/ceasiompy/WKDIR/CEASIOMpy_Run_2020-08-13_15-31-18/SUMO/ToolOutput.1.face.
+Writing /home/cfse2/Documents/CEASIOMpy/ceasiompy/WKDIR/CEASIOMpy_Run_2020-08-13_15-31-18/SUMO/ToolOutput.1.edge.
 
-Output seconds:  0.537782
-Total running seconds:  4.27532
+Output seconds:  0.537161
+Total running seconds:  4.35454
 
 Statistics:
 

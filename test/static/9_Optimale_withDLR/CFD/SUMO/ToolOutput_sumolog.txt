@@ -1,0 +1,11 @@
+Reading .smx file: /home/cfse2/Documents/CEASIOMpy/ceasiompy/WKDIR/CEASIOMpy_Run_2020-08-13_14-13-10/SUMO/ToolOutput.smx
+Geometry generation: 0.0940284s.
+Generating surface mesh...
+Surface mesh: 60750 triangles. (2.79293 s.)
+Initializing mesh boundaries for tetgen ... 0.0591725s.
+Writing tetgen input file: /home/cfse2/Documents/CEASIOMpy/ceasiompy/WKDIR/CEASIOMpy_Run_2020-08-13_14-13-10/SUMO/ToolOutput.smesh ... 0.319295s.
+Running tetgen with options: -pq1.16VY
+tetgen output is written to /home/cfse2/Documents/CEASIOMpy/ceasiompy/WKDIR/CEASIOMpy_Run_2020-08-13_14-13-10/SUMO/ToolOutput_tetgenlog.txt
+tetgen runtime: 5.12572s.
+Reading tetgen output files... 0.204817s.
+Writing SU2 mesh... 2.73874s.

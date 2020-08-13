@@ -31,19 +31,19 @@ class mapper:
         results.
         """
         # For debug purposes
-        self.plotting = True
+        self.plotting = False
         np.set_printoptions(precision=3)
 
         # Assembles matrices
         self.geo = preMeshedStructre
-        self.SU2 = SU2Data
-        logger.debug(self.SU2)
+        self.SU2_forces = SU2Data
+        logger.debug(self.SU2_forces)
         self.geoP = preMeshedStructre.aircraftNodesPoints
         self.csd = csdSolverClassVar
 
         # Separates input points into each aircraft instance (fuselage, wings)
         self.aircraftPointsAndForcesCFD = []
-        self.aircraftPartsNames = self.SU2["marker"].unique()
+        self.aircraftPartsNames = self.SU2_forces["marker"].unique()
         logger.debug(self.aircraftPartsNames)
         logger.debug(self.geo.aircraftPartsUIDs)
         self.order = []
@@ -69,7 +69,7 @@ class mapper:
         logger.debug(N)
         for i in range(N):
             logger.debug(i)
-            self.aircraftPointsAndForcesCFD.append(self.SU2[self.SU2['marker'].str.contains(self.geo.aircraftPartsUIDs[i])].to_numpy())
+            self.aircraftPointsAndForcesCFD.append(self.SU2_forces[self.SU2_forces['marker'].str.contains(self.geo.aircraftPartsUIDs[i])].to_numpy())
 
         # if self.plotting:
         #     fig = plt.figure("figure 1")
@@ -233,9 +233,9 @@ class mapper:
         # separates froces for each wings
         N = len(self.aircraftPartsNames)
         for i in range(N):
-            self.afx.append(self.aircraftPointsAndForcesCFD[i][:,3])
-            self.afy.append(self.aircraftPointsAndForcesCFD[i][:,4])
-            self.afz.append(self.aircraftPointsAndForcesCFD[i][:,5])
+            self.afx.append(self.aircraftPointsAndForcesCFD[i][:,4])
+            self.afy.append(self.aircraftPointsAndForcesCFD[i][:,5])
+            self.afz.append(self.aircraftPointsAndForcesCFD[i][:,6])
         # logger.debug(self.afx[0].shape)
         # logger.debug(self.afx[1].shape)
         # logger.debug(self.afx[2].shape)
@@ -383,8 +383,6 @@ class mapper:
         Converts the displacements from the structure mesh to the aerodynamic
         mesh.
         """
-        # For debugging only
-        plotting = False
         
         # structure displacements
         self.sux = []
@@ -416,33 +414,33 @@ class mapper:
             self.sux.append(self.csd.results.get('tensors').get('comp:U')["ux"][old:old+M])
             self.suy.append(self.csd.results.get('tensors').get('comp:U')["uy"][old:old+M])
             self.suz.append(self.csd.results.get('tensors').get('comp:U')["uz"][old:old+M])
-            
+
             self.stx.append(self.csd.results.get('tensors').get('comp:U')["thx"][old:old+M])
             self.sty.append(self.csd.results.get('tensors').get('comp:U')["thy"][old:old+M])
             self.stz.append(self.csd.results.get('tensors').get('comp:U')["thz"][old:old+M])
             old += M
         np.set_printoptions(precision=3)
-        logger.debug("\n"*20)
-        logger.debug("==== sux ========================")
-        logger.debug(self.sux)
-        logger.debug("==== suy ========================")
-        logger.debug(self.suy)
-        logger.debug("==== suz ========================")
-        logger.debug(self.suz)
-        logger.debug("==== stx ========================")
-        logger.debug(self.stx)
-        logger.debug("==== sty ========================")
-        logger.debug(self.sty)
-        logger.debug("==== stz ========================")
-        logger.debug(self.stz)
-        
+        # logger.debug("\n"*20)
+        # logger.debug("==== sux ========================")
+        # logger.debug(self.sux)
+        # logger.debug("==== suy ========================")
+        # logger.debug(self.suy)
+        # logger.debug("==== suz ========================")
+        # logger.debug(self.suz)
+        # logger.debug("==== stx ========================")
+        # logger.debug(self.stx)
+        # logger.debug("==== sty ========================")
+        # logger.debug(self.sty)
+        # logger.debug("==== stz ========================")
+        # logger.debug(self.stz)
+
         logger.debug("\n"*20)
         # Computes the aerodynamic displacements and the aerodynamic angles
         for i in range(N):
             self.aux.append(np.matmul(self.H[i],self.sux[i]))
             self.auy.append(np.matmul(self.H[i],self.suy[i]))
             self.auz.append(np.matmul(self.H[i],self.suz[i]))
-            
+
             self.atx.append(np.matmul(self.H[i],self.stx[i]))
             self.aty.append(np.matmul(self.H[i],self.sty[i]))
             self.atz.append(np.matmul(self.H[i],self.stz[i]))
@@ -451,15 +449,15 @@ class mapper:
         # logger.debug(self.atx[1])
         # logger.debug(self.atx[2])
         # logger.debug(self.atx[3])
-        
+
         # Assembles the displacements into a big vector
-        size = len(self.SU2)
+        size = len(self.SU2_forces)
         self.displacements = np.empty((size,3))
         logger.debug(self.displacements.shape)
-        N = len(self.geoP) # in the optimale case N=4
-        
+        N = len(self.geoP)  # in the optimale case N=4
+
         # Assembles the displacements
-        ind = self.order[0] # CFD mesh index
+        ind = self.order[0]  # CFD mesh index
         logger.debug(ind)
         dmx = self.aty[ind] * self.distanceMatrix[ind][:,2] + \
               self.atz[ind] * self.distanceMatrix[ind][:,1]
@@ -471,7 +469,7 @@ class mapper:
         dfy = self.auy[ind]
         dfz = self.auz[ind]
         for i in range(1,N):
-            ind = self.order[i] # CFD mesh index
+            ind = self.order[i]  # CFD mesh index
             logger.debug(ind)
             logger.debug(type(ind))
             dmxi = self.aty[ind] * self.distanceMatrix[ind][:,2] + \
@@ -496,7 +494,25 @@ class mapper:
         logger.debug(np.max(self.displacements[1]))
         logger.debug(np.max(self.displacements[2]))
 
+        # Generates the deformation file
+        # 'GlobalID_' + 
+        # New x,y,z positions
+        N = len(self.displacements)
+        # logger.debug(np.arange(N))
+        # idx =  str()
+        idx = ['GlobalID_' + str(x) for x in np.arange(N)]
+        idx = np.array(idx)
+        logger.debug(idx)
+        const = 1
+        x = self.SU2_forces["x"] + const*self.displacements[:,0]
+        y = self.SU2_forces["y"] + const*self.displacements[:,1]
+        z = self.SU2_forces["z"] + const*self.displacements[:,2]
+        fname = 'CFD/Case00_alt0_mach0.3_aoa2.0_aos0.0/disp.dat'
+        # X = np.array()
+        np.savetxt(fname,np.column_stack([idx,x,y,z]),delimiter=', ',fmt='%s')
+
         # Plots
+        self.plotting = False
         if self.plotting:
             fig = plt.figure("figure 2")
             ax = fig.add_subplot(111, projection='3d')
@@ -506,15 +522,15 @@ class mapper:
             #                self.aircraftPointsAndForcesCFD[j][:,2],
             #                self.aircraftPointsAndForcesCFD[j][:,3],
             #                label=self.geo.aircraftPartsUIDs[j])
-            ax.scatter(self.SU2["x"],
-                        self.SU2["y"],
-                        self.SU2["z"],
-                        label = "undeformed")
+            ax.scatter(self.SU2_forces["x"],
+                       self.SU2_forces["y"],
+                       self.SU2_forces["z"],
+                       label = "undeformed")
 
-            ax.scatter(self.SU2["x"] + self.displacements[:,0],
-                        self.SU2["y"] + self.displacements[:,1],
-                        self.SU2["z"] + self.displacements[:,2],
-                        label = "deformed")
+            ax.scatter(self.SU2_forces["x"] + self.displacements[:,0],
+                       self.SU2_forces["y"] + self.displacements[:,1],
+                       self.SU2_forces["z"] + self.displacements[:,2],
+                       label = "deformed")
             val = 15
             ax.set_xlim(-val,val)
             ax.set_ylim(-val,val)
@@ -524,4 +540,3 @@ class mapper:
 
     # def deformVLM(self):
     #     pass
-            

@@ -303,16 +303,12 @@ def solverSU2Framat(args, aeroframeSettings, acceptedNames):
     logger.debug("nb of proc: \n"+str(nb_proc))
     logger.debug("WKDIR: \n"+str(wkdir))
 
-    # TODO: Correct MESH_FILENAME into the input file
-    # TODO: Uncomment in the future:
-    # # Runs a single SU2 simulation
+    # TODO: Correct outputsolution filename is problematic
+    # Runs a single SU2 simulation
     #SU2_fsi.run_SU2_single(config_path, wkdir, nb_proc)
-    # # Extracts the aerodynamics loads and separates them by aircraft parts
-    # # for instance fuselage, wing, vertical tail, horizonzal tail.
-    #extract_loads(wkdir)
-    # SU2_fsi.run_SU2_fsi(config_path, wkdir, nb_proc)
-    # TODO: In the loop this function should be used
-    # run_SU2_fsi()
+    # Extracts the aerodynamics loads and separates them by aircraft parts
+    # for instance fuselage, wing, vertical tail, horizonzal tail.
+    extract_loads(wkdir)
     
     # Step 2) Reads CFD data from CSV file
     logger.debug("Inside the folder")
@@ -361,6 +357,10 @@ def solverSU2Framat(args, aeroframeSettings, acceptedNames):
 
         # # Step ) computes new aerodynamic points
         transformCurrent.structureToAero()
+        # TODO: take care of the markers, make it versatile
+        # TODO: take care of the configDEF file
+        markers = '( VTP , Fuselage , HTP , Wing )'
+        SU2_fsi.run_SU2_fsi(config_path, wkdir, nb_proc, markers)
         sys.exit()
 def standard_run(args):
     """

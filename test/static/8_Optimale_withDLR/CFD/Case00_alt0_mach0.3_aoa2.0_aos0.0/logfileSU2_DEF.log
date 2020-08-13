@@ -1,0 +1,147 @@
+
+-------------------------------------------------------------------------
+|    ___ _   _ ___                                                      |
+|   / __| | | |_  )   Release 7.0.3 "Blackbird"                         |
+|   \__ \ |_| |/ /                                                      |
+|   |___/\___//___|   Suite (Mesh Deformation Code)                     |
+|                                                                       |
+-------------------------------------------------------------------------
+| SU2 Project Website: https://su2code.github.io                        |
+|                                                                       |
+| The SU2 Project is maintained by the SU2 Foundation                   |
+| (http://su2foundation.org)                                            |
+-------------------------------------------------------------------------
+| Copyright 2012-2020, SU2 Contributors                                 |
+|                                                                       |
+| SU2 is free software; you can redistribute it and/or                  |
+| modify it under the terms of the GNU Lesser General Public            |
+| License as published by the Free Software Foundation; either          |
+| version 2.1 of the License, or (at your option) any later version.    |
+|                                                                       |
+| SU2 is distributed in the hope that it will be useful,                |
+| but WITHOUT ANY WARRANTY; without even the implied warranty of        |
+| MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU      |
+| Lesser General Public License for more details.                       |
+|                                                                       |
+| You should have received a copy of the GNU Lesser General Public      |
+| License along with SU2. If not, see <http://www.gnu.org/licenses/>.   |
+-------------------------------------------------------------------------
+
+----------------- Physical Case Definition ( Zone 0 ) -------------------
+Input mesh file name: /home/cfse2/Documents/aeroframe_2/test/static/8_Optimale_withDLR/CFD/MESH/OptimaleBL3_baseline.su2
+
+---------------- Grid deformation parameters ( Zone 0 )  ----------------
+Grid deformation using a linear elasticity method.
+
+
+-------------------- Output Information ( Zone 0 ) ----------------------
+Output mesh file name: /home/cfse2/Documents/aeroframe_2/test/static/8_Optimale_withDLR/CFD/MESH/OptimaleBL3_baseline_.su2. 
+A file will be created to visualize the surface deformation.
+A file will be created to visualize the volume deformation.
+Cell stiffness scaled by distance to nearest solid surface.
+
+------------- Config File Boundary Information ( Zone 0 ) ---------------
++-----------------------------------------------------------------------+
+|                        Marker Type|                        Marker Name|
++-----------------------------------------------------------------------+
+|                         Euler wall|                                VTP|
+|                                   |                           Fuselage|
+|                                   |                                HTP|
+|                                   |                               Wing|
++-----------------------------------------------------------------------+
+|                          Far-field|                           Farfield|
++-----------------------------------------------------------------------+
+|                     Symmetry plane|                                  0|
++-----------------------------------------------------------------------+
+|           Deformable mesh boundary|                                VTP|
++-----------------------------------------------------------------------+
+Three dimensional problem.
+134403 grid points before partitioning.
+750945 volume elements before partitioning.
+5 surface markers.
+2298 boundary elements in index 0 (Marker = VTP).
+6838 boundary elements in index 1 (Marker = Fuselage).
+9046 boundary elements in index 2 (Marker = HTP).
+42568 boundary elements in index 3 (Marker = Wing).
+1280 boundary elements in index 4 (Marker = Farfield).
+Executing the partitioning functions.
+Building the graph adjacency structure.
+Calling ParMETIS... graph partitioning complete (5060 edge cuts).
+Distributing ParMETIS coloring.
+Rebalancing vertices.
+Rebalancing volume element connectivity.
+Rebalancing markers and surface elements.
+137162 vertices including ghost points. 
+758572 interior elements including halo cells. 
+758572 tetrahedra.
+Establishing MPI communication patterns.
+
+----------------------- Preprocessing computations ----------------------
+Setting local point connectivity.
+Checking the numerical grid orientation of the interior elements.
+Identify edges and vertices.
+Computing centers of gravity.
+Setting the bound control volume structure.
+  Info: Ignoring the following volume output fields/groups:
+  SOLUTION, PRIMITIVE, COORDINATES
+Volume output fields: COORDINATES
+  Info: Ignoring the following screen output fields:
+  RMS_DENSITY, RMS_MOMENTUM-X, RMS_MOMENTUM-Y, RMS_ENERGY, LIFT, DRAG
+Screen output fields: INNER_ITER, TIME_ITER
+  Info: Ignoring the following history output groups:
+  TIME_ITER, RMS_RES, AERO_COEFF
+History output group(s): ITER
+Ignoring Convergence Field(s): DRAG 
+Warning: No (valid) fields chosen for convergence monitoring. Convergence monitoring inactive.
+Warning: No (valid) fields chosen for time convergence monitoring. Time convergence monitoring inactive.
+
+--------------------- Surface grid deformation (ZONE 0) -----------------
+Performing the deformation of the surface grid.
+Updating the surface coordinates from the input file.
+
+------------------- Volumetric grid deformation (ZONE 0) ----------------
+Performing the deformation of the volumetric grid.
+Computing volumes of the grid elements.
+Min. volume: 1.17708e-10, max. volume: 3607.77.
+Min. distance: 0.00139604, max. distance: 109.138.
+
+# ILU preconditioner.
+
+# FGMRES residual history
+# Residual tolerance target = 1e-14
+# Initial residual norm     = 0.000877216
+     0     1
+     10     0.000643815
+     20     2.99467e-05
+     30     6.0654e-06
+     40     1.16936e-06
+     50     1.0542e-07
+     60     7.96535e-09
+     70     5.69592e-10
+     80     5.38925e-11
+     90     5.9394e-12
+     100     3.37808e-13
+     110     2.08218e-14
+# FGMRES final (true) residual:
+# Iteration = 115: |res|/|res0| = 9.46258e-15.
+
+Computing volumes of the grid elements.
+Non-linear iter.: 1/1. Linear iter.: 115. Min. volume: 0. Error: 9.46258e-15.
+
+----------------------- Write deformed grid files -----------------------
+|SU2 mesh                           |/home/cfse2/Documents/aeroframe_2/test/static/8_Optimale_withDLR/CFD/MESH/OptimaleBL3_baseline_.su2|
+|Paraview                           |volume_deformed.vtu                |
+|Paraview surface                   |surface_deformed.vtu               |
+Adding any FFD information to the SU2 file.
+
+------------------------- Solver Postprocessing -------------------------
+Deleted CGeometry container.
+Deleted CSurfaceMovement class.
+Deleted CVolumetricMovement class.
+Deleted CConfig container.
+Deleted COutput class.
+
+Completed in 9.020706 seconds on 3 cores.
+
+------------------------- Exit Success (SU2_DEF) ------------------------
+
