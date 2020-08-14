@@ -298,23 +298,20 @@ def solverSU2Framat(args, aeroframeSettings, acceptedNames):
     # Case s2etup
     config_path = aeroframeSettings["SU2ConfigPath"]
     wkdir = args.cwd + "/CFD/Case00_alt0_mach0.3_aoa2.0_aos0.0/"
-    nb_proc = 3
+    nb_proc = 4
     logger.debug("Configuration path: \n"+str(config_path))
     logger.debug("nb of proc: \n"+str(nb_proc))
     logger.debug("WKDIR: \n"+str(wkdir))
 
     # TODO: Correct outputsolution filename is problematic
     # Runs a single SU2 simulation
-    #SU2_fsi.run_SU2_single(config_path, wkdir, nb_proc)
+    SU2_fsi.run_SU2_single(config_path, wkdir, nb_proc)
     # Extracts the aerodynamics loads and separates them by aircraft parts
     # for instance fuselage, wing, vertical tail, horizonzal tail.
     extract_loads(wkdir)
     
     # Step 2) Reads CFD data from CSV file
     logger.debug("Inside the folder")
-    forceFilePath = wkdir + "force.csv"
-    logger.debug(forceFilePath)
-    SU2Data = pd.read_csv(forceFilePath)
 
     # Step 3)  Reads CPACS files and computes the nodes of pseudo 1D structural
     #          mesh. Aeroframe function pre-meshes the aircraft to get each
@@ -332,8 +329,12 @@ def solverSU2Framat(args, aeroframeSettings, acceptedNames):
     # Step ) feeds the computed nodes to a mapping function which computes the
     # tranformation matrices (based on RBF)
     logger.debug("Next step is transformation")
-    transform = mappingSU2.mapper(SU2Data,preMeshedStructre,csdSolverClassVar)
+    forceFilePath = wkdir + "force.csv"
+    transform = mappingSU2.mapper(forceFilePath,preMeshedStructre,csdSolverClassVar)
     transform.computesTransformationsMatrices()
+
+    # For debugging
+    # forcesOG = pd.read_csv(forceFilePath)
 
     # Setp 7) Aeroelastic loop.
     N = aeroframeSettings["MaxIterationsNumber"]
@@ -343,7 +344,6 @@ def solverSU2Framat(args, aeroframeSettings, acceptedNames):
     absoluteDisplacement = []
     tol = aeroframeSettings["ConvergeanceTolerence"]
     while (i < N):
-        N = 1
         # basic user comminication
         logger.debug("aeroelastic loop number: "+str(i))
 
@@ -354,14 +354,35 @@ def solverSU2Framat(args, aeroframeSettings, acceptedNames):
         transformCurrent.aeroToStructure()
         # Step ) Compute structure solution
         csdSolverClassVarCurrent.run(transformCurrent)
+        transformCurrent.structureToAero(i)
+        # Computes convergence
+        maxDisplacement = np.append(maxDisplacement, np.max(transform.displacements))
+        error.append(np.abs(maxDisplacement[-1] - maxDisplacement[-2]))
+        absoluteDisplacement.append(np.abs(maxDisplacement[-1] - maxDisplacement[0]))
+        logger.info("Max error between two iteration: "+str(error))
 
-        # # Step ) computes new aerodynamic points
-        transformCurrent.structureToAero()
-        # TODO: take care of the markers, make it versatile
-        # TODO: take care of the configDEF file
-        markers = '( VTP , Fuselage , HTP , Wing )'
-        SU2_fsi.run_SU2_fsi(config_path, wkdir, nb_proc, markers)
-        sys.exit()
+        # Step ) computes new CFD solution
+        SU2_fsi.run_SU2_fsi(config_path, wkdir, nb_proc, i)
+        # forcesNew = pd.read_csv(forceFilePath)
+        # forcesOG
+        # if forcesNew.equals(forcesOG):
+        #     logger.debug("\n"*100)
+        #     logger.debug("No changes in forces")
+        #     logger.debug("\n"*100)
+        #     sys.exit()
+        # else:
+        #     logger.debug("\n"*100)
+        #     logger.debug('Force file is not the same')
+        #     logger.debug("\n"*100)
+        i += 1
+        if i == N-1:
+            logger.warning("Simulation has reached max number of step,")
+            logger.warning("convergeance is yet to determine!")
+        if error[-1] <= tol:
+            logger.info("Simulation has converged")
+            i = N
+    sys.exit()
+
 def standard_run(args):
     """
     Master function which selects the solvers

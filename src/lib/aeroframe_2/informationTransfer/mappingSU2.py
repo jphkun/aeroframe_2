@@ -18,6 +18,7 @@ import scipy as sp
 import skspatial.objects as sk
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
+import pandas as pd
 import time
 import sys
 
@@ -25,7 +26,7 @@ logger = logging.getLogger(__name__)
 
 
 class mapper:
-    def __init__(self,SU2Data,preMeshedStructre,csdSolverClassVar):
+    def __init__(self,forceFilePath,preMeshedStructre,csdSolverClassVar):
         """
         Initialises the class and separes the wing points for enhanced quality
         results.
@@ -33,17 +34,24 @@ class mapper:
         # For debug purposes
         self.plotting = False
         np.set_printoptions(precision=3)
-
+        self.forceFilePath = forceFilePath
+        
         # Assembles matrices
         self.geo = preMeshedStructre
-        self.SU2_forces = SU2Data
-        logger.debug(self.SU2_forces)
         self.geoP = preMeshedStructre.aircraftNodesPoints
         self.csd = csdSolverClassVar
 
         # Separates input points into each aircraft instance (fuselage, wings)
-        self.aircraftPointsAndForcesCFD = []
-        self.aircraftPartsNames = self.SU2_forces["marker"].unique()
+        SU2Data = pd.read_csv(self.forceFilePath)
+        N = len(self.geo.aircraftPartsUIDs)
+        logger.debug(N)
+        aircraftPointsAndForcesCFD = []
+        for i in range(N):
+            logger.debug(i)
+            aircraftPointsAndForcesCFD.append(SU2Data[SU2Data['marker'].str.contains(self.geo.aircraftPartsUIDs[i])].to_numpy())
+
+        self.aircraftPartsNames = SU2Data["marker"].unique()
+        del(SU2Data)
         logger.debug(self.aircraftPartsNames)
         logger.debug(self.geo.aircraftPartsUIDs)
         self.order = []
@@ -65,20 +73,15 @@ class mapper:
         logger.debug(self.order)
         # sys.exit()
         
-        N = len(self.geo.aircraftPartsUIDs)
-        logger.debug(N)
-        for i in range(N):
-            logger.debug(i)
-            self.aircraftPointsAndForcesCFD.append(self.SU2_forces[self.SU2_forces['marker'].str.contains(self.geo.aircraftPartsUIDs[i])].to_numpy())
 
         # if self.plotting:
         #     fig = plt.figure("figure 1")
         #     ax = fig.add_subplot(111, projection='3d')
         #     # for i in range(len(self.wingsPoints)):
         #     for i in range(len(self.aircraftPartsNames)):
-        #         ax.scatter(self.aircraftPointsAndForcesCFD[i][:,1],
-        #                    self.aircraftPointsAndForcesCFD[i][:,2],
-        #                    self.aircraftPointsAndForcesCFD[i][:,3],
+        #         ax.scatter(aircraftPointsAndForcesCFD[i][:,1],
+        #                    aircraftPointsAndForcesCFD[i][:,2],
+        #                    aircraftPointsAndForcesCFD[i][:,3],
         #                    label=self.geo.aircraftPartsUIDs[i])
         #     val = 15
         #     ax.set_xlim(-val,val)
@@ -102,6 +105,15 @@ class mapper:
         self.dzsGlob = []
         self.dzaGlob = []
 
+        # Updates aircraftPointsAndForcesCFD
+        SU2Data = pd.read_csv(self.forceFilePath)
+        N = len(self.geo.aircraftPartsUIDs)
+        logger.debug(N)
+        aircraftPointsAndForcesCFD = []
+        for i in range(N):
+            logger.debug(i)
+            aircraftPointsAndForcesCFD.append(SU2Data[SU2Data['marker'].str.contains(self.geo.aircraftPartsUIDs[i])].to_numpy())
+
         # Computes the matrix M and then invert it for each aircraft part.
         for i in range(len(self.aircraftPartsNames)):
             # permitted choices are: G,L,TPS,HMQ,HIMQ,C0,C2,C4,C6,EH. See the 
@@ -120,9 +132,9 @@ class mapper:
 
             # Computes the matrix Q which is also the matrix A transposed in
             # this specific case.
-            m = len(self.aircraftPointsAndForcesCFD[i])
+            m = len(aircraftPointsAndForcesCFD[i])
             X = self.geoP[i]
-            Y = self.aircraftPointsAndForcesCFD[i][:,1:4]
+            Y = aircraftPointsAndForcesCFD[i][:,1:4]
             r = sp.spatial.distance.cdist(X,Y,"euclidean")
             # Computes the radial basis function matrix "Q" in the report
             Q = self.phi(r,fun)
@@ -156,14 +168,14 @@ class mapper:
         #     fig = plt.figure("figure 2")
         #     ax = fig.add_subplot(111, projection='3d')
         #     for p in range(len(self.aircraftPartsNames)):
-        #         logger.debug(self.aircraftPointsAndForcesCFD[p].shape)
-        #         # ax.scatter(self.aircraftPointsAndForcesCFD[p]["x"],
-        #         #            self.aircraftPointsAndForcesCFD[p]["y"],
-        #         #            self.aircraftPointsAndForcesCFD[p]["z"],
+        #         logger.debug(aircraftPointsAndForcesCFD[p].shape)
+        #         # ax.scatter(aircraftPointsAndForcesCFD[p]["x"],
+        #         #            aircraftPointsAndForcesCFD[p]["y"],
+        #         #            aircraftPointsAndForcesCFD[p]["z"],
         #         #            label=self.aircraftPartsNames[i])
-        #         ax.scatter(self.aircraftPointsAndForcesCFD[p][:,1],
-        #                    self.aircraftPointsAndForcesCFD[p][:,2],
-        #                    self.aircraftPointsAndForcesCFD[p][:,3] + self.dzaGlob[p],
+        #         ax.scatter(aircraftPointsAndForcesCFD[p][:,1],
+        #                    aircraftPointsAndForcesCFD[p][:,2],
+        #                    aircraftPointsAndForcesCFD[p][:,3] + self.dzaGlob[p],
         #                    label=self.geo.aircraftPartsUIDs[p])
         #     val = 15
         #     ax.set_xlim(-val,val)
@@ -171,6 +183,8 @@ class mapper:
         #     ax.set_zlim(-val,val)
         #     ax.legend()
         #     plt.show()
+        del(SU2Data)
+
 
     def phi(self,r,fun):
         """
@@ -230,12 +244,22 @@ class mapper:
         self.afy = []
         self.afz = []
 
+        # Updates aircraftPointsAndForcesCFD
+        SU2Data = pd.read_csv(self.forceFilePath)
+        N = len(self.geo.aircraftPartsUIDs)
+        logger.debug(N)
+        aircraftPointsAndForcesCFD = []
+        for i in range(N):
+            logger.debug(i)
+            aircraftPointsAndForcesCFD.append(SU2Data[SU2Data['marker'].str.contains(self.geo.aircraftPartsUIDs[i])].to_numpy())
+
+
         # separates froces for each wings
         N = len(self.aircraftPartsNames)
         for i in range(N):
-            self.afx.append(self.aircraftPointsAndForcesCFD[i][:,4])
-            self.afy.append(self.aircraftPointsAndForcesCFD[i][:,5])
-            self.afz.append(self.aircraftPointsAndForcesCFD[i][:,6])
+            self.afx.append(aircraftPointsAndForcesCFD[i][:,4])
+            self.afy.append(aircraftPointsAndForcesCFD[i][:,5])
+            self.afz.append(aircraftPointsAndForcesCFD[i][:,6])
         # logger.debug(self.afx[0].shape)
         # logger.debug(self.afx[1].shape)
         # logger.debug(self.afx[2].shape)
@@ -262,6 +286,7 @@ class mapper:
         logger.debug("smx = \n"+str(self.smx))
         logger.debug("smy = \n"+str(self.smy))
         logger.debug("smz = \n"+str(self.smz))
+        del(SU2Data)
 
     def computeDistanceForMorments(self):
         """
@@ -280,12 +305,21 @@ class mapper:
                   the exact projection
         7) Computes the moment
         """
-        N = len(self.aircraftPointsAndForcesCFD)
+        # Updates aircraftPointsAndForcesCFD
+        SU2Data = pd.read_csv(self.forceFilePath)
+        N = len(self.geo.aircraftPartsUIDs)
+        logger.debug(N)
+        aircraftPointsAndForcesCFD = []
+        for i in range(N):
+            logger.debug(i)
+            aircraftPointsAndForcesCFD.append(SU2Data[SU2Data['marker'].str.contains(self.geo.aircraftPartsUIDs[i])].to_numpy())
+
+        N = len(aircraftPointsAndForcesCFD)
         self.distanceMatrix = []
 
         for i in range(N):
-            M = len(self.aircraftPointsAndForcesCFD[i])
-            X = self.aircraftPointsAndForcesCFD[i][:,1:4]
+            M = len(aircraftPointsAndForcesCFD[i])
+            X = aircraftPointsAndForcesCFD[i][:,1:4]
             Y = self.geo.aircraftNodesPoints[i]
             
             # Computes the distance between each point of X and each point of
@@ -295,7 +329,7 @@ class mapper:
             self.distanceMatrix.append(np.empty((M,3)))
             # Finds the minimal 3 values
             for j in range(M):
-                point = self.aircraftPointsAndForcesCFD[i][j,1:4]
+                point = aircraftPointsAndForcesCFD[i][j,1:4]
                 point = point.astype('float64')
                 # point[1] = np.around(point[1],6)
                 # logger.debug("point = \n"+str(point))
@@ -354,6 +388,7 @@ class mapper:
                 elif distP1Proj1 > distP1P2 and distP3Proj2 > distP2P3:
                     delta = -(point - p2)
                 self.distanceMatrix[i][j] = np.array([delta[0],delta[1],delta[2]])
+        del(SU2Data)
 
     def computeMoments(self):
         """
@@ -378,7 +413,7 @@ class mapper:
             # self.amy[i][np.abs(self.amy[i])<1e-7] = 0.
             # self.amz[i][np.abs(self.amz[i])<1e-7] = 0.
 
-    def structureToAero(self):
+    def structureToAero(self,loopNumber):
         """
         Converts the displacements from the structure mesh to the aerodynamic
         mesh.
@@ -451,7 +486,8 @@ class mapper:
         # logger.debug(self.atx[3])
 
         # Assembles the displacements into a big vector
-        size = len(self.SU2_forces)
+        SU2Data = pd.read_csv(self.forceFilePath)
+        size = len(SU2Data)
         self.displacements = np.empty((size,3))
         logger.debug(self.displacements.shape)
         N = len(self.geoP)  # in the optimale case N=4
@@ -500,16 +536,23 @@ class mapper:
         N = len(self.displacements)
         # logger.debug(np.arange(N))
         # idx =  str()
-        idx = ['GlobalID_' + str(x) for x in np.arange(N)]
-        idx = np.array(idx)
+        # idx = ['GlobalID_' + str(x) for x in np.arange(N)]
+        idx = [str(x) for x in np.arange(N)]
+        start = 0  # 9136
+        idx = np.array(idx[start:])
         logger.debug(idx)
         const = 1
-        x = self.SU2_forces["x"] + const*self.displacements[:,0]
-        y = self.SU2_forces["y"] + const*self.displacements[:,1]
-        z = self.SU2_forces["z"] + const*self.displacements[:,2]
-        fname = 'CFD/Case00_alt0_mach0.3_aoa2.0_aos0.0/disp.dat'
+        some_value = 'Wing'
+        # var = SU2Data.loc[self.SU2_forces['marker'] == some_value]
+        var = SU2Data
+        logger.debug(var['x'])
+        # sys.exit()
+        x = var["x"] + const*self.displacements[start:,0]
+        y = var["y"] + const*self.displacements[start:,1]
+        z = var["z"] + const*self.displacements[start:,2]
+        fname = 'CFD/Case00_alt0_mach0.3_aoa2.0_aos0.0/'+str(loopNumber+1)+'disp.dat'
         # X = np.array()
-        np.savetxt(fname,np.column_stack([idx,x,y,z]),delimiter=', ',fmt='%s')
+        np.savetxt(fname,np.column_stack([idx,x,y,z]),delimiter='\t',fmt='%s')
 
         # Plots
         self.plotting = False
@@ -522,14 +565,14 @@ class mapper:
             #                self.aircraftPointsAndForcesCFD[j][:,2],
             #                self.aircraftPointsAndForcesCFD[j][:,3],
             #                label=self.geo.aircraftPartsUIDs[j])
-            ax.scatter(self.SU2_forces["x"],
-                       self.SU2_forces["y"],
-                       self.SU2_forces["z"],
+            ax.scatter(SU2Data[start:,"x"],
+                       SU2Data[start:,"y"],
+                       SU2Data[start:,"z"],
                        label = "undeformed")
 
-            ax.scatter(self.SU2_forces["x"] + self.displacements[:,0],
-                       self.SU2_forces["y"] + self.displacements[:,1],
-                       self.SU2_forces["z"] + self.displacements[:,2],
+            ax.scatter(SU2Data[start:,"x"] + self.displacements[start:,0],
+                       SU2Data[start:,"y"] + self.displacements[start:,1],
+                       SU2Data[start:,"z"] + self.displacements[start:,2],
                        label = "deformed")
             val = 15
             ax.set_xlim(-val,val)
@@ -537,6 +580,7 @@ class mapper:
             ax.set_zlim(-val,val)
             ax.legend()
             plt.show()
+        del(SU2Data)
 
     # def deformVLM(self):
     #     pass
