@@ -21,6 +21,8 @@ from mpl_toolkits.mplot3d import Axes3D
 import pandas as pd
 import time
 import sys
+import os
+import fnmatch
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +36,6 @@ class mapper:
         # For debug purposes
         self.plotting = False
         np.set_printoptions(precision=3)
-        self.forceFilePath = forceFilePath
         
         # Assembles matrices
         self.geo = preMeshedStructre
@@ -42,7 +43,7 @@ class mapper:
         self.csd = csdSolverClassVar
 
         # Separates input points into each aircraft instance (fuselage, wings)
-        SU2Data = pd.read_csv(self.forceFilePath)
+        SU2Data = pd.read_csv(forceFilePath)
         N = len(self.geo.aircraftPartsUIDs)
         logger.debug(N)
         aircraftPointsAndForcesCFD = []
@@ -90,7 +91,7 @@ class mapper:
         #     ax.legend()
         #     plt.show()
 
-    def computesTransformationsMatrices(self):
+    def computesTransformationsMatrices(self,forceFilePath):
         """
         Computes the transformation matrix in order for the mesh tranformation
         to follow the principle of virtual work.
@@ -106,7 +107,7 @@ class mapper:
         self.dzaGlob = []
 
         # Updates aircraftPointsAndForcesCFD
-        SU2Data = pd.read_csv(self.forceFilePath)
+        SU2Data = pd.read_csv(forceFilePath)
         N = len(self.geo.aircraftPartsUIDs)
         logger.debug(N)
         aircraftPointsAndForcesCFD = []
@@ -147,7 +148,7 @@ class mapper:
         
         # Computes the distances from the leading edge for each point. This
         # computation result is necessary for the moments computation.
-        self.computeDistanceForMorments()
+        self.computeDistanceForMorments(forceFilePath)
         logger.info("Finised computing distance matrix")
         #     # tests the mapping:
         #     n = self.geoP[i].shape
@@ -226,7 +227,7 @@ class mapper:
             phi_x = np.pi*((1/12*r**3) - r*eps**2 + 4/3*eps**3)
         return phi_x
 
-    def aeroToStructure(self):
+    def aeroToStructure(self,forceFilePath):
         """
         Compute the forces for the structure solver from the CFD solver resutls.
         """
@@ -245,7 +246,7 @@ class mapper:
         self.afz = []
 
         # Updates aircraftPointsAndForcesCFD
-        SU2Data = pd.read_csv(self.forceFilePath)
+        SU2Data = pd.read_csv(forceFilePath)
         N = len(self.geo.aircraftPartsUIDs)
         logger.debug(N)
         aircraftPointsAndForcesCFD = []
@@ -288,7 +289,7 @@ class mapper:
         logger.debug("smz = \n"+str(self.smz))
         del(SU2Data)
 
-    def computeDistanceForMorments(self):
+    def computeDistanceForMorments(self,forceFilePath):
         """
         1) Retrieves the forces
         2) Retrieves the points
@@ -306,7 +307,7 @@ class mapper:
         7) Computes the moment
         """
         # Updates aircraftPointsAndForcesCFD
-        SU2Data = pd.read_csv(self.forceFilePath)
+        SU2Data = pd.read_csv(forceFilePath)
         N = len(self.geo.aircraftPartsUIDs)
         logger.debug(N)
         aircraftPointsAndForcesCFD = []
@@ -413,7 +414,7 @@ class mapper:
             # self.amy[i][np.abs(self.amy[i])<1e-7] = 0.
             # self.amz[i][np.abs(self.amz[i])<1e-7] = 0.
 
-    def structureToAero(self,loopNumber):
+    def structureToAero(self,iteration,forceInitFilePath,forceFilePath):
         """
         Converts the displacements from the structure mesh to the aerodynamic
         mesh.
@@ -486,7 +487,7 @@ class mapper:
         # logger.debug(self.atx[3])
 
         # Assembles the displacements into a big vector
-        SU2Data = pd.read_csv(self.forceFilePath)
+        SU2Data = pd.read_csv(forceFilePath)
         size = len(SU2Data)
         self.displacements = np.empty((size,3))
         logger.debug(self.displacements.shape)
@@ -523,12 +524,12 @@ class mapper:
             dmz = np.concatenate((dmz,dmzi))
             dfz = np.concatenate((dfz,self.auz[ind]))
         self.displacements = np.array([dmx+dfx,dmy+dfy,dmz+dfz]).T
-        logger.debug(self.displacements[0])
-        logger.debug(self.displacements[1])
-        logger.debug(self.displacements[1])
-        logger.debug(np.max(self.displacements[0]))
-        logger.debug(np.max(self.displacements[1]))
-        logger.debug(np.max(self.displacements[2]))
+        # logger.debug(self.displacements[0])
+        # logger.debug(self.displacements[1])
+        # logger.debug(self.displacements[2])
+        # logger.debug(np.max(self.displacements[0]))
+        # logger.debug(np.max(self.displacements[1]))
+        # logger.debug(np.max(self.displacements[2]))
 
         # Generates the deformation file
         # 'GlobalID_' + 
@@ -544,13 +545,16 @@ class mapper:
         const = 1
         some_value = 'Wing'
         # var = SU2Data.loc[self.SU2_forces['marker'] == some_value]
-        var = SU2Data
-        logger.debug(var['x'])
-        # sys.exit()
-        x = var["x"] + const*self.displacements[start:,0]
-        y = var["y"] + const*self.displacements[start:,1]
-        z = var["z"] + const*self.displacements[start:,2]
-        fname = 'CFD/Case00_alt0_mach0.3_aoa2.0_aos0.0/'+str(loopNumber+1)+'disp.dat'
+        SU2DataInit = pd.read_csv(forceInitFilePath)
+        x = SU2DataInit["x"] + const*self.displacements[start:,0]
+        y = SU2DataInit["y"] + const*self.displacements[start:,1]
+        z = SU2DataInit["z"] + const*self.displacements[start:,2]
+        path = os.path.join(self.geo.inputArgs.cwd,'CFD')
+        caseName = os.listdir(path)
+        caseName = fnmatch.filter(caseName, 'Case*')
+        logger.debug(caseName)
+        fname = path + '/' + caseName[0] + '/' + str(iteration) + '/disp.dat'
+        logger.debug('filename: \n'+str(fname))
         # X = np.array()
         np.savetxt(fname,np.column_stack([idx,x,y,z]),delimiter='\t',fmt='%s')
 

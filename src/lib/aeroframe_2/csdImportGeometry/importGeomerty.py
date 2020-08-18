@@ -70,7 +70,7 @@ class CsdGeometryImport:
         # Aircraft absolute path
         inputAircraftPath = args.cwd +"/CFD/aircraft/" + aeroframeSettings["aircraftFile"]
         logger.debug("inputAircraftPath \n"+str(inputAircraftPath))
-
+        self.inputArgs = args
         # Tixi and Tigl handler. Necessary to read the CPACS
         self.tixi = tixi3wrapper.Tixi3()
         self.tigl = tigl3wrapper.Tigl3()

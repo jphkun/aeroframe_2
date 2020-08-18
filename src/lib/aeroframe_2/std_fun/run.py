@@ -19,8 +19,10 @@ OK TODO: File management with csv deformation
 OK TODO do a better job with the settings files workflow
 OK TODO: get CFD forces for csv file
 OK TODO: compute CFD moments
-TODO make a features that makes the program run a save the results and mesh.
-TODO checks folder structure and prints the potential errors
+OK TODO make a feature that makes the program run a save the results and mesh.
+
+TODO: Verify that the displacements do not add up
+TODO: checks folder structure and prints the potential errors
 
 """
 
@@ -294,93 +296,84 @@ def solverSU2Framat(args, aeroframeSettings, acceptedNames):
     """
     # TODO Step ) Checks the entry data.
     
-    # Step 1) Runs SU2 in order to get the aerodynamcs loads.
+    # Step 1) Initialization of the loop
+    #   Creation of the current loop directory done by the su2run.py file.
     # Case s2etup
+    iteration = 0
     config_path = aeroframeSettings["SU2ConfigPath"]
     wkdir = args.cwd + "/CFD/Case00_alt0_mach0.3_aoa2.0_aos0.0/"
     nb_proc = 4
     logger.debug("Configuration path: \n"+str(config_path))
     logger.debug("nb of proc: \n"+str(nb_proc))
     logger.debug("WKDIR: \n"+str(wkdir))
-
-    # TODO: Correct outputsolution filename is problematic
-    # Runs a single SU2 simulation
-    SU2_fsi.run_SU2_single(config_path, wkdir, nb_proc)
-    # Extracts the aerodynamics loads and separates them by aircraft parts
-    # for instance fuselage, wing, vertical tail, horizonzal tail.
-    extract_loads(wkdir)
     
-    # Step 2) Reads CFD data from CSV file
-    logger.debug("Inside the folder")
+    # Step 2) Runs a single SU2 simulation
+    SU2_fsi.run_SU2_fsi(config_path, wkdir, nb_proc, iteration)
 
-    # Step 3)  Reads CPACS files and computes the nodes of pseudo 1D structural
-    #          mesh. Aeroframe function pre-meshes the aircraft to get each
-    #          structure node.
+    # Step 3)  Reads CPACS files and computes the nodes of 3D beam structural
+    #          mesh. Aeroframe_2 function 'importGeomerty' pre-meshes the 
+    #          aircraft to get each structure node.
     preMeshedStructre = importGeomerty.CsdGeometryImport(args,aeroframeSettings)
     preMeshedStructre.getAllPoints()
     logger.info("Structure mesh points computed")
 
-    # Step ) feeds the computed nodes to the structure solver and builds a
+    # Step 4) feeds the computed nodes to the structure solver and builds a
     # structure mesh
     csdSolverClassVar = framatWrapperSU2.framat(preMeshedStructre)
     csdSolverClassVar.mesh()
     logger.info("FramAT mesh computed")
 
-    # Step ) feeds the computed nodes to a mapping function which computes the
+    # Step 5) feeds the computed nodes to a mapping function which computes the
     # tranformation matrices (based on RBF)
     logger.debug("Next step is transformation")
-    forceFilePath = wkdir + "force.csv"
-    transform = mappingSU2.mapper(forceFilePath,preMeshedStructre,csdSolverClassVar)
-    transform.computesTransformationsMatrices()
+    forceInitFilePath = os.path.join(wkdir,str(iteration) + '/force.csv')
+    transform = mappingSU2.mapper(forceInitFilePath,preMeshedStructre,csdSolverClassVar)
+    transform.computesTransformationsMatrices(forceInitFilePath)
 
-    # For debugging
-    # forcesOG = pd.read_csv(forceFilePath)
-
-    # Setp 7) Aeroelastic loop.
+    # Setp 6) Aeroelastic loop.
     N = aeroframeSettings["MaxIterationsNumber"]
-    i = 0
     maxDisplacement = np.array([0])
     error = []
     absoluteDisplacement = []
     tol = aeroframeSettings["ConvergeanceTolerence"]
-    while (i < N):
-        # basic user comminication
-        logger.debug("aeroelastic loop number: "+str(i))
+    while (iteration < N):
 
+        # basic user comminication
+        logger.debug("aeroelastic loop number: "+str(iteration))
+        forceFilePath = os.path.join(wkdir,str(iteration) + '/force.csv')
         # Makes a copy to avoid memory linked mistakes
         transformCurrent = transform
         csdSolverClassVarCurrent = csdSolverClassVar
-        # Step ) Projects the loads on CSD instance.
-        transformCurrent.aeroToStructure()
-        # Step ) Compute structure solution
+        # Step 7) Projects the loads on CSD instance.
+        transformCurrent.aeroToStructure(forceFilePath)
+        # Step 8) Compute structure solution
         csdSolverClassVarCurrent.run(transformCurrent)
-        transformCurrent.structureToAero(i)
-        # Computes convergence
+        transformCurrent.structureToAero(iteration,forceInitFilePath,forceFilePath)
+        # Step 9) Computes convergence
         maxDisplacement = np.append(maxDisplacement, np.max(transform.displacements))
         error.append(np.abs(maxDisplacement[-1] - maxDisplacement[-2]))
         absoluteDisplacement.append(np.abs(maxDisplacement[-1] - maxDisplacement[0]))
         logger.info("Max error between two iteration: "+str(error))
-
-        # Step ) computes new CFD solution
-        SU2_fsi.run_SU2_fsi(config_path, wkdir, nb_proc, i)
-        # forcesNew = pd.read_csv(forceFilePath)
-        # forcesOG
-        # if forcesNew.equals(forcesOG):
-        #     logger.debug("\n"*100)
-        #     logger.debug("No changes in forces")
-        #     logger.debug("\n"*100)
-        #     sys.exit()
-        # else:
-        #     logger.debug("\n"*100)
-        #     logger.debug('Force file is not the same')
-        #     logger.debug("\n"*100)
-        i += 1
-        if i == N-1:
+        # WARNING do not change it's place unless you know what you are doing
+        iteration += 1
+        # Step 10) computes new CFD solution
+        SU2_fsi.run_SU2_fsi(config_path, wkdir, nb_proc, iteration)
+        if iteration == N-1:
             logger.warning("Simulation has reached max number of step,")
             logger.warning("convergeance is yet to determine!")
         if error[-1] <= tol:
             logger.info("Simulation has converged")
-            i = N
+            iteration = N
+    # Writes a file which contains the error for each timestep
+    N = len(error)
+    path = args.cwd + "/results.csv"
+    MyFile = open(path,"w")
+    MyFile.write("Relative error; max displacement")
+    MyFile.write("\n")
+    for i in range(N):
+        MyFile.write(str(error[i]) + ";" + str(absoluteDisplacement[i]))
+        MyFile.write("\n")
+    MyFile.close()
     sys.exit()
 
 def standard_run(args):
