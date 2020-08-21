@@ -34,11 +34,10 @@ class Mesh_Def:
         u_* : defomation of the given type of point. follows the same naming
               pattern as for the previous 5 items
         """
-        #         
         self.args = args
         self.aeroframeSettings = aeroframeSettings
         self.lattice = lattice
-        
+
         # stores lattice shapes (only theses two are needed, the others are
         # of identical shape)
         self.s_p = lattice.p.shape
@@ -164,7 +163,7 @@ class Mesh_Def:
             logger.debug(int(case[15:-4]))
             m = np.linspace(0,0.1,13)
             m = m[int(case[15:-4])-1]
-            
+
         else:
             logger.warning("Deformation input UNEXPECTED")
 
@@ -246,7 +245,7 @@ class Mesh_Def:
         # s = self.f_v.shape
         # var = self.f_v.reshape(s[0]*s[1],s[2]) - self.i_v.reshape(s[0]*s[1],s[2])
         # logger.debug(np.max(var[:,0]))
-    
+
     def framatDeformation(self,transform):
         x = self.i_c[:,0]
         y = self.i_c[:,1]
@@ -255,7 +254,7 @@ class Mesh_Def:
         logger.debug("tranform.uax = \n"+str(transform.aux))
 
         d = transform.displacements
-        
+
         logger.debug("x.shape = "+str(x.shape))
         logger.debug("y.shape = "+str(y.shape))
         logger.debug("z.shape = "+str(z.shape))
@@ -267,7 +266,7 @@ class Mesh_Def:
         # Sorts out which type of FEM simulation was done (beam or shell)
         # TODO: separate the airplane if half using the x axis. At the moment
         #       there is an issue with the center of the airplane.
-        
+
         logger.info("Input deformation data is of type surface")
         # interpolates the points (lattice.p)
         rbfi = Rbf(x,y,z,d,function='linear',mode="N-D")
@@ -277,32 +276,32 @@ class Mesh_Def:
         for i in range(len(self.ir_v)):
             if (i % 4) == 1:
                 self.u_v[i] = rbfi(self.ir_v[i,0],
-                                    self.ir_v[i,1],
-                                    self.ir_v[i,2])
+                                   self.ir_v[i,1],
+                                   self.ir_v[i,2])
                 self.u_v[i-1] = self.u_v[i]
             elif (i % 4) == 2:
                 self.u_v[i] = rbfi(self.ir_v[i,0],
-                                    self.ir_v[i,1],
-                                    self.ir_v[i,2])
+                                   self.ir_v[i,1],
+                                   self.ir_v[i,2])
                 self.u_v[i+1] = self.u_v[i]
         # interpolates the collocation points (lattice.c)
         self.u_c = rbfi(self.i_c[:,0],self.i_c[:,1],self.i_c[:,2])
 
         # interpolates the bound leg mid-points (lattice.blm)
         self.u_b = rbfi(self.i_b[:,0],self.i_b[:,1],self.i_b[:,2])
-        
+
         # Feed values to the deformed points (f for final).
         self.fr_p = self.ir_p + self.u_p
         self.f_p = self.i_p + self.u_p.reshape(self.s_p[0],
-                                                self.s_p[1],
-                                                self.s_p[2])
+                                               self.s_p[1],
+                                               self.s_p[2])
         self.fr_v = self.ir_v + self.u_v
         self.f_v = self.i_v + self.u_v.reshape(self.s_v[0],
-                                                self.s_v[1],
-                                                self.s_v[2])
+                                               self.s_v[1],
+                                               self.s_v[2])
         self.f_c = self.i_c + self.u_c
         self.f_b = self.i_b + self.u_b
-    
+
     def CSVDeformation(self):
         """
         Loads a displacement file of format .csv and up
@@ -365,7 +364,7 @@ class Mesh_Def:
 
             # interpolates the bound leg mid-points (lattice.blm)
             self.u_b = rbfi(self.i_b[:,0],self.i_b[:,1],self.i_b[:,2])
-            
+
             # Feed values to the deformed points (f for final).
             self.fr_p = self.ir_p + self.u_p
             self.f_p = self.i_p + self.u_p.reshape(self.s_p[0],
@@ -377,17 +376,6 @@ class Mesh_Def:
                                                    self.s_v[2])
             self.f_c = self.i_c + self.u_c
             self.f_b = self.i_b + self.u_b
-
-    def is_zero(self):
-        pass
-        val = 1e-4
-        # self.f_p[np.abs(self.f_p) < val] = 0
-        # # logger.debug(self.f_p)
-        # self.f_v[np.abs(self.f_v) < val] = 0
-        # # self.f_c[np.abs(self.f_c) < val] = val
-        # # self.f_n[np.abs(self.f_n) < val] = val
-        # self.f_b[np.abs(self.f_b) < val] = 0
-        # # self.f_a[np.abs(self.f_a) < val] = val
 
     def deformation(self,acceptedNames,transform=None):
         """
@@ -483,7 +471,3 @@ class Mesh_Def:
         c = LA.norm(c,axis=1)
         # New surface area
         self.f_a = s * c
-
-        # Checks if small values are present and changes them by a small
-        # number
-        self.is_zero()

@@ -1,0 +1,108 @@
+# encoding: utf-8
+# 2020 R1
+SetScriptVersion(Version="20.1.164")
+template1 = GetTemplate(
+    TemplateName="Static Structural",
+    Solver="ANSYS")
+system1 = template1.CreateSystem()
+geometry1 = system1.GetContainer(ComponentName="Geometry")
+geometry1.Edit(IsSpaceClaimGeometry=True)
+geometry1.Exit()
+modelComponent1 = system1.GetComponent(Name="Model")
+modelComponent1.Refresh()
+model1 = system1.GetContainer(ComponentName="Model")
+model1.Edit()
+EngData.EnableFilter(Enable=False)
+favorites1 = EngData.LoadFavoriteItems()
+engineeringData1 = system1.GetContainer(ComponentName="Engineering Data")
+material1 = engineeringData1.GetMaterial(Name="Acier standard")
+matlProp1 = material1.GetProperty(Name="Density")
+matlProp1.SetData(
+    Variables=["Density"],
+    Values=[["1190 [kg m^-3]"]])
+matlProp2 = material1.CreateProperty(
+    Name="Elasticity",
+    Behavior="Anisotropic",
+    Qualifiers={"Definition": "", "Behavior": "Anisotropic"})
+matlProp2.Delete(Behavior="Anisotropic")
+matlProp2.SetData(
+    Variables=["Young's Modulus"],
+    Values=[["12000000 [Pa]"]])
+Save(Overwrite=True)
+modelComponent1.Update(AllDependencies=True)
+setupComponent1 = system1.GetComponent(Name="Setup")
+setupComponent1.Update(AllDependencies=True)
+material1.Delete()
+material2 = engineeringData1.GetMaterial(Name="Air")
+material2.Delete()
+matl1 = engineeringData1.CreateMaterial(Name="Acier")
+matl1.DisplayName = "NinjaFlex"
+matlProp3 = matl1.CreateProperty(
+    Name="Density",
+    Qualifiers={"Definition": "", "Behavior": ""})
+matlProp3.SetData(
+    Index=-1,
+    Variables=["Density"],
+    Values=[["1190 [kg m^-3]"]])
+matlProp4 = matl1.CreateProperty(
+    Name="Elasticity",
+    Behavior="Isotropic",
+    Qualifiers={"Definition": "", "Behavior": "Isotropic"})
+matlProp4.SetData(
+    Index=-1,
+    Variables=["Young's Modulus"],
+    Values=[["12000000 [Pa]"]])
+matlProp4.SetData(
+    Variables=["Poisson's Ratio"],
+    Values=[["0.3"]])
+Refresh()
+geometry1.Edit(IsSpaceClaimGeometry=True)
+model1.Exit()
+geometry1.Exit()
+geometry1.Edit(IsSpaceClaimGeometry=True)
+geometry1.Exit()
+Refresh()
+geometry1.Edit(IsSpaceClaimGeometry=True)
+geometry1.Exit()
+modelComponent1.Refresh()
+geometry1.Edit(IsSpaceClaimGeometry=True)
+Refresh()
+geometry1.Exit()
+system2 = template1.CreateSystem(
+    Position="Right",
+    RelativeTo=system1)
+system1.Delete()
+geometry2 = system2.GetContainer(ComponentName="Geometry")
+geometry2.Edit(IsSpaceClaimGeometry=True)
+geometry2.Exit()
+modelComponent2 = system2.GetComponent(Name="Model")
+modelComponent2.Refresh()
+model2 = system2.GetContainer(ComponentName="Model")
+model2.Edit()
+engineeringData2 = system2.GetContainer(ComponentName="Engineering Data")
+matl2 = engineeringData2.CreateMaterial(Name="NinjaFlex")
+matlProp5 = matl2.CreateProperty(
+    Name="Elasticity",
+    Behavior="Isotropic",
+    Qualifiers={"Definition": "", "Behavior": "Isotropic"})
+matlProp5.SetData(
+    Index=-1,
+    Variables=["Young's Modulus"],
+    Values=[["12000000 [Pa]"]])
+matlProp5.SetData(
+    Variables=["Poisson's Ratio"],
+    Values=[["0.3"]])
+matlProp6 = matl2.CreateProperty(
+    Name="Density",
+    Qualifiers={"Definition": "", "Behavior": ""})
+matlProp6.SetData(
+    Index=-1,
+    Variables=["Density"],
+    Values=[["1190 [kg m^-3]"]])
+material3 = engineeringData2.GetMaterial(Name="Acier standard")
+material3.Delete()
+Save(Overwrite=True)
+Refresh()
+Refresh()
+model2.Exit()
+Save(Overwrite=True)

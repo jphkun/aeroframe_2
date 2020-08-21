@@ -6,9 +6,9 @@ Created on Wed Jul 29 09:54:08 2020
 @author: Jean-Philippe Kuntzer
 
 # OK TODO: clamp the wings
-# TODO: correct the sections
-# TODO: correct the mesh points
-# TODO: correct force
+# OK TODO: correct the sections
+# OK TODO: correct the mesh points
+# OK TODO: correct force
 """
 import logging
 import numpy as np
@@ -74,7 +74,6 @@ class framat:
         logger.error(self.geo.aircraftBeamsMaterials)
         N = self.geo.nFuselage + self.geo.nWings
         # mat = []
-        
         for i in range(N):
             name = self.geo.aircraftBeamsMaterials[i][0] + "_mat"
             mat = self.model.add_feature('material', uid=name)

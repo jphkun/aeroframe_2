@@ -34,9 +34,8 @@ class mapper:
         results.
         """
         # For debug purposes
-        self.plotting = False
         np.set_printoptions(precision=3)
-        
+
         # Assembles matrices
         self.geo = preMeshedStructre
         self.geoP = preMeshedStructre.aircraftNodesPoints
@@ -56,40 +55,12 @@ class mapper:
         logger.debug(self.aircraftPartsNames)
         logger.debug(self.geo.aircraftPartsUIDs)
         self.order = []
+
         # Constructs a dictionary for ease of use when regrouping displacements
         for i in self.aircraftPartsNames:
             index = self.geo.aircraftPartsUIDs.index(i)
             logger.debug(index)
             self.order.append(index)
-            # logger.debug(self.aircraftPartsNames.index(i))
-            # self.order.append(index)
-            # logger.debug(self.order) 
-        # # Constructs a dictionary for ease of use when regrouping displacements
-        # for i in self.geo.aircraftPartsUIDs:
-        #     index = np.where(self.aircraftPartsNames == i)
-        #     self.order.append(index[0][0])
-        #     # logger.debug(self.aircraftPartsNames.index(i))
-        #     # self.order.append(index)
-        #     # logger.debug(self.order)
-        logger.debug(self.order)
-        # sys.exit()
-        
-
-        # if self.plotting:
-        #     fig = plt.figure("figure 1")
-        #     ax = fig.add_subplot(111, projection='3d')
-        #     # for i in range(len(self.wingsPoints)):
-        #     for i in range(len(self.aircraftPartsNames)):
-        #         ax.scatter(aircraftPointsAndForcesCFD[i][:,1],
-        #                    aircraftPointsAndForcesCFD[i][:,2],
-        #                    aircraftPointsAndForcesCFD[i][:,3],
-        #                    label=self.geo.aircraftPartsUIDs[i])
-        #     val = 15
-        #     ax.set_xlim(-val,val)
-        #     ax.set_ylim(-val,val)
-        #     ax.set_zlim(-val,val)
-        #     ax.legend()
-        #     plt.show()
 
     def computesTransformationsMatrices(self,forceFilePath):
         """
@@ -98,7 +69,7 @@ class mapper:
         """
 
         # Computes transformations matrices
-        self.iM= []
+        self.iM = []
         self.A = []
         self.H = []
 
@@ -117,7 +88,7 @@ class mapper:
 
         # Computes the matrix M and then invert it for each aircraft part.
         for i in range(len(self.aircraftPartsNames)):
-            # permitted choices are: G,L,TPS,HMQ,HIMQ,C0,C2,C4,C6,EH. See the 
+            # permitted choices are: G,L,TPS,HMQ,HIMQ,C0,C2,C4,C6,EH. See the
             # function below for the definition of the shape functions.
             fun = "L"
             n = self.geoP[i].shape
@@ -133,7 +104,6 @@ class mapper:
 
             # Computes the matrix Q which is also the matrix A transposed in
             # this specific case.
-            m = len(aircraftPointsAndForcesCFD[i])
             X = self.geoP[i]
             Y = aircraftPointsAndForcesCFD[i][:,1:4]
             r = sp.spatial.distance.cdist(X,Y,"euclidean")
@@ -145,47 +115,13 @@ class mapper:
             logger.debug("A "+str(self.A[i].shape))
             logger.debug("iM"+str(self.iM[i].shape))
             logger.debug("H "+str(self.H[i].shape))
-        
+
         # Computes the distances from the leading edge for each point. This
         # computation result is necessary for the moments computation.
         self.computeDistanceForMorments(forceFilePath)
         logger.info("Finised computing distance matrix")
-        #     # tests the mapping:
-        #     n = self.geoP[i].shape
-        #     n = n[0]
-        #     dzs = np.zeros(n)
-        #     for k in range(n):
-        #         dzs[k] = 0.01 * self.geoP[i][k,1]**2
-        #     self.dzsGlob.append(dzs)
-        #     dza = np.matmul(self.H[i],self.dzsGlob[i])
-        #     self.dzaGlob.append(dza)
-
-        # logger.debug(self.dzsGlob)
-        # logger.debug(self.dzaGlob)
-
-        # # sys.exit()
-        # # Plots line
-        # if self.plotting:
-        #     fig = plt.figure("figure 2")
-        #     ax = fig.add_subplot(111, projection='3d')
-        #     for p in range(len(self.aircraftPartsNames)):
-        #         logger.debug(aircraftPointsAndForcesCFD[p].shape)
-        #         # ax.scatter(aircraftPointsAndForcesCFD[p]["x"],
-        #         #            aircraftPointsAndForcesCFD[p]["y"],
-        #         #            aircraftPointsAndForcesCFD[p]["z"],
-        #         #            label=self.aircraftPartsNames[i])
-        #         ax.scatter(aircraftPointsAndForcesCFD[p][:,1],
-        #                    aircraftPointsAndForcesCFD[p][:,2],
-        #                    aircraftPointsAndForcesCFD[p][:,3] + self.dzaGlob[p],
-        #                    label=self.geo.aircraftPartsUIDs[p])
-        #     val = 15
-        #     ax.set_xlim(-val,val)
-        #     ax.set_ylim(-val,val)
-        #     ax.set_zlim(-val,val)
-        #     ax.legend()
-        #     plt.show()
+        # Frees memory. not sure it is still needed
         del(SU2Data)
-
 
     def phi(self,r,fun):
         """
@@ -226,12 +162,12 @@ class mapper:
             # Euclid's hat
             phi_x = np.pi*((1/12*r**3) - r*eps**2 + 4/3*eps**3)
         return phi_x
-
+        
     def aeroToStructure(self,forceFilePath):
         """
         Compute the forces for the structure solver from the CFD solver resutls.
         """
-        logger.debug("aeroToStructure")       
+        logger.debug("aeroToStructure")
         # structure forces
         self.sfx = []
         self.sfy = []
@@ -239,7 +175,7 @@ class mapper:
         self.smx = []
         self.smy = []
         self.smz = []
-        
+
         # Aerodynamics forces
         self.afx = []
         self.afy = []
@@ -253,7 +189,6 @@ class mapper:
         for i in range(N):
             logger.debug(i)
             aircraftPointsAndForcesCFD.append(SU2Data[SU2Data['marker'].str.contains(self.geo.aircraftPartsUIDs[i])].to_numpy())
-
 
         # separates froces for each wings
         N = len(self.aircraftPartsNames)
@@ -287,7 +222,84 @@ class mapper:
         logger.debug("smx = \n"+str(self.smx))
         logger.debug("smy = \n"+str(self.smy))
         logger.debug("smz = \n"+str(self.smz))
-        del(SU2Data)
+
+        if not self.geo.settings['G_static']:
+            Fx = SU2Data['fx'].sum(axis=0, skipna=True)
+            Fy = SU2Data['fy'].sum(axis=0, skipna=True)
+            Fz = SU2Data['fz'].sum(axis=0, skipna=True)
+            logger.debug(Fx)
+            logger.debug(Fy)
+            logger.debug(Fz)
+            a_x = Fx / self.geo.aircraftTotalMass
+            a_y = Fy / self.geo.aircraftTotalMass
+            a_z = (Fz - self.geo.aircraftTotalMass * 9.81)/self.geo.aircraftTotalMass
+        else:
+            a_x = 0
+            a_y = 0
+            a_z = -9.81
+        self.G = Fz / (self.geo.aircraftTotalMass * 9.81)
+
+        # Computes the force due to inertia on each strcutre node
+        self.smf = []
+        N = len(self.geo.aircraftSegementsMass)
+        for i in range(N):
+            # Since there is one more point then segment we need to add one at
+            # the end.
+            M = len(self.geo.aircraftSegementsMass[i]) + 1
+            force = np.empty((M,3))
+            for j in range(M):
+                # loadFactor
+                n = a_z/9.81
+                if j == 0:
+                    massRight = self.geo.aircraftSegementsMass[i][j]
+                    # force in the x direction, earth reference frame
+                    force[j,0] = 0.5 * massRight * a_x * 0
+                    # force in the x direction, earth reference frame
+                    force[j,1] = 0.5 * massRight * a_y
+                    # force in the x direction, earth reference frame
+                    force[j,2] = 0.5 * massRight * n * 9.81
+                elif j == M-1:
+                    massLeft = self.geo.aircraftSegementsMass[i][j-1]
+                    # force in the x direction, earth reference frame
+                    force[j,0] = 0.5 * massLeft * a_x * 0
+                    # force in the x direction, earth reference frame
+                    force[j,1] = 0.5 * massLeft * a_y
+                    # force in the x direction, earth reference frame
+                    force[j,2] = 0.5 * massLeft * n * 9.81
+                else:
+                    massRight = self.geo.aircraftSegementsMass[i][j]
+                    massLeft = self.geo.aircraftSegementsMass[i][j-1]
+                    # force in the x direction, earth reference frame
+                    force[j,0] = 0.5 * massRight * a_x * 0 + \
+                                 0.5 * massLeft * a_x * 0
+                    # force in the x direction, earth reference frame
+                    force[j,1] = 0.5 * massRight * a_y + \
+                                 0.5 * massLeft * a_y
+                    # force in the x direction, earth reference frame
+                    force[j,2] = 0.5 * massRight * n * 9.81 + \
+                                 0.5 * massLeft * n * 9.81
+            self.smf.append(force)
+
+        # Computes the moment due to inertia on each strcture node
+        # for i i
+        N = len(self.geo.aircraftMassDistances)
+        # logger.debug(N)
+        # logger.debug(len(self.smf))
+        # sys.exit()
+        self.smm = []
+        for i in range(N):
+            # Since there is one more point then segment we need to ass one at
+            # the end.
+            M = len(self.geo.aircraftMassDistances[i])
+            # logger.debug(M)
+            # logger.debug(len(self.smf[i]))
+            # sys.exit()
+            moments = np.empty((M,3))
+            for j in range(M):
+                moments[j,0] = self.geo.aircraftMassDistances[i][j,0]
+                moments[j,1] = self.geo.aircraftMassDistances[i][j,1]
+                moments[j,2] = self.geo.aircraftMassDistances[i][j,2]
+            self.smm.append(moments)
 
     def computeDistanceForMorments(self,forceFilePath):
         """
@@ -322,7 +334,7 @@ class mapper:
             M = len(aircraftPointsAndForcesCFD[i])
             X = aircraftPointsAndForcesCFD[i][:,1:4]
             Y = self.geo.aircraftNodesPoints[i]
-            
+
             # Computes the distance between each point of X and each point of
             # Y. This leads to an (NxM) matrix, M being the number of structure
             # nodes points.
@@ -361,8 +373,8 @@ class mapper:
 
                 # the two selected segments are parallel.
                 if proj1[0] == proj2[0] and \
-                    proj1[1] == proj2[1] and \
-                    proj1[2] == proj2[2]:
+                   proj1[1] == proj2[1] and \
+                   proj1[2] == proj2[2]:
                     delta = -(point - proj1)
 
                 # both projected points are on the mesh, we need to take the
@@ -409,17 +421,12 @@ class mapper:
             self.amz.append(self.distanceMatrix[i][:,0]*self.afy[i] +
                             self.distanceMatrix[i][:,1]*self.afx[i])
 
-            # In order to limit the numerical error
-            # self.amx[i][np.abs(self.amx[i])<1e-7] = 0.
-            # self.amy[i][np.abs(self.amy[i])<1e-7] = 0.
-            # self.amz[i][np.abs(self.amz[i])<1e-7] = 0.
-
     def structureToAero(self,iteration,forceInitFilePath,forceFilePath):
         """
         Converts the displacements from the structure mesh to the aerodynamic
         mesh.
         """
-        
+
         # structure displacements
         self.sux = []
         self.suy = []
@@ -427,7 +434,7 @@ class mapper:
         self.stx = []
         self.sty = []
         self.stz = []
-        
+
         # aerodynamic displacements
         self.aux = []
         self.auy = []
@@ -440,7 +447,7 @@ class mapper:
         N = len(self.geoP)
         # logger.debug("N = "+str(N))
         old = 0
-        
+
         # Separates the results for each wing. This leads to an amazing quality
         # jump in the simulation results.
         for i in range(N):
@@ -524,15 +531,9 @@ class mapper:
             dmz = np.concatenate((dmz,dmzi))
             dfz = np.concatenate((dfz,self.auz[ind]))
         self.displacements = np.array([dmx+dfx,dmy+dfy,dmz+dfz]).T
-        # logger.debug(self.displacements[0])
-        # logger.debug(self.displacements[1])
-        # logger.debug(self.displacements[2])
-        # logger.debug(np.max(self.displacements[0]))
-        # logger.debug(np.max(self.displacements[1]))
-        # logger.debug(np.max(self.displacements[2]))
 
         # Generates the deformation file
-        # 'GlobalID_' + 
+        # 'GlobalID_' +
         # New x,y,z positions
         N = len(self.displacements)
         # logger.debug(np.arange(N))
@@ -543,7 +544,7 @@ class mapper:
         idx = np.array(idx[start:])
         logger.debug(idx)
         const = 1
-        some_value = 'Wing'
+        # some_value = 'Wing'
         # var = SU2Data.loc[self.SU2_forces['marker'] == some_value]
         SU2DataInit = pd.read_csv(forceInitFilePath)
         x = SU2DataInit["x"] + const*self.displacements[start:,0]
@@ -561,7 +562,7 @@ class mapper:
         # Plots
         self.plotting = False
         if self.plotting:
-            fig = plt.figure("figure 2")
+            fig = plt.figure('figure 2')
             ax = fig.add_subplot(111, projection='3d')
             old = 0
             # for j in range(len(self.aircraftPartsNames)):
@@ -569,15 +570,15 @@ class mapper:
             #                self.aircraftPointsAndForcesCFD[j][:,2],
             #                self.aircraftPointsAndForcesCFD[j][:,3],
             #                label=self.geo.aircraftPartsUIDs[j])
-            ax.scatter(SU2Data[start:,"x"],
-                       SU2Data[start:,"y"],
-                       SU2Data[start:,"z"],
-                       label = "undeformed")
+            ax.scatter(SU2Data[start:,'x'],
+                       SU2Data[start:,'y'],
+                       SU2Data[start:,'z'],
+                       label='undeformed')
 
-            ax.scatter(SU2Data[start:,"x"] + self.displacements[start:,0],
-                       SU2Data[start:,"y"] + self.displacements[start:,1],
-                       SU2Data[start:,"z"] + self.displacements[start:,2],
-                       label = "deformed")
+            ax.scatter(SU2Data[start:,'x'] + self.displacements[start:,0],
+                       SU2Data[start:,'y'] + self.displacements[start:,1],
+                       SU2Data[start:,'z'] + self.displacements[start:,2],
+                       label='deformed')
             val = 15
             ax.set_xlim(-val,val)
             ax.set_ylim(-val,val)
@@ -586,5 +587,3 @@ class mapper:
             plt.show()
         del(SU2Data)
 
-    # def deformVLM(self):
-    #     pass

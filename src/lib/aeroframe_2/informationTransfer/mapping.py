@@ -5,9 +5,13 @@ Created on Tue Aug  4 13:56:01 2020
 
 @author: Jean-Philippe Kuntzer
 
-TODO: For the computation of the moment, distance must be computed in the x,y
-      plane.
-TODO: verify the moment orientation
+Mapping is a class that applies the principle of virtual work to aeroelaticity.
+In this class the matrices linking the CFD mesh to the structure mesh are
+computed.
+
+OK TODO: For the computation of the moment, distance must be computed in the x,y
+         plane.
+OK TODO: verify the moment orientation
 TODO: set to 0 small values to speed up the code and limit error.
 """
 
@@ -18,7 +22,6 @@ import scipy as sp
 import skspatial.objects as sk
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
-import sys
 
 logger = logging.getLogger(__name__)
 
@@ -43,58 +46,57 @@ class mapper:
         self.limitsStart = []
         self.limitsEnd = []
 
-        # Separates the lattice points for each wing hence leading to better
-        # results since each wing only contribute her specific beam.
+        # Separates the lattice points understand the VLM mesh for each wing
+        # hence leading to better results since each wing only contribute her
+        # specific beam.
         number = len(self.lattice.bookkeeping_by_wing_uid)
         for i in self.lattice.bookkeeping_by_wing_uid:
-            # Gets the data for separating the wing points
+
+            # Gets the data that needs to be sorted.
             listing = list(self.lattice.bookkeeping_by_wing_uid.get(i)[0][1])
             init = listing[0]
             logger.debug("init = "+str(init))
-            N = len(list(self.lattice.bookkeeping_by_wing_uid.get(i)))-1
-            # logger.debug(N)
+
             listing = list(self.lattice.bookkeeping_by_wing_uid.get(i)[-1][1])
             panels = self.lattice.bookkeeping_by_wing_uid.get(i)[-1][2]
-            # takes care of last segment
-            # if number == 1:
-            #     end = listing[-1]
-            # else:
-            end = listing[-1] + panels +1
+
+            # takes care of last segment hence the + 1 at the end
+            end = listing[-1] + panels + 1
             logger.debug("number = "+str(number))
             logger.debug("end = "+str(end))
             self.limitsStart.append(init)
             self.limitsEnd.append(end)
+
             # Appends the separated points
             self.wingsPoints.append(self.lattice.c[init:end])
-            # logger.debug("Initial position"+str(init))
-            # logger.debug("Final position"+str(listing[-1]))
-            # logger.debug("Final position"+str(end))
-            # logger.debug("\n")
             number -= 1
 
-        # # Plot for debug purposes
-        # if plotting:
-        #     fig = plt.figure("figure 1")
-        #     ax = fig.add_subplot(111, projection='3d')
-        #     for i in range(len(self.wingsPoints)):
-        #         ax.scatter(self.wingsPoints[i][:,0],
-        #                     self.wingsPoints[i][:,1],
-        #                     self.wingsPoints[i][:,2],
-        #                     label='Wing '+str(i+1))
-        #     val = 15
-        #     ax.set_xlim(-val,val)
-        #     ax.set_ylim(-val,val)
-        #     ax.set_zlim(-val,val)
-        #     ax.legend()
-        #     plt.show()
+        # Plot for debug purposes only
+        if plotting:
+            fig = plt.figure("figure 1")
+            ax = fig.add_subplot(111, projection='3d')
+            for i in range(len(self.wingsPoints)):
+                ax.scatter(self.wingsPoints[i][:,0],
+                           self.wingsPoints[i][:,1],
+                           self.wingsPoints[i][:,2],
+                           label='Wing '+str(i+1))
+            val = 15
+            ax.set_xlim(-val,val)
+            ax.set_ylim(-val,val)
+            ax.set_zlim(-val,val)
+            ax.legend()
+            plt.show()
 
+    def computesTransformationsMatrices(self):
         # Computes transformations matrices
-        self.iM= []
+        self.iM = []
         self.A = []
         self.H = []
         # For debugging
         self.dzsGlob = []
         self.dzaGlob = []
+        plotting = False
+
         for i in range(len(self.wingsPoints)):
             # Computes the matrix M and then invert it
             # permitted choices are: G,L,TPS,HMQ,HIMQ,C0,C2,C4,C6,EH see below
@@ -108,10 +110,10 @@ class mapper:
                     x1 = self.geoP[i + self.geo.nFuselage][k]
                     x2 = self.geoP[i + self.geo.nFuselage][j]
                     Mbeam[k,j] = self.phi(x1,x2,fun)
-            self.iM.append(np.linalg.inv(Mbeam))
+            self.iM.append(LA.inv(Mbeam))
 
             # Computes the matrix Q which is also the matrix A transposed in
-            # this specific case.
+            # this specific case c.f. to the theory.
             m = self.wingsPoints[i].shape
             m = m[0]
             Q = np.zeros((n,m))
@@ -139,42 +141,49 @@ class mapper:
             dza = np.matmul(self.H[i],self.dzsGlob[i])
             self.dzaGlob.append(dza)
 
-        # # Plots line
-        # if plotting:
-        #     fig = plt.figure("figure 2")
-        #     ax = fig.add_subplot(111, projection='3d')
-        #     for p in range(len(self.wingsPoints)):
-        #         # ax.scatter(self.geoP[p + self.geo.nFuselage][:,0],
-        #         #             self.geoP[p + self.geo.nFuselage][:,1],
-        #         #             self.geoP[p + self.geo.nFuselage][:,2],
-        #         #             label='beam wing '+str(p+1))
-        #         # ax.scatter(self.geoP[p + self.geo.nFuselage][:,0],
-        #         #             self.geoP[p + self.geo.nFuselage][:,1],
-        #         #             self.geoP[p + self.geo.nFuselage][:,2]+self.dzsGlob[i],
-        #                     # label='deformed beam wing '+str(p+1))
-        #         ax.scatter(self.wingsPoints[p][:,0],
-        #                    self.wingsPoints[p][:,1],
-        #                    self.wingsPoints[p][:,2],
-        #                    label='undeformed wing'+str(p+1))
-        #         ax.scatter(self.wingsPoints[p][:,0],
-        #                    self.wingsPoints[p][:,1],
-        #                    self.wingsPoints[p][:,2]+self.dzaGlob[p],
-        #                    label='deformed wing'+str(p+1))
-        #     val = 15
-        #     ax.set_xlim(-val,val)
-        #     ax.set_ylim(-val,val)
-        #     ax.set_zlim(-val,val)
-        #     ax.legend()
-        #     plt.show()
+        # Plots line
+        if plotting:
+            fig = plt.figure("figure 2")
+            ax = fig.add_subplot(111, projection='3d')
+            for p in range(len(self.wingsPoints)):
+                # ax.scatter(self.geoP[p + self.geo.nFuselage][:,0],
+                #             self.geoP[p + self.geo.nFuselage][:,1],
+                #             self.geoP[p + self.geo.nFuselage][:,2],
+                #             label='beam wing '+str(p+1))
+                # ax.scatter(self.geoP[p + self.geo.nFuselage][:,0],
+                #             self.geoP[p + self.geo.nFuselage][:,1],
+                #             self.geoP[p + self.geo.nFuselage][:,2]+self.dzsGlob[i],
+                #             label='deformed beam wing '+str(p+1))
+                ax.scatter(self.wingsPoints[p][:,0],
+                           self.wingsPoints[p][:,1],
+                           self.wingsPoints[p][:,2],
+                           label='undeformed wing'+str(p+1))
+                ax.scatter(self.wingsPoints[p][:,0],
+                           self.wingsPoints[p][:,1],
+                           self.wingsPoints[p][:,2]+self.dzaGlob[p],
+                           label='deformed wing'+str(p+1))
+
+            val = 15
+            ax.set_xlim(-val,val)
+            ax.set_ylim(-val,val)
+            ax.set_zlim(-val,val)
+            ax.legend()
+            plt.show()
 
     def phi(self,x1,x2,fun):
         """
         Set of radial basis functions that the user can choose of. After some
-        test "Wendland C2" seems to be the better choice, but this is really
-        up to user preference.
+        test "Linear" seems to be the better choice and only suitable choice.
+        This is due to the fact that the aeroelasticity is done with a beam
+        hence a line of point and not a surface. So when a RBF is defined with
+        a mesh which is smaller than the chord length there is a problem since
+        the RBF is zero at the leading a trailing edge.
+
+        All the other functions are here in case someone finds a way to connect
+        the solver to some 2D or 3D structure FEM solver.
         """
         eps = 1
-        r = np.linalg.norm(x1-x2)
+        r = LA.norm(x1-x2)
         if fun == "G":
             # Gaussian
             phi_x = np.exp(-eps*r**2)
@@ -211,7 +220,7 @@ class mapper:
         """
         Compute the forces for the structure solver from the CFD solver resutls.
         """
-        logger.debug("aeroToStructure")       
+        logger.debug("aeroToStructure")
         # structure forces
         self.sfx = []
         self.sfy = []
@@ -219,7 +228,7 @@ class mapper:
         self.smx = []
         self.smy = []
         self.smz = []
-        
+
         # Aerodynamics forces
         self.afx = []
         self.afy = []
@@ -233,7 +242,7 @@ class mapper:
             self.afx.append(self.VLMdata.panelwise["fx"][start:end])
             self.afy.append(self.VLMdata.panelwise["fy"][start:end])
             self.afz.append(self.VLMdata.panelwise["fz"][start:end])
-            
+
         # Calls the function in order to compute the moment generated by each
         # force on the wing.
         self.computeMoments()
@@ -248,14 +257,86 @@ class mapper:
             self.smx.append(np.matmul(self.H[i].T,self.amx[i]))
             self.smy.append(np.matmul(self.H[i].T,self.amy[i]))
             self.smz.append(np.matmul(self.H[i].T,self.amz[i]))
-        
-        # logger.debug("sfx = \n"+str(self.sfx))
-        # logger.debug("sfy = \n"+str(self.sfy))
-        # logger.debug("sfz = \n"+str(self.sfz))
-        
-        # logger.debug("smx = \n"+str(self.smx))
-        # logger.debug("smy = \n"+str(self.smy))
-        # logger.debug("smz = \n"+str(self.smz))
+
+        # logger.debug(self.VLMdata.forces['x'])
+        # logger.debug(self.VLMdata.forces['y'])
+        # logger.debug(self.VLMdata.forces['z'])
+        if not self.geo.settings['G_static']:
+            a_x = self.VLMdata.forces['x'] / self.geo.aircraftTotalMass
+            a_y = self.VLMdata.forces['y'] / self.geo.aircraftTotalMass
+            a_z = (self.VLMdata.forces['z'] - self.geo.aircraftTotalMass*9.81)/self.geo.aircraftTotalMass
+        else:
+            a_x = 0
+            a_y = 0
+            a_z = -9.81
+        self.G = self.VLMdata.forces['z']/(self.geo.aircraftTotalMass * 9.81)
+        # logger.debug('a_x = ' + str(a_x))
+        # logger.debug('a_y = ' + str(a_y))
+        # logger.debug('a_z = ' + str(a_z))
+        # logger.debug('G = '+str(self.G))
+        # logger.debug('mass = ' + str(self.geo.aircraftTotalMass))
+
+        # Computes the force due to inertia on each strcutre node
+        self.smf = []
+        N = len(self.geo.aircraftSegementsMass)
+        for i in range(N):
+            # Since there is one more point then segment we need to add one at
+            # the end.
+            M = len(self.geo.aircraftSegementsMass[i]) + 1
+            force = np.empty((M,3))
+            for j in range(M):
+                # loadFactor
+                n = a_z/9.81
+                if j == 0:
+                    massRight = self.geo.aircraftSegementsMass[i][j]
+                    # force in the x direction, earth reference frame
+                    force[j,0] = 0.5 * massRight * a_x * 0
+                    # force in the x direction, earth reference frame
+                    force[j,1] = 0.5 * massRight * a_y
+                    # force in the x direction, earth reference frame
+                    force[j,2] = 0.5 * massRight * n * 9.81
+                elif j == M-1:
+                    massLeft = self.geo.aircraftSegementsMass[i][j-1]
+                    # force in the x direction, earth reference frame
+                    force[j,0] = 0.5 * massLeft * a_x * 0
+                    # force in the x direction, earth reference frame
+                    force[j,1] = 0.5 * massLeft * a_y
+                    # force in the x direction, earth reference frame
+                    force[j,2] = 0.5 * massLeft * n * 9.81
+                else:
+                    massRight = self.geo.aircraftSegementsMass[i][j]
+                    massLeft = self.geo.aircraftSegementsMass[i][j-1]
+                    # force in the x direction, earth reference frame
+                    force[j,0] = 0.5 * massRight * a_x * 0 + \
+                                 0.5 * massLeft * a_x * 0
+                    # force in the x direction, earth reference frame
+                    force[j,1] = 0.5 * massRight * a_y + \
+                                 0.5 * massLeft * a_y
+                    # force in the x direction, earth reference frame
+                    force[j,2] = 0.5 * massRight * n * 9.81 + \
+                                 0.5 * massLeft * n * 9.81
+            self.smf.append(force)
+
+        # Computes the moment due to inertia on each strcture node
+        # for i i
+        N = len(self.geo.aircraftMassDistances)
+        # logger.debug(N)
+        # logger.debug(len(self.smf))
+        # sys.exit()
+        self.smm = []
+        for i in range(N):
+            # Since there is one more point then segment we need to ass one at
+            # the end.
+            M = len(self.geo.aircraftMassDistances[i])
+            # logger.debug(M)
+            # logger.debug(len(self.smf[i]))
+            # sys.exit()
+            moments = np.empty((M,3))
+            for j in range(M):
+                moments[j,0] = self.geo.aircraftMassDistances[i][j,0]
+                moments[j,1] = self.geo.aircraftMassDistances[i][j,1]
+                moments[j,2] = self.geo.aircraftMassDistances[i][j,2]
+            self.smm.append(moments)
 
     def computeMoments(self):
         """
@@ -283,7 +364,7 @@ class mapper:
             M = len(self.wingsPoints[i])
             X = self.wingsPoints[i]
             Y = self.geo.aircraftNodesPoints[i+self.geo.nFuselage]
-            
+
             # Computes the distance between each point of X and each point of
             # Y. This leads to an (NxM) matrix, M being the number of structure
             # nodes points.
@@ -311,10 +392,10 @@ class mapper:
                 # Computes the distance between the projected point and the
                 # most far way point. This permetis to test if the projection
                 # is still on the structural mesh or not
-                distP1Proj1 = np.linalg.norm(p1 - proj1)
-                distP1P2 = np.linalg.norm(p1 - p2)
-                distP3Proj2 = np.linalg.norm(p3 - proj2)
-                distP2P3 = np.linalg.norm(p3 - p2)
+                distP1Proj1 = LA.norm(p1 - proj1)
+                distP1P2 = LA.norm(p1 - p2)
+                distP3Proj2 = LA.norm(p3 - proj2)
+                distP2P3 = LA.norm(p3 - p2)
 
                 # the two selected segments are parallel.
                 if proj1[0] == proj2[0] and \
@@ -325,8 +406,8 @@ class mapper:
                 # both projected points are on the mesh, we need to take the
                 # the one that has the least distance to the line.
                 elif distP1Proj1 < distP1P2 and distP3Proj2 < distP2P3:
-                    norm1 = np.linalg.norm(point - proj1)
-                    norm2 = np.linalg.norm(point - proj2)
+                    norm1 = LA.norm(point - proj1)
+                    norm2 = LA.norm(point - proj2)
                     norms = np.array([norm1,norm2])
                     projs = np.array([proj1,proj2])
                     delta = -(point - projs[np.argmin(norms)])
@@ -346,7 +427,7 @@ class mapper:
                 elif distP1Proj1 > distP1P2 and distP3Proj2 > distP2P3:
                     delta = -(point - p2)
                 self.distanceMatrix[i][j] = np.array([delta[0],delta[1],delta[2]])
-            
+
             # Computes the moment on the beam generated by all the forces.
             self.amx.append(self.distanceMatrix[i][:,2]*self.afy[i] + 
                             self.distanceMatrix[i][:,1]*self.afz[i])
@@ -356,9 +437,9 @@ class mapper:
                             self.distanceMatrix[i][:,1]*self.afx[i])
 
             # In order to limit the numerical error
-            self.amx[i][np.abs(self.amx[i])<1e-7] = 0.
-            self.amy[i][np.abs(self.amy[i])<1e-7] = 0.
-            self.amz[i][np.abs(self.amz[i])<1e-7] = 0.
+            # self.amx[i][np.abs(self.amx[i])<1e-7] = 0.
+            # self.amy[i][np.abs(self.amy[i])<1e-7] = 0.
+            # self.amz[i][np.abs(self.amz[i])<1e-7] = 0.
 
     def structureToAero(self):
         """
@@ -367,7 +448,7 @@ class mapper:
         """
         # For debugging only
         plotting = False
-        
+
         # structure displacements
         self.sux = []
         self.suy = []
@@ -375,7 +456,7 @@ class mapper:
         self.stx = []
         self.sty = []
         self.stz = []
-        
+
         # aerodynamic displacements
         self.aux = []
         self.auy = []
@@ -388,42 +469,39 @@ class mapper:
         N = len(self.geoP)
         # logger.debug("N = "+str(N))
         old = 0
-        
+
         # Separates the results for each wing. This leads to an amazing quality
         # jump in the simulation results.
         for i in range(N):
             # Number of node for each beams
-            # logger.debug()
             M = len(self.geoP[i])
             self.sux.append(self.csd.results.get('tensors').get('comp:U')["ux"][old:old+M])
             self.suy.append(self.csd.results.get('tensors').get('comp:U')["uy"][old:old+M])
             self.suz.append(self.csd.results.get('tensors').get('comp:U')["uz"][old:old+M])
-            
+
             self.stx.append(self.csd.results.get('tensors').get('comp:U')["thx"][old:old+M])
             self.sty.append(self.csd.results.get('tensors').get('comp:U')["thy"][old:old+M])
             self.stz.append(self.csd.results.get('tensors').get('comp:U')["thz"][old:old+M])
             old += M
-        
+
         # Computes the aerodynamic displacements and the aerodynamic angles
         for i in range(N-self.geo.nFuselage):
             self.aux.append(np.matmul(self.H[i],self.sux[i+self.geo.nFuselage]))
             self.auy.append(np.matmul(self.H[i],self.suy[i+self.geo.nFuselage]))
             self.auz.append(np.matmul(self.H[i],self.suz[i+self.geo.nFuselage]))
-            
+
             self.atx.append(np.matmul(self.H[i],self.stx[i+self.geo.nFuselage]))
             self.aty.append(np.matmul(self.H[i],self.sty[i+self.geo.nFuselage]))
             self.atz.append(np.matmul(self.H[i],self.stz[i+self.geo.nFuselage]))
-        
+
         # Assembles the displacements into a big vector
         N = len(self.lattice.c)
         self.displacements = np.empty((N,3))
         N = len(self.geoP)
-        # logger.debug("N = "+str(N))
         old = 0
         coef1 = 1  # for debugging
         coef2 = 1  # for debugging
         for i in range(N-self.geo.nFuselage):
-            # logger.debug(i+self.geo.nFuselage)
             M = len(self.aux[i])
             for j in range(M):
                 # Displacements due to moments:
@@ -437,40 +515,31 @@ class mapper:
                 self.displacements[old+j][1] = coef1*self.auy[i][j] + coef2*dmy[j]
                 self.displacements[old+j][2] = coef1*self.auz[i][j] + coef2*dmz[j]
             old = old + M
-        logger.debug(self.aux[i].shape)
-        logger.debug(self.distanceMatrix[i][:,2].shape)
-        logger.debug(dmx.shape)
-        logger.debug(dmy.shape)
-        logger.debug(dmz.shape)
-        # sys.exit()
-        # Plots
+
+        # For debugging only
         if plotting:
             fig = plt.figure("figure 2")
             ax = fig.add_subplot(111, projection='3d')
             # for p in range(len(self.wingsPoints)):
             #     ax.scatter(self.wingsPoints[p][:,0],
-            #                 self.wingsPoints[p][:,1],
-            #                 self.wingsPoints[p][:,2],
-            #                 label='undeformed wing'+str(p+1))
+            #                self.wingsPoints[p][:,1],
+            #                self.wingsPoints[p][:,2],
+            #                label='undeformed wing'+str(p+1))
             #     ax.scatter(self.wingsPoints[p][:,0]+self.aux[p],
-            #                 self.wingsPoints[p][:,1]+self.auy[p],
-            #                 self.wingsPoints[p][:,2]+self.auz[p],
-            #                 label='deformed wing'+str(p+1))
+            #                self.wingsPoints[p][:,1]+self.auy[p],
+            #                self.wingsPoints[p][:,2]+self.auz[p],
+            #                label='deformed wing'+str(p+1))
             ax.scatter(self.lattice.c[:,0],
-                        self.lattice.c[:,1],
-                        self.lattice.c[:,2],
-                        label='wing')
+                       self.lattice.c[:,1],
+                       self.lattice.c[:,2],
+                       label='wing')
             ax.scatter(self.lattice.c[:,0] + self.displacements[:,0],
-                        self.lattice.c[:,1] + self.displacements[:,1],
-                        self.lattice.c[:,2] + self.displacements[:,2],
-                        label='deformed wing')
+                       self.lattice.c[:,1] + self.displacements[:,1],
+                       self.lattice.c[:,2] + self.displacements[:,2],
+                       label='deformed wing')
             val = 15
             ax.set_xlim(-val,val)
             ax.set_ylim(-val,val)
             ax.set_zlim(-val,val)
             ax.legend()
             plt.show()
-        # sys.exit()
-    def deformVLM(self):
-        pass
-            
