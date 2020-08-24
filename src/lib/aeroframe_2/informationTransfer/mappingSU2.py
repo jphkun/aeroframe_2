@@ -129,7 +129,7 @@ class mapper:
         test "Wendland C2" seems to be the better choice, but this is really
         up to user preference.
         """
-        eps = 1
+        eps = 10
         # r = np.linalg.norm(x1-x2)
         if fun == "G":
             # Gaussian
@@ -137,6 +137,9 @@ class mapper:
         elif fun == "L":
             # Linear
             phi_x = r
+        elif fun == 'cubic':
+            # Cubic
+            phi_x = r**3
         elif fun == "TPS":
             # Thin plate spline
             phi_x = r**2 * np.log(r)
@@ -454,12 +457,18 @@ class mapper:
             # Number of node for each beams
             # logger.debug()
             M = len(self.geoP[i])
+            if i == 1:
+                corrDelta = self.csd.results.get('tensors').get('comp:U')["uz"][old+int(np.ceil(M/2))]
+                corrTheta = self.csd.results.get('tensors').get('comp:U')["thy"][old+int(np.ceil(M/2))]
+            else:
+                corrDelta = 0
+                corrTheta = 0
             self.sux.append(self.csd.results.get('tensors').get('comp:U')["ux"][old:old+M])
             self.suy.append(self.csd.results.get('tensors').get('comp:U')["uy"][old:old+M])
-            self.suz.append(self.csd.results.get('tensors').get('comp:U')["uz"][old:old+M])
+            self.suz.append(self.csd.results.get('tensors').get('comp:U')["uz"][old:old+M] - corrDelta) 
 
             self.stx.append(self.csd.results.get('tensors').get('comp:U')["thx"][old:old+M])
-            self.sty.append(self.csd.results.get('tensors').get('comp:U')["thy"][old:old+M])
+            self.sty.append(self.csd.results.get('tensors').get('comp:U')["thy"][old:old+M] - corrTheta)
             self.stz.append(self.csd.results.get('tensors').get('comp:U')["thz"][old:old+M])
             old += M
         np.set_printoptions(precision=3)

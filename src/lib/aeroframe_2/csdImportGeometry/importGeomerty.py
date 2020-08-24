@@ -49,6 +49,7 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from scipy.spatial import ConvexHull
 import sys
+import copy
 # import os
 from scipy.spatial.transform import Rotation as R
 from numpy.core.umath_tests import inner1d
@@ -371,19 +372,20 @@ class CsdGeometryImport:
                 sys.exit()
 
             logger.debug("Number of wing nodes asked: "+str(w_m_N_nodes))
-            # distance from leading edge
+            # distance from leading edge to the elastic axis
             xsiEl = self.settings['wing' + str(i+1)]['elasticAxis']
+            # distance between the mass axis and the elastic axis
             xsiMa = self.settings['wing' + str(i+1)]['massAxis']
             logger.debug("Wing"+str(i+1)+" Elastic center is: "+str(xsiEl))
             wingIndex = i+1
 
-            # Searches for each wing segment the start and end relative point
+            # Gets the number of segment and sections for each wing
             w_N_sg = self.tigl.wingGetSegmentCount(i+1)
             w_N_sc = self.tigl.wingGetSectionCount(i+1)
             logger.debug("Wing"+str(i+1)+" has "+str(w_N_sg)+" segments")
             logger.debug("Wing"+str(i+1)+" has "+str(w_N_sc)+" sections")
             if w_m_N_nodes < w_N_sc:
-                logger.warning("Mesh underdetermined, less mesh points than actual CPACS sections")
+                logger.warning("Wing mesh underdetermined, less points than actual CPACS sections")
 
             # Gets each segments starting and ending points
             w_sg_points = np.empty((w_N_sg+1,3))
@@ -468,7 +470,8 @@ class CsdGeometryImport:
                 # logger.debug()
                 logger.debug("case "+str(case)+"  eta = "+str(eta))
 
-                # Gets the wing point
+                # Gets the wing mesh points. Theses points will be always on
+                # the camber line.
                 w_me_points[j] = self.getWingCamberLinePoint(wingIndex,segmentIndex,eta,xsiEl)
                 w_ma_points[j] = self.getWingCamberLinePoint(wingIndex,segmentIndex,eta,xsiEl+xsiMa)
                 if j > 0:
@@ -485,8 +488,8 @@ class CsdGeometryImport:
                 area = self.computePointSectionArea(wingIndex,segmentIndex,eta,xsiEl)
                 w_me_pointsInitArea[j] = area
 
-            # For reference, in tigl3wrapper.py the symmetry is defined as
-            # such:
+            # For reference, in tigl3wrapper.py the symmetry is defined as such:
+            #
             # class TiglSymmetryAxis(object):
             # TIGL_NO_SYMMETRY = 0
             # TIGL_X_Y_PLANE = 1
@@ -701,6 +704,7 @@ class CsdGeometryImport:
         self.aircraftNodesJ = []
         # More general information
         self.aircraftConnectedNodes = []
+        self.aircraftNonRotatingNodes = []
 
         self.computeProportionFuselage()
         self.computeProportionWings()
@@ -902,7 +906,7 @@ class CsdGeometryImport:
         if self.nWings <= 1:
             logger.info("No wing connexions needed")
         elif self.nWings > 1 and self.nFuselage < 1:
-            logger.error("Multiple wings with no fusekage!")
+            logger.error("Multiple wings with no fuselage! Mesh can not be computed")
             sys.exit()
         else:
             ws_connextionsPoints = self.nWings + self.nFuselage - 1
@@ -920,7 +924,9 @@ class CsdGeometryImport:
                 for each wing there is 3 points that need to be taken into
                 account:
                     1) Left tip position[0]
-                    2) center [np.floor(nNodes/2))] (note symmetric wings always have odd number of points)
+                    2) center [np.floor(nNodes/2))]
+                        WARNING: keep in mind that symmetric wings always have 
+                        an odd number of points!
                     3) right tip position[-1]
                 """
                 if self.nFuselage > 0:
@@ -940,6 +946,7 @@ class CsdGeometryImport:
                 for j in range(ws_connextionsPoints+1):
                     logger.debug("wingIndex,j = "+str(wingIndex)+" "+str(j))
                     if wingIndex != j:
+                        # c: stands for current
                         logger.debug("True with wingIndex,j = "+str(wingIndex)+" "+str(j))
                         # Computes the distances between all point
                         dist_l = np.linalg.norm(self.aircraftNodesPoints[j] - self.aircraftNodesPoints[wingIndex][0], axis=1)
@@ -981,6 +988,7 @@ class CsdGeometryImport:
                             ws_identifiers[j] = identifier
                         else:
                             ws_identifiers[j-1] = identifier
+                
                 index2 = np.argmin(ws_identifiers[:,4])
                 old = np.array([ws_identifiers[index2,2],
                                 ws_identifiers[index2,3],
@@ -997,8 +1005,111 @@ class CsdGeometryImport:
                 connectedNodes[i] = ws_identifiers[index2]
                 logger.debug("connected Nodes: \n"+str(connectedNodes[i]))
             # logger.debug(connectedNodes)
+            
             self.aircraftConnectedNodes.append(connectedNodes)
+            self.rigidNodesAdder()
             # sys.exit()
+            
+    def rigidNodesAdder(self):
+        """
+        Adds rigid nodes before and after the original one
+
+        Returns
+        -------
+        None.
+
+        """
+        N = len(self.aircraftConnectedNodes[0])
+        logger.debug('\n'*20)
+        # logger.debug(self.aircraftConnectedNodes[0])
+        newConnectedNodes = []
+        np.set_printoptions(0)
+        for i in range(N):
+            # Connects the wing nodes to one another
+            wingNode = self.aircraftConnectedNodes[0][i][2]
+            fuselageNode = self.aircraftConnectedNodes[0][i][3]
+            newNodes = self.settings['wing' + str(i+1)]['FEM']['rigidNodes']
+            newConnectedNodes.append(self.aircraftConnectedNodes[0][i])
+            M = int(np.ceil(newNodes/2))
+            for j in range(1,M+1):
+                temp1 = copy.deepcopy(self.aircraftConnectedNodes[0][i])
+                temp2 = copy.deepcopy(self.aircraftConnectedNodes[0][i])
+                # self.aircraftNonRotatingNodes.append('wing_' + str(i+1) + '_')
+                # logger.debug(self.aircraftNodesNames[i+1][int(wingNode+j)])
+                # logger.debug(self.aircraftNodesNames[i+1][int(wingNode-j)])
+                # logger.debug(self.aircraftNodesNames[i+1])
+                if wingNode - M > 0:
+                    temp1[2] = wingNode + j
+                    temp2[2] = wingNode - j
+                    # logger.debug(temp1)
+                    # logger.debug(temp2)
+                    newConnectedNodes.append(temp1)
+                    newConnectedNodes.append(temp2)
+                    self.aircraftNonRotatingNodes.append(self.aircraftNodesNames[i+1][int(wingNode+j)])
+                    self.aircraftNonRotatingNodes.append(self.aircraftNodesNames[i+1][int(wingNode+j)])
+                else:
+                    temp1[2] = wingNode + j
+                    temp2[2] = wingNode + j + M
+                    newConnectedNodes.append(temp1)
+                    newConnectedNodes.append(temp2)
+        # Connects the fuselage nodes that are connected to a wing:
+        for i in range(N):
+            # Tests if it's a fuselage node
+            # logger.debug(self.aircraftConnectedNodes[0][i])
+            temp = self.aircraftConnectedNodes[0][i]
+            if temp[1] == 0:
+                newNodes = self.settings['fuselage']['FEM']['rigidNodes']
+                M = int(np.ceil(newNodes)/2)
+                fuselageNode = temp[3]
+                wingNode = temp[2]
+
+                for j in range(1,M+1):
+                    newNodes = self.settings['wing' + str(int(temp[0]))]['FEM']['rigidNodes']
+                    for k in range(newNodes):
+                        if fuselageNode - M > 0:
+                            # WARNING: move this bit of code only if you are sure
+                            # of what you are doing. This one can lead to unwanted
+                            # bugs!!
+                            # Wing uid
+                            # temp1[0] = 0
+                            # temp2[0] = 0
+                            
+                            # Fuselage uid
+                            # temp1[1] = 0
+                            # temp2[1] = 0
+                            # logger.debug(j)
+                            if wingNode - M > 0:
+                                temp1 = copy.deepcopy(temp)
+                                temp2 = copy.deepcopy(temp)
+                                temp1[2] = wingNode + k
+                                temp2[2] = wingNode - k
+                                temp1[3] = fuselageNode + j
+                                temp2[3] = fuselageNode - j
+                                newConnectedNodes.append(temp1)
+                                newConnectedNodes.append(temp2)
+                            else:
+                                temp1 = copy.deepcopy(temp)
+                                temp2 = copy.deepcopy(temp)
+                                temp1[2] = wingNode + k
+                                temp2[2] = wingNode + M + k
+                                temp1[3] = fuselageNode + j
+                                temp2[3] = fuselageNode - j
+                                newConnectedNodes.append(temp1)
+                                newConnectedNodes.append(temp2)
+
+                    else:
+                        pass
+                # logger.debug(temp)
+                # logger.debug(temp[3])
+        for i in newConnectedNodes:
+            logger.debug(i)
+        
+        logger.debug('\n'*5)
+        # logger.debug(newConnectedNodes[0])
+        self.aircraftConnectedNodes = newConnectedNodes
+        for i in self.aircraftConnectedNodes:
+            logger.debug(i)
+        # sys.exit()
 
     def plotSectionsPoints(self):
         # N = len(self.wingsSectionsCenters)

@@ -456,7 +456,7 @@ def solverSU2Framat(args, aeroframeSettings, acceptedNames):
     logger.debug("WKDIR: \n"+str(wkdir))
 
     # Step 2) Runs a single SU2 simulation
-    case = 'Case00_alt0_mach0.3_aoa2.0_aos0.0/'
+    case = '/Case00_alt0_mach0.3_aoa2.0_aos0.0/'
     ###
     # WARNING
     ###
@@ -505,7 +505,7 @@ def solverSU2Framat(args, aeroframeSettings, acceptedNames):
         # Step 8) Compute structure solution
         csdSolverClassVarCurrent.run(transformCurrent)
         transformCurrent.structureToAero(iteration,forceInitFilePath,forceFilePath)
-        
+
         # Step 9) Computes convergence
         maxDisplacement = np.append(maxDisplacement, np.max(transform.displacements))
         error.append(np.abs(maxDisplacement[-1] - maxDisplacement[-2]))

@@ -22,6 +22,7 @@ import scipy as sp
 import skspatial.objects as sk
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
+import sys
 
 logger = logging.getLogger(__name__)
 

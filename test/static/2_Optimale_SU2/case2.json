@@ -3,13 +3,13 @@
     "CSD_settings_file": "OptimaleCSDsettings.json",
     "aircraftFile": "Optimale.xml",
     "CFD_solver": "SU2",
-    "SU2_Nproc": 6,
-    "SU2_Niter": 50,
+    "SU2_Nproc": 4,
+    "SU2_Niter": 150,
     "SU2ConfigPath":"/home/cfse2/Documents/aeroframe_2/test/static/2_Optimale_SU2/CFD/Case00_alt0_mach0.3_aoa2.0_aos0.0/ConfigCFD.cfg",
     "CFDResultFile": " ",
     "CSD_solver": "FramAT",
-    "MaxIterationsNumber": 20,
-    "ConvergeanceTolerence": 0.01,
+    "MaxIterationsNumber": 15,
+    "ConvergeanceTolerence": 0.05,
     "deformation_activation": true,
     "deformation_from_file": false,
     "G_loads": false,
@@ -19,9 +19,9 @@
     "fuselage": {
         "mechanicalProperties": {
             "A": 0.11,
-            "Iy": 8E-04,
-            "Iz": 8E-04,
-            "J": 16E-04
+            "Iy": 1.6E-02,
+            "Iz": 1.6E-02,
+            "J": 3.2E-02
         },
         "materialProperties": {
             "E": 70e9,
@@ -30,16 +30,17 @@
         },
         "FEM": {
             "mechanicalInterpolationType": "quadratic",
-            "nodesFEM":6
+            "nodesFEM":40,
+            "rigidNodes": 8
         }
     },
     "wing1": {
-        "elasticAxis": 0.3,
-        "massAxis": 0.1,
+        "elasticAxis": 0.5,
+        "massAxis": 0.01,
         "mechanicalProperties": {
             "A": 0.11,
-            "Iy": 0.3E-03,
-            "Iz": 0.3E-03,
+            "Iy": 5E-04,
+            "Iz": 5E-04,
             "J": 1E-03
         },
         "materialProperties": {
@@ -49,7 +50,8 @@
         },
         "FEM": {
             "mechanicalInterpolationType": "quadratic",
-            "nodesFEM": 32
+            "nodesFEM": 32,
+            "rigidNodes": 4
         }
     },
     "wing2": {
@@ -68,7 +70,8 @@
         },
         "FEM": {
             "mechanicalInterpolationType": "quadratic",
-            "nodesFEM": 10
+            "nodesFEM": 10,
+            "rigidNodes": 2
         }
     },
     "wing3": {
@@ -87,7 +90,8 @@
         },
         "FEM": {
             "mechanicalInterpolationType": "constant",
-            "nodesFEM": 6
+            "nodesFEM": 8,
+            "rigidNodes": 0
         }
     },
     "Results": {

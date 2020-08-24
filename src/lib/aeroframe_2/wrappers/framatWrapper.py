@@ -41,7 +41,7 @@ class framat:
         self.imposeBC()
         self.applysLoad(tranform)
         # TODO add a user input if he wants or not to see the results
-        # self.postProcessing()
+        self.postProcessing()
         logger.debug("Framat solver stars computing")
         logger.debug(tranform.afx)
         logger.debug(self.geo)
@@ -198,7 +198,7 @@ class framat:
                 self.beams[i].add('point_load', {'at': name, 'load': load})
                 # for removing them at the end of the simulation but keeping
                 # the same mesh for computation time efficiency.
-                self.minusLoads = [-fx-mfx, -fy-mfy, -fz-mfz, -mx-mmx, -my-mmy, -mz-mmz]
+                self.minusLoads = [-fx+mfx, -fy+mfy, -fz+mfz, -mx+mmx, -my+mmy, -mz+mmz]
 
     def eraseLoad(self,tranform):
         N = self.geo.nFuselage + self.geo.nWings
@@ -215,15 +215,37 @@ class framat:
             name = "f_n_clamped"
             logger.debug(self.geo.aircraftNodesNames)
 
+            # # Connect nodes
+            # Nc = len(self.geo.aircraftConnectedNodes[0])
+            # logger.debug(self.geo.aircraftConnectedNodes[0])
+            # for i in range(Nc):
+            #     logger.debug(self.geo.aircraftConnectedNodes[0][i])
+            #     beamIndex1 = int(self.geo.aircraftConnectedNodes[0][i][0])
+            #     beamIndex1Node = int(self.geo.aircraftConnectedNodes[0][i][2])
+            #     beamIndex2 = int(self.geo.aircraftConnectedNodes[0][i][1])
+            #     beamIndex2Node = int(self.geo.aircraftConnectedNodes[0][i][3])
+            #     logger.debug(beamIndex1)
+            #     logger.debug(beamIndex1Node)
+            #     logger.debug(beamIndex2)
+            #     logger.debug(beamIndex2Node)
+            #     name1 = self.geo.aircraftNodesNames[beamIndex1][beamIndex1Node]
+            #     name2 = self.geo.aircraftNodesNames[beamIndex2][beamIndex2Node]
+            #     bc.add('connect',{'node1': name1,
+            #                       'node2': name2,
+            #                       'fix':['all']})
+            #     logger.debug("Connects node: " + name1)
+            #     logger.debug("connects node: " + name2)
+            #     logger.debug("="*30)
+            
             # Connect nodes
-            Nc = len(self.geo.aircraftConnectedNodes[0])
-            logger.debug(self.geo.aircraftConnectedNodes[0])
-            for i in range(Nc):
-                logger.debug(self.geo.aircraftConnectedNodes[0][i])
-                beamIndex1 = int(self.geo.aircraftConnectedNodes[0][i][0])
-                beamIndex1Node = int(self.geo.aircraftConnectedNodes[0][i][2])
-                beamIndex2 = int(self.geo.aircraftConnectedNodes[0][i][1])
-                beamIndex2Node = int(self.geo.aircraftConnectedNodes[0][i][3])
+            N = len(self.geo.aircraftConnectedNodes)
+            logger.debug(self.geo.aircraftConnectedNodes)
+            for i in range(N):
+                # logger.debug(self.geo.aircraftConnectedNodes[0][i])
+                beamIndex1 = int(self.geo.aircraftConnectedNodes[i][0])
+                beamIndex1Node = int(self.geo.aircraftConnectedNodes[i][2])
+                beamIndex2 = int(self.geo.aircraftConnectedNodes[i][1])
+                beamIndex2Node = int(self.geo.aircraftConnectedNodes[i][3])
                 logger.debug(beamIndex1)
                 logger.debug(beamIndex1Node)
                 logger.debug(beamIndex2)
@@ -233,12 +255,19 @@ class framat:
                 bc.add('connect',{'node1': name1,
                                   'node2': name2,
                                   'fix':['all']})
-                logger.debug("Connects node: "+name1)
-                logger.debug("connects node: "+name2)
+                logger.debug("Connects node: " + name1)
+                logger.debug("connects node: " + name2)
                 logger.debug("="*30)
+                
+            
         else:
             name = "w_n_clamped"
         bc.add('fix', {'node': name, 'fix': ['all']})
+        N = len(self.geo.aircraftNonRotatingNodes)
+        # for i in range(N):
+        #     name = self.geo.aircraftNonRotatingNodes[i]
+        #     # bc.add('fix', {'node': name, 'fix': ['ty']})
+        #     bc.add('fix', {'node': name, 'fix': ['ux','uy','uz]})
 
     def postProcessing(self):
         # ===== POST-PROCESSING =====
