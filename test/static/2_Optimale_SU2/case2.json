@@ -3,8 +3,8 @@
     "CSD_settings_file": "OptimaleCSDsettings.json",
     "aircraftFile": "Optimale.xml",
     "CFD_solver": "SU2",
-    "SU2_Nproc": 4,
-    "SU2_Niter": 150,
+    "SU2_Nproc": 6,
+    "SU2_Niter": 50,
     "SU2ConfigPath":"/home/cfse2/Documents/aeroframe_2/test/static/2_Optimale_SU2/CFD/Case00_alt0_mach0.3_aoa2.0_aos0.0/ConfigCFD.cfg",
     "CFDResultFile": " ",
     "CSD_solver": "FramAT",
@@ -12,7 +12,7 @@
     "ConvergeanceTolerence": 0.01,
     "deformation_activation": true,
     "deformation_from_file": false,
-    "G_loads": true,
+    "G_loads": false,
     "G_static": false,
     "deformation_file": "CSD/deformation/Optimale_disp_dlr.csv",
     "save_pkl": false,
@@ -38,8 +38,8 @@
         "massAxis": 0.1,
         "mechanicalProperties": {
             "A": 0.11,
-            "Iy": 0.6E-03,
-            "Iz": 0.6E-03,
+            "Iy": 0.3E-03,
+            "Iz": 0.3E-03,
             "J": 1E-03
         },
         "materialProperties": {

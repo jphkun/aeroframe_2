@@ -9,8 +9,15 @@ src/lib/aeroframe_2.egg-info/SOURCES.txt
 src/lib/aeroframe_2.egg-info/dependency_links.txt
 src/lib/aeroframe_2.egg-info/requires.txt
 src/lib/aeroframe_2.egg-info/top_level.txt
+src/lib/aeroframe_2/deformation/FramAT_functions.py
+src/lib/aeroframe_2/deformation/RBF_test.py
+src/lib/aeroframe_2/deformation/__init__.py
+src/lib/aeroframe_2/deformation/framatNormalVecConverter.py
+src/lib/aeroframe_2/deformation/functions.py
 src/lib/aeroframe_2/fileio/__init__.py
 src/lib/aeroframe_2/fileio/settings.py
+src/lib/aeroframe_2/informationTransfer/__init__.py
+src/lib/aeroframe_2/informationTransfer/mapping.py
+src/lib/aeroframe_2/informationTransfer/mappingSU2.py
 src/lib/aeroframe_2/std_fun/__init__.py
-src/lib/aeroframe_2/std_fun/_run.py
 src/lib/aeroframe_2/std_fun/run.py

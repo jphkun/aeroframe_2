@@ -448,17 +448,19 @@ def solverSU2Framat(args, aeroframeSettings, acceptedNames):
     #   Creation of the current loop directory done by the su2run.py file.
     # Case s2etup
     iteration = 0
-    config_path = aeroframeSettings
     wkdir = args.cwd
     # TODO: read it form the config file
     nb_proc = aeroframeSettings["SU2_Nproc"]
-    logger.debug("Configuration path: \n"+str(config_path))
+    logger.debug("Configuration path: \n"+str(aeroframeSettings))
     logger.debug("nb of proc: \n"+str(nb_proc))
     logger.debug("WKDIR: \n"+str(wkdir))
 
     # Step 2) Runs a single SU2 simulation
-    case = '/Case00_alt0_mach0.3_aoa2.0_aos0.0/'
-    SU2_fsi.run_SU2_fsi(config_path, wkdir, case, iteration)
+    case = 'Case00_alt0_mach0.3_aoa2.0_aos0.0/'
+    ###
+    # WARNING
+    ###
+    # SU2_fsi.run_SU2_fsi(aeroframeSettings, wkdir, case, iteration)
 
     # Step 3)  Reads CPACS files and computes the nodes of 3D beam structural
     #          mesh. Aeroframe_2 function 'importGeomerty' pre-meshes the
@@ -503,6 +505,7 @@ def solverSU2Framat(args, aeroframeSettings, acceptedNames):
         # Step 8) Compute structure solution
         csdSolverClassVarCurrent.run(transformCurrent)
         transformCurrent.structureToAero(iteration,forceInitFilePath,forceFilePath)
+        
         # Step 9) Computes convergence
         maxDisplacement = np.append(maxDisplacement, np.max(transform.displacements))
         error.append(np.abs(maxDisplacement[-1] - maxDisplacement[-2]))
@@ -514,7 +517,8 @@ def solverSU2Framat(args, aeroframeSettings, acceptedNames):
         # WARNING do not change it's place unless you know what you are doing
         iteration += 1
         # Step 10) computes new CFD solution
-        SU2_fsi.run_SU2_fsi(config_path, wkdir, case, iteration)
+
+        SU2_fsi.run_SU2_fsi(aeroframeSettings, wkdir, case, iteration)
         if iteration == N-1:
             logger.warning("Simulation has reached max number of step,")
             logger.warning("convergeance is yet to determine!")
