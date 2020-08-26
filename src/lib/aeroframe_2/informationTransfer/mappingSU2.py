@@ -120,6 +120,11 @@ class mapper:
         # computation result is necessary for the moments computation.
         self.computeDistanceForMorments(forceFilePath)
         logger.info("Finised computing distance matrix")
+        
+        # Finds wings nodes close tu fuselage in order to correct the mesh
+        # rotation
+        self.findCloseToWing(forceFilePath)
+        
         # Frees memory. not sure it is still needed
         del(SU2Data)
 
@@ -143,6 +148,12 @@ class mapper:
         elif fun == "TPS":
             # Thin plate spline
             phi_x = r**2 * np.log(r)
+        elif fun == "Po4":
+            # Polyharmonic spline
+            phi_x = r**3 * np.log(r**r)
+        elif fun == "Po4":
+            # Polyharmonic spline
+            phi_x = r**5 * np.log(r**r)
         elif fun == "HMQ":
             # Hardy's multiquadratic
             phi_x = (eps**2 + r**2)**0.5
@@ -457,18 +468,18 @@ class mapper:
             # Number of node for each beams
             # logger.debug()
             M = len(self.geoP[i])
-            if i == 1:
-                corrDelta = self.csd.results.get('tensors').get('comp:U')["uz"][old+int(np.ceil(M/2))]
-                corrTheta = self.csd.results.get('tensors').get('comp:U')["thy"][old+int(np.ceil(M/2))]
-            else:
-                corrDelta = 0
-                corrTheta = 0
+            # if i == 1:
+            #     corrDelta = self.csd.results.get('tensors').get('comp:U')["uz"][old+int(np.ceil(M/2))]
+            #     corrTheta = self.csd.results.get('tensors').get('comp:U')["thy"][old+int(np.ceil(M/2))]
+            # else:
+            #     corrDelta = 0
+            #     corrTheta = 0
             self.sux.append(self.csd.results.get('tensors').get('comp:U')["ux"][old:old+M])
             self.suy.append(self.csd.results.get('tensors').get('comp:U')["uy"][old:old+M])
-            self.suz.append(self.csd.results.get('tensors').get('comp:U')["uz"][old:old+M] - corrDelta) 
+            self.suz.append(self.csd.results.get('tensors').get('comp:U')["uz"][old:old+M]) 
 
             self.stx.append(self.csd.results.get('tensors').get('comp:U')["thx"][old:old+M])
-            self.sty.append(self.csd.results.get('tensors').get('comp:U')["thy"][old:old+M] - corrTheta)
+            self.sty.append(self.csd.results.get('tensors').get('comp:U')["thy"][old:old+M])
             self.stz.append(self.csd.results.get('tensors').get('comp:U')["thz"][old:old+M])
             old += M
         np.set_printoptions(precision=3)
@@ -489,13 +500,17 @@ class mapper:
         logger.debug("\n"*20)
         # Computes the aerodynamic displacements and the aerodynamic angles
         for i in range(N):
-            self.aux.append(np.matmul(self.H[i],self.sux[i]))
-            self.auy.append(np.matmul(self.H[i],self.suy[i]))
-            self.auz.append(np.matmul(self.H[i],self.suz[i]))
+            if i == 1:
+                coef = 0.05
+            else:
+                coef = 0
+            self.aux.append(np.matmul(self.H[i],self.sux[i]) - coef)
+            self.auy.append(np.matmul(self.H[i],self.suy[i]) - coef)
+            self.auz.append(np.matmul(self.H[i],self.suz[i]) - coef)
 
-            self.atx.append(np.matmul(self.H[i],self.stx[i]))
-            self.aty.append(np.matmul(self.H[i],self.sty[i]))
-            self.atz.append(np.matmul(self.H[i],self.stz[i]))
+            self.atx.append(np.matmul(self.H[i],self.stx[i]) - coef)
+            self.aty.append(np.matmul(self.H[i],self.sty[i]) - coef)
+            self.atz.append(np.matmul(self.H[i],self.stz[i]) - coef)
 
         # logger.debug(self.atx[0])
         # logger.debug(self.atx[1])
@@ -540,6 +555,7 @@ class mapper:
             dmz = np.concatenate((dmz,dmzi))
             dfz = np.concatenate((dfz,self.auz[ind]))
         self.displacements = np.array([dmx+dfx,dmy+dfy,dmz+dfz]).T
+        # self.displacements = np.array([dfx,dfy,dfz]).T
 
         # Generates the deformation file
         # 'GlobalID_' +
@@ -559,6 +575,16 @@ class mapper:
         x = SU2DataInit["x"] + const*self.displacements[start:,0]
         y = SU2DataInit["y"] + const*self.displacements[start:,1]
         z = SU2DataInit["z"] + const*self.displacements[start:,2]
+        
+        X = np.array([x,y,z])
+        logger.debug(X)
+        s = X.shape
+        X = X.T.reshape(s[1],s[0])
+        X = X[self.wingCTFIndexes]
+        u,s,vh = np.linalg.svd(X)
+        logger.debug(vh)
+        sys.exit()
+        
         path = os.path.join(self.geo.inputArgs.cwd,'CFD')
         caseName = os.listdir(path)
         caseName = fnmatch.filter(caseName, 'Case*')
@@ -596,3 +622,103 @@ class mapper:
             plt.show()
         del(SU2Data)
 
+    def findCloseToWing(self,forceFilePath):
+        """
+        
+
+        Parameters
+        ----------
+        forceFilePath : TYPE
+            DESCRIPTION.
+
+        Returns
+        -------
+        None.
+
+        """
+        # Separates the uids
+        SU2Data = pd.read_csv(forceFilePath)
+        N = len(self.geo.aircraftPartsUIDs)
+        aircraftPointsAndForcesCFD = []
+
+        for i in range(N):
+            logger.debug(i)
+            aircraftPointsAndForcesCFD.append(SU2Data[SU2Data['marker'].str.contains(self.geo.aircraftPartsUIDs[i])].to_numpy())
+        logger.debug(aircraftPointsAndForcesCFD[0])
+        
+        # Stores fuselage points
+        fuselagePoints = aircraftPointsAndForcesCFD[0][:,1:4]
+        
+        # Stores wing points
+        wingPoints = aircraftPointsAndForcesCFD[1][:,1:4]
+        
+        # Compute the distance between each fuselage point to each wing point.
+        # This is and NxM matrix with N number of fuselage points and M nbr.
+        # of wing points.
+        distance = sp.spatial.distance.cdist(fuselagePoints, wingPoints)
+        # logger.debug(distance.shape)
+        # logger.debug(distance)
+        
+        # Finds the the minimum distance between each fuselage point and the
+        # the closest wing point.
+        distanceFusePTWing = np.min(distance,axis=0)
+        # Finds the the minimum distance between each wing point and the
+        # the closest wing point.
+        distanceWingPTFuse = np.min(distance,axis=1)
+        # logger.debug(distanceFusePTWing.shape)
+        # logger.debug(distanceWingPTFuse.shape)
+        
+        
+        # Arbitrary value that selects the fuselage points that are new the
+        # wing.
+        distanceMax = 0.1
+        
+        # Wing point indexes selected with this criteras
+        indexesWingTF = np.where(np.logical_and(distanceFusePTWing>=0, distanceFusePTWing<distanceMax))
+        indexesWing = aircraftPointsAndForcesCFD[1][indexesWingTF,0]
+        indexesWing = indexesWing[0]
+
+        # Stores the wings point that satify the condition
+        selectedWingPoints = aircraftPointsAndForcesCFD[1][indexesWingTF,1:4]
+        s = selectedWingPoints.shape
+        selectedWingPoints = selectedWingPoints.reshape(s[0]*s[1],s[2])
+        selectedWingPoints = selectedWingPoints.astype(np.float32)
+        u, s, vh = np.linalg.svd(selectedWingPoints)
+        self.V = vh
+        self.wingCTFIndexes = indexesWingTF
+        logger.debug(vh)
+        
+
+        # sys.exit()
+        
+        # # Computes weighting coefficients
+        # x = 1-localWingPointDist/distanceMax
+        # # logger.debug(x)
+        
+        # coef = self.polynome(x)
+        # # logger.debug(coef)
+
+        # logger.debug('OG fuselage \n'+str(self.displacements[indexesFuselageTF]))
+        # # logger.debug(type(globalWingPointIndex))
+        # # logger.debug(type(self.displacements))
+        # N = len(globalWingPointIndex)
+        # temp = np.empty((N,3))
+        # for i in range(N):
+        #     # logger.debug()
+        #     temp[i] = self.displacements[globalWingPointIndex[i]]
+        # logger.debug('OG wing \n'+str(temp))
+        # # logger.debug(self.displacements[globalWingPointIndex])
+        # # # logger.debug((1 - coef))
+        # # # logger.debug(coef)
+        # # # logger.debug(( np.einsum('i,ij->ij', (1 - coef).T, self.displacements[indexesTF]) ))
+        # # # logger.debug(np.einsum('i,ij->ij', coef.T, self.displacements[relatedFWingPointsIndex]))
+        # fuselage = np.einsum('i,ij->ij', coef.T, self.displacements[indexesFuselageTF])
+        # logger.debug('fuselage \n'+str(fuselage))
+        
+        # wing = np.einsum('i,ij->ij', (1 - coef).T, temp)
+        # logger.debug('wing \n'+str(wing))
+        # self.displacements[indexesFuselageTF] = np.zeros((N,3))  # fuselage + wing            
+        # logger.debug(self.displacements[indexesFuselageTF])
+        # # # logger.debug(self.displacements[indexesTF])
+        # # # logger.debug(relatedFWingPointsIndex)
+        # # sys.exit()

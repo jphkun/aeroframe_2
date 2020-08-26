@@ -36,12 +36,12 @@
     },
     "wing1": {
         "elasticAxis": 0.5,
-        "massAxis": 0.01,
+        "massAxis": 0.0,
         "mechanicalProperties": {
             "A": 0.11,
-            "Iy": 5E-04,
-            "Iz": 5E-04,
-            "J": 1E-03
+            "Iy": 1E-04,
+            "Iz": 1E-04,
+            "J": 2E-04
         },
         "materialProperties": {
             "E": 70e9,

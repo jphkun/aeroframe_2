@@ -102,7 +102,7 @@ class mapper:
             # Computes the matrix M and then invert it
             # permitted choices are: G,L,TPS,HMQ,HIMQ,C0,C2,C4,C6,EH see below
             # the definition
-            fun = "L"
+            fun = "EH"
             n = self.geoP[i + self.geo.nFuselage].shape
             n = n[0]
             Mbeam = np.zeros((n,n))
@@ -183,7 +183,7 @@ class mapper:
         All the other functions are here in case someone finds a way to connect
         the solver to some 2D or 3D structure FEM solver.
         """
-        eps = 1
+        eps = 10
         r = LA.norm(x1-x2)
         if fun == "G":
             # Gaussian
@@ -338,6 +338,33 @@ class mapper:
                 moments[j,1] = self.geo.aircraftMassDistances[i][j,1]
                 moments[j,2] = self.geo.aircraftMassDistances[i][j,2]
             self.smm.append(moments)
+        self.totalAerodynamicFx = np.sum(self.afx)
+        self.totalAerodynamicFy = np.sum(self.afy)
+        self.totalAerodynamicFz = np.sum(self.afz)
+        self.totalAerodynamicMx = np.sum(self.amx)
+        self.totalAerodynamicMy = np.sum(self.amy)
+        self.totalAerodynamicMz = np.sum(self.amz)
+        self.totalStructureFx = np.sum(self.sfx)
+        self.totalStructureFy = np.sum(self.sfy)
+        self.totalStructureFz = np.sum(self.sfz)
+        self.totalStructureMx = np.sum(self.smx)
+        self.totalStructureMy = np.sum(self.smy)
+        self.totalStructureMz = np.sum(self.smz)
+        # logger.debug('Conservation of forces and moments')
+        # logger.debug('\n'*5)
+        # logger.debug(np.sum(self.afx))
+        # logger.debug(np.sum(self.sfx))
+        # logger.debug(np.sum(self.afy))
+        # logger.debug(np.sum(self.sfy))
+        # logger.debug(np.sum(self.afz))
+        # logger.debug(np.sum(self.sfz))
+        # logger.debug('\n'*5)
+        # logger.debug(np.sum(self.amx))
+        # logger.debug(np.sum(self.smx))
+        # logger.debug(np.sum(self.amy))
+        # logger.debug(np.sum(self.smy))
+        # logger.debug(np.sum(self.amz))
+        # logger.debug(np.sum(self.smz))
 
     def computeMoments(self):
         """
@@ -365,38 +392,73 @@ class mapper:
             M = len(self.wingsPoints[i])
             X = self.wingsPoints[i]
             Y = self.geo.aircraftNodesPoints[i+self.geo.nFuselage]
+            logger.debug(Y)
 
             # Computes the distance between each point of X and each point of
             # Y. This leads to an (NxM) matrix, M being the number of structure
             # nodes points.
             dist = sp.spatial.distance.cdist(X,Y,"euclidean")
+            # distances in the x,y,z coordinates in the airplane reference
+            # frame.
             self.distanceMatrix.append(np.empty((M,3)))
             # Finds the minimal 3 values
+            logger.debug(dist)
+            
             for j in range(M):
                 point = self.wingsPoints[i][j]
                 indexes = np.argsort(dist[j])[:3]
+                # logger.debug(dist)
+                # logger.debug(dist[j])
+                # logger.debug(indexes)
+                # logger.debug(dist[j][indexes])
+                
                 # Stores the 3 points of interest
                 p1 = self.geo.aircraftNodesPoints[i+self.geo.nFuselage][indexes[0]]
                 p2 = self.geo.aircraftNodesPoints[i+self.geo.nFuselage][indexes[1]]
                 p3 = self.geo.aircraftNodesPoints[i+self.geo.nFuselage][indexes[2]]
+                # logger.debug('Points')
+                # logger.debug(p1)
+                # logger.debug(p2)
+                # logger.debug(p3)
 
-                # Computes the two lines vectors
+                # Computes the two lines direction vectors
+                # p1 will always be the closest structure point hence he will
+                # be in the middle. Little drawing of what it looks like in
+                # space below
+                #
+                # (P2 or P3)           (P1)
+                #                             
+                #                                   (P2 or P3)
                 v12 = sk.Vector(p2-p1)
-                v23 = sk.Vector(p3-p2)
-
+                v23 = sk.Vector(p3-p1)
+                # logger.debug('Vectors')
+                # logger.debug(v12)
+                # logger.debug(v23)
+                
                 line1 = sk.Line(point=p2, direction=v12)
                 line2 = sk.Line(point=p2, direction=v23)
-
+                # logger.debug('lines')
+                # logger.debug(line1)
+                # logger.debug(line2)
+                
                 proj1 = line1.project_point(point)
                 proj2 = line2.project_point(point)
-
+                # logger.debug('Projected points+')
+                # logger.debug(proj1)
+                # logger.debug(proj2)
+                
                 # Computes the distance between the projected point and the
-                # most far way point. This permetis to test if the projection
+                # most far away point. This permetis to test if the projection
                 # is still on the structural mesh or not
-                distP1Proj1 = LA.norm(p1 - proj1)
+                distP1Proj1 = LA.norm(p2 - proj1)
                 distP1P2 = LA.norm(p1 - p2)
                 distP3Proj2 = LA.norm(p3 - proj2)
-                distP2P3 = LA.norm(p3 - p2)
+                distP2P3 = LA.norm(p1 - p3)
+                # logger.debug('Projected points distance to center and to relative point')
+                # logger.debug(distP1Proj1)
+                # logger.debug(distP1P2)
+                # logger.debug(distP3Proj2)
+                # logger.debug(distP2P3)
 
                 # the two selected segments are parallel.
                 if proj1[0] == proj2[0] and \
@@ -423,24 +485,34 @@ class mapper:
                 elif distP1Proj1 < distP1P2 and distP3Proj2 > distP2P3:
                     delta = -(point - proj2)
 
-                # line 1 projected point is outside the mesh but not the line 2
-                # projected point.
+                # line 1 projected point is outside the mesh and the line 2
+                # projected point is also outside the structure mesh.
                 elif distP1Proj1 > distP1P2 and distP3Proj2 > distP2P3:
-                    delta = -(point - p2)
+                    delta = -(point - p1)
                 self.distanceMatrix[i][j] = np.array([delta[0],delta[1],delta[2]])
-
+            # logger.debug(self.distanceMatrix)
+            # logger.debug(self.wingsPoints[i])
+            
             # Computes the moment on the beam generated by all the forces.
-            self.amx.append(self.distanceMatrix[i][:,2]*self.afy[i] + 
-                            self.distanceMatrix[i][:,1]*self.afz[i])
-            self.amy.append(self.distanceMatrix[i][:,2]*self.afx[i] +
-                            self.distanceMatrix[i][:,0]*self.afz[i])
-            self.amz.append(self.distanceMatrix[i][:,0]*self.afy[i] +
-                            self.distanceMatrix[i][:,1]*self.afx[i])
+            # logger.debug(self.afx[i])
+            # logger.debug(self.afy[i])
+            # logger.debug(self.afz[i])
+            
+            # In the airplane reference frame. in straight level flight
+            # wind is positive in the x direction and the wings span
+            # is in the y direction.
+            self.amx.append(self.distanceMatrix[i][:,2]*self.afy[i] + # OK
+                            self.distanceMatrix[i][:,1]*self.afz[i])  # OK
+            self.amy.append(self.distanceMatrix[i][:,2]*self.afx[i] + # OK
+                            self.distanceMatrix[i][:,0]*self.afz[i])  # OK
+            self.amz.append(self.distanceMatrix[i][:,0]*self.afy[i] + # OK
+                            self.distanceMatrix[i][:,1]*self.afx[i])  # OK
 
-            # In order to limit the numerical error
-            # self.amx[i][np.abs(self.amx[i])<1e-7] = 0.
-            # self.amy[i][np.abs(self.amy[i])<1e-7] = 0.
-            # self.amz[i][np.abs(self.amz[i])<1e-7] = 0.
+            # logger.debug(self.amx[i])
+            # logger.debug(self.amy[i])
+            # logger.debug(self.amz[i])
+
+
 
     def structureToAero(self):
         """
@@ -479,12 +551,24 @@ class mapper:
             self.sux.append(self.csd.results.get('tensors').get('comp:U')["ux"][old:old+M])
             self.suy.append(self.csd.results.get('tensors').get('comp:U')["uy"][old:old+M])
             self.suz.append(self.csd.results.get('tensors').get('comp:U')["uz"][old:old+M])
-
+            #######
+            # WARNING: FramAT changes the reference frame! It looks like the y
+            #          of the airplane is aligned with the x axis of the beam.
+            #          z axis should be fine since it is defined by the wrapper.
+            #######
             self.stx.append(self.csd.results.get('tensors').get('comp:U')["thx"][old:old+M])
             self.sty.append(self.csd.results.get('tensors').get('comp:U')["thy"][old:old+M])
             self.stz.append(self.csd.results.get('tensors').get('comp:U')["thz"][old:old+M])
             old += M
-
+        logger.debug('\n'*5)
+        logger.debug(self.sux)
+        logger.debug(self.suy)
+        logger.debug(self.suz)
+        logger.debug('\n'*5)
+        logger.debug(self.stx)
+        logger.debug(self.sty)
+        logger.debug(self.stz)
+        
         # Computes the aerodynamic displacements and the aerodynamic angles
         for i in range(N-self.geo.nFuselage):
             self.aux.append(np.matmul(self.H[i],self.sux[i+self.geo.nFuselage]))
@@ -494,7 +578,17 @@ class mapper:
             self.atx.append(np.matmul(self.H[i],self.stx[i+self.geo.nFuselage]))
             self.aty.append(np.matmul(self.H[i],self.sty[i+self.geo.nFuselage]))
             self.atz.append(np.matmul(self.H[i],self.stz[i+self.geo.nFuselage]))
-
+        logger.debug('\n'*5)
+        logger.debug(self.aux)
+        logger.debug(self.auy)
+        logger.debug(self.auz)
+        logger.debug('\n'*5)
+        logger.debug(self.atx)
+        logger.debug(self.aty)
+        logger.debug(self.atz)
+        
+        logger.debug(self.distanceMatrix)
+        # sys.exit()
         # Assembles the displacements into a big vector
         N = len(self.lattice.c)
         self.displacements = np.empty((N,3))
@@ -502,21 +596,31 @@ class mapper:
         old = 0
         coef1 = 1  # for debugging
         coef2 = 1  # for debugging
+        # TODO: Clean up this part
         for i in range(N-self.geo.nFuselage):
             M = len(self.aux[i])
+            
             for j in range(M):
                 # Displacements due to moments:
-                dmx = self.aty[i][j] * self.distanceMatrix[i][:,2] + \
-                      self.atz[i][j] * self.distanceMatrix[i][:,1]
-                dmy = self.atx[i][j] * self.distanceMatrix[i][:,2] + \
-                      self.atz[i][j] * self.distanceMatrix[i][:,0]
-                dmz = self.atx[i][j] * self.distanceMatrix[i][:,1] + \
-                      self.aty[i][j] * self.distanceMatrix[i][:,0]
+                dmx = 0*self.atz[i][j] * self.distanceMatrix[i][:,2]
+                dmy = 0*self.aty[i][j] * self.distanceMatrix[i][:,1]
+                if self.wingsPoints[i][j,1] > 0:
+                    dmz = self.atx[0] * self.distanceMatrix[0][:,0]
+                else:
+                    dmz = - self.atx[0] * self.distanceMatrix[0][:,0]
                 self.displacements[old+j][0] = coef1*self.aux[i][j] + coef2*dmx[j]
                 self.displacements[old+j][1] = coef1*self.auy[i][j] + coef2*dmy[j]
                 self.displacements[old+j][2] = coef1*self.auz[i][j] + coef2*dmz[j]
             old = old + M
-
+            
+        logger.debug(self.distanceMatrix[0][0,0])
+        logger.debug(self.atx[0][0])
+        
+        disp = self.atx[0] * self.distanceMatrix[0][:,0]
+        
+        logger.debug(disp)
+        
+        # sys.exit()
         # For debugging only
         if plotting:
             fig = plt.figure("figure 2")

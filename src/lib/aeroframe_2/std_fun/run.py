@@ -342,7 +342,7 @@ def solverPytornadoFramat(args, aeroframeSettings, acceptedNames):
     # Step 1) pytornado meshing
     pytornadoSettings, pytornadoVariables = pytornadoMeshing(args, aeroframeSettings)
 
-    # Step 2)  Reads CPACS files and computes the nodes of pseudo 1D structural
+    # Step 2)  Reads CPACS files and computes the nodes of beam model structural
     #          mesh. Aeroframe function pre-meshes the aircraft to get each
     #          structure node.
     preMeshedStructre = importGeomerty.CsdGeometryImport(args,aeroframeSettings)
@@ -366,40 +366,77 @@ def solverPytornadoFramat(args, aeroframeSettings, acceptedNames):
     maxDisplacement = np.array([0])
     error = []
     absoluteDisplacement = []
+    aeroFx = []
+    aeroFy = []
+    aeroFz = []
+    aeroMx = []
+    aeroMy = []
+    aeroMz = []
+    structFx = []
+    structFy = []
+    structFz = []
+    structMx = []
+    structMy = []
+    structMz = []
     tol = aeroframeSettings["ConvergeanceTolerence"]
     while (i < N):
         # basic user comminication
         logger.debug("aeroelastic loop number: "+str(i))
 
         # Makes a copy to avoid memory linked mistakes
-        transformCurrent = transform
-        csdSolverClassVarCurrent = csdSolverClassVar
+        # WARNING with this setup it does not work properly
+        # transformCurrent = transform
+        # csdSolverClassVar = csdSolverClassVar
+
         # Step 7) Projects the loads on CSD instance.
-        transformCurrent.aeroToStructure()
+        transform.aeroToStructure()
+        logger.debug(transform)
 
         # Step 8) Compute structure solution
-        csdSolverClassVarCurrent.run(transformCurrent)
+        csdSolverClassVar.run(transform)
 
         # Step 9) deforms the CFD mesh. Computes beam deformation
         latticeCurrent = pytornadoVariablesInit[0]
         meshDeformation = aeroDef.Mesh_Def(args,aeroframeSettings,latticeCurrent)
 
         # Step 10) computes new aerodynamic points
-        transformCurrent.structureToAero()
-        meshDeformation.deformation(acceptedNames,transformCurrent)
+        transform.structureToAero()
+        meshDeformation.deformation(acceptedNames,transform)
         pytornadoVariables = feeder(pytornadoVariables,meshDeformation)
 
         # Step 11) Computes the norm of the displacement error
-        # TODO find a clean way to do it
-        # TODO one can add a convergence graph
-        maxDisplacement = np.append(maxDisplacement, np.max(transform.displacements))
+        # Max structure displacement form one aeroelastic iteration to the next
+        maxDisplacement = np.append(maxDisplacement, np.max(transform.suz))
         error.append(np.abs(maxDisplacement[-1] - maxDisplacement[-2]))
+        # Max structure displacement from undeformed state
         absoluteDisplacement.append(np.abs(maxDisplacement[-1] - maxDisplacement[0]))
-        logger.info("Max error between two iteration: "+str(error))
-        logger.info("Max displacement between two iteration: "+str(absoluteDisplacement))
-        logger.info('G load: '+str(transform.G))
+        aeroFx.append(transform.totalAerodynamicFx)
+        aeroFy.append(transform.totalAerodynamicFy)
+        aeroFz.append(transform.totalAerodynamicFz)
+        aeroMx.append(transform.totalAerodynamicMx)
+        aeroMy.append(transform.totalAerodynamicMy)
+        aeroMz.append(transform.totalAerodynamicMz)
+        structFx.append(transform.totalStructureFx)
+        structFy.append(transform.totalStructureFy)
+        structFz.append(transform.totalStructureFz)
+        structMx.append(transform.totalStructureMx)
+        structMy.append(transform.totalStructureMy)
+        structMz.append(transform.totalStructureMz)
+        
+        # logger.info("Max error between two iteration: "+str(error))
+        # logger.info("Max displacement between two iteration: "+str(absoluteDisplacement))
+        # logger.info('G load: '+str(transform.G))
+        
         # Step 12) Deforms the CFD mesh.
         pytornadoVariables = cfd.solver(pytornadoVariables)
+        del(csdSolverClassVar)
+        csdSolverClassVar = framatWrapper.framat(preMeshedStructre)
+        csdSolverClassVar.mesh()
+        
+        del(transform)
+        transform = mapping.mapper(pytornadoVariables,preMeshedStructre,csdSolverClassVar)
+        transform.computesTransformationsMatrices()
+        # sys.exit()
         i += 1
         if i == N-1:
             logger.warning("Simulation has reached max number of step,")
@@ -407,14 +444,32 @@ def solverPytornadoFramat(args, aeroframeSettings, acceptedNames):
         if error[-1] <= tol:
             logger.info("Simulation has converged")
             i = N
+        
     # Writes a file which contains the error for each timestep
     N = len(error)
     path = args.cwd + "/results.csv"
     MyFile = open(path,"w")
-    MyFile.write("Relative error; max displacement")
+    MyFile.write("Relative error; max displacement;"\
+                 " aero Fx; aero Fy; aero Fz; aero Mx; aero My; aero Mz;"\
+                 " struct  Fx; struct  Fy; struct  Fz; struct Mx; struct My; struct Mz"\
+                     )
     MyFile.write("\n")
     for i in range(N):
-        MyFile.write(str(error[i]) + ";" + str(absoluteDisplacement[i]))
+        MyFile.write(str(error[i]) + ";" + \
+                     str(absoluteDisplacement[i]) + ";" + \
+                     str(aeroFx[i]) + ";" + \
+                     str(aeroFy[i]) + ";" + \
+                     str(aeroFz[i]) + ";" + \
+                     str(aeroMx[i]) + ";" + \
+                     str(aeroMy[i]) + ";" + \
+                     str(aeroMz[i]) + ";" + \
+                     str(structFx[i]) + ";" + \
+                     str(structFy[i]) + ";" + \
+                     str(structFz[i]) + ";" + \
+                     str(structMx[i]) + ";" + \
+                     str(structMy[i]) + ";" + \
+                     str(structMz[i]) + ";"
+                     )
         MyFile.write("\n")
     MyFile.close()
     sys.exit()

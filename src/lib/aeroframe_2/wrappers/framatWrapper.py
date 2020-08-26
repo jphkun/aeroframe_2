@@ -41,12 +41,11 @@ class framat:
         self.imposeBC()
         self.applysLoad(tranform)
         # TODO add a user input if he wants or not to see the results
-        self.postProcessing()
+        # self.postProcessing()
         logger.debug("Framat solver stars computing")
         logger.debug(tranform.afx)
         logger.debug(self.geo)
         self.results = self.model.run()
-        self.eraseLoad(tranform)
         logger.debug("Framat solver finised computing")
 
     def checkResults(self):
@@ -170,7 +169,7 @@ class framat:
 
                 # Distributes loads due to aerodynamics if CFD solver is Pytornado
                 if (self.geo.settings['CFD_solver'] == 'Pytornado'
-                    and i > self.geo.nFuselage
+                    and i >= self.geo.nFuselage
                     ):
                     fx = tranform.sfx[i - self.geo.nFuselage][j]
                     fy = tranform.sfy[i - self.geo.nFuselage][j]
@@ -185,7 +184,8 @@ class framat:
                     mx = 0
                     my = 0
                     mz = 0
-
+                logger.debug(fx)
+                logger.debug(fz)
                 # Distributes loads due to aerodynamics if CFD solver is SU2
                 if self.geo.settings['CFD_solver'] == 'SU2':
                     fx = tranform.sfx[i][j]
@@ -198,7 +198,10 @@ class framat:
                 self.beams[i].add('point_load', {'at': name, 'load': load})
                 # for removing them at the end of the simulation but keeping
                 # the same mesh for computation time efficiency.
-                self.minusLoads = [-fx+mfx, -fy+mfy, -fz+mfz, -mx+mmx, -my+mmy, -mz+mmz]
+                self.minusLoads = []
+                for t in load:
+                    self.minusLoads.append(-2*t)
+                # self.minusLoads = [-fx-mfx, -fy-mfy, -fz-mfz, -mx-mmx, -my-mmy, -mz-mmz]
 
     def eraseLoad(self,tranform):
         N = self.geo.nFuselage + self.geo.nWings
