@@ -41,7 +41,7 @@ class framat:
         self.imposeBC()
         self.applysLoad(tranform)
         # TODO add a user input if he wants or not to see the results
-        # self.postProcessing()
+        self.postProcessing()
         logger.debug("Framat solver stars computing")
         logger.debug(tranform.afx)
         logger.debug(self.geo)
