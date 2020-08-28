@@ -19,5 +19,7 @@ src/lib/aeroframe_2/fileio/settings.py
 src/lib/aeroframe_2/informationTransfer/__init__.py
 src/lib/aeroframe_2/informationTransfer/mapping.py
 src/lib/aeroframe_2/informationTransfer/mappingSU2.py
+src/lib/aeroframe_2/informationTransfer/mappingSU2_v0.1.py
+src/lib/aeroframe_2/informationTransfer/mappingSU2_v0.2.py
 src/lib/aeroframe_2/std_fun/__init__.py
 src/lib/aeroframe_2/std_fun/run.py

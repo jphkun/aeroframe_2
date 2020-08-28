@@ -41,11 +41,18 @@ class framat:
         self.imposeBC()
         self.applysLoad(tranform)
         # TODO add a user input if he wants or not to see the results
-        self.postProcessing()
+        # self.postProcessing()
         logger.debug("Framat solver stars computing")
         logger.debug(tranform.afx)
         logger.debug(self.geo)
         self.results = self.model.run()
+        var = self.results.get('tensors').get('comp:U')["uz"]
+        for i in var:
+            logger.debug(i)
+            var = self.results.get('tensors').get('F')[5::6]
+        for i in var:
+            logger.debug(i)
+        # sys.exit()
         logger.debug("Framat solver finised computing")
 
     def checkResults(self):
@@ -84,19 +91,20 @@ class framat:
                 J = self.geo.aircraftNodesJ[i][j]
                 cs = self.model.add_feature('cross_section', uid=name)
                 cs.set('A', A)
-                cs.set('Iy', Iy)
-                cs.set('Iz', Iz)
+                cs.set('Iy',Iy)
+                cs.set('Iz',Iz)
                 cs.set('J', J)
                 logger.debug("uid = "+str(name))
                 logger.debug("Iy = "+str(Iy))
                 logger.debug("Iz = "+str(Iz))
                 logger.debug("J = "+str(J))
+                # logger.debug(cs.get('Iy'))
+                # sys.exit()
 
     def computesCsdMesh(self):
         """
         """
         self.beams = []
-        np.set_printoptions(precision=3)
         # Number of beams
         N = len(self.geo.aircraftNodesPoints)
         for i in range(N):
@@ -106,36 +114,39 @@ class framat:
             for j in range(M):
                 # adds the points (nodes) to the beam
                 point = self.geo.aircraftNodesPoints[i][j].tolist()
-                logger.debug("point = "+str(point))
+                # logger.debug("point = "+str(point))
                 name = self.geo.aircraftNodesNames[i][j]
-                logger.debug("name = "+str(name))
+                # logger.debug("name = "+str(name))
                 self.beams[i].add("node",point,uid=name)
 
-                # WARNING this bit of code should be indented one more time.
-                # It should be nested inside the second for loop
                 # Adds the cross_section feature to each points
-                if j+1 < int(np.floor(M/2)) + 2:
-
+                if j < int(np.floor(M/2)):
                     name1 = self.geo.aircraftNodesNames[i][j]
                     name2 = self.geo.aircraftNodesNames[i][j+1]
                     uid = name2 + "_cross_section"
+                    logger.debug('Before '+name1+' '+name2+' '+uid)
                     self.beams[i].add('cross_section', {'from': name1,
-                                                        'to': name2,
-                                                        'uid': uid})
-                else:
-                    name1 = self.geo.aircraftNodesNames[i][j-1]
-                    name2 = self.geo.aircraftNodesNames[i][j]
+                                                        'to':   name2,
+                                                        'uid':  uid})
+                elif j < M-1:
+                    # M - 1 in order to add the last point
+                    name1 = self.geo.aircraftNodesNames[i][j]
+                    name2 = self.geo.aircraftNodesNames[i][j+1]
                     uid = name1 + "_cross_section"
+                    logger.debug('After '+name1+' '+name2+' '+uid)
                     self.beams[i].add('cross_section', {'from': name1,
-                                                        'to': name2,
-                                                        'uid': uid})
-
+                                                        'to':   name2,
+                                                        'uid':  uid})
+                logger.debug(j)
+                # logger.debug(self.geo.aircraftNodesIy[i][j])
+            # sys.exit()
             # Sets beam number of elements
             self.beams[i].set('nelem', 1)
             uid = self.geo.aircraftBeamsMaterials[i][0] + "_mat"
             a = self.geo.aircraftNodesNames[i][0]
             b = self.geo.aircraftNodesNames[i][-1]
             logger.debug("Material uid = "+str(uid))
+            # logger.debug()
             self.beams[i].add('material', {'from': a, 'to': b, 'uid': uid})
             self.beams[i].add('orientation',{'from': a, 'to': b, 'up': [0, 0, 1]})
 
@@ -153,12 +164,12 @@ class framat:
                 # Distributes loads due to inertia. m__ for mass, _f_ for
                 # force, _m_ for moment, __* direction
                 if self.geo.settings['G_loads']:
-                    mfx = tranform.smf[i][j,0]
-                    mfy = tranform.smf[i][j,1]
-                    mfz = tranform.smf[i][j,2]
-                    mmx = tranform.smm[i][j,0]
-                    mmy = tranform.smm[i][j,1]
-                    mmz = tranform.smm[i][j,2]
+                    mfx = np.round(tranform.smf[i][j,0])
+                    mfy = np.round(tranform.smf[i][j,1])
+                    mfz = np.round(tranform.smf[i][j,2])
+                    mmx = np.round(tranform.smm[i][j,0])
+                    mmy = np.round(tranform.smm[i][j,1])
+                    mmz = np.round(tranform.smm[i][j,2])
                 else:
                     mfx = 0
                     mfy = 0
@@ -171,12 +182,12 @@ class framat:
                 if (self.geo.settings['CFD_solver'] == 'Pytornado'
                     and i >= self.geo.nFuselage
                     ):
-                    fx = tranform.sfx[i - self.geo.nFuselage][j]
-                    fy = tranform.sfy[i - self.geo.nFuselage][j]
-                    fz = tranform.sfz[i - self.geo.nFuselage][j]
-                    mx = tranform.smx[i - self.geo.nFuselage][j]
-                    my = tranform.smy[i - self.geo.nFuselage][j]
-                    mz = tranform.smz[i - self.geo.nFuselage][j]
+                    fx = np.round(tranform.sfx[i - self.geo.nFuselage][j])
+                    fy = np.round(tranform.sfy[i - self.geo.nFuselage][j])
+                    fz = np.round(tranform.sfz[i - self.geo.nFuselage][j])
+                    mx = np.round(tranform.smx[i - self.geo.nFuselage][j])
+                    my = np.round(tranform.smy[i - self.geo.nFuselage][j])
+                    mz = np.round(tranform.smz[i - self.geo.nFuselage][j])
                 elif self.geo.settings['CFD_solver'] == 'Pytornado':
                     fx = 0
                     fy = 0
@@ -188,28 +199,33 @@ class framat:
                 logger.debug(fz)
                 # Distributes loads due to aerodynamics if CFD solver is SU2
                 if self.geo.settings['CFD_solver'] == 'SU2':
-                    fx = tranform.sfx[i][j]
-                    fy = tranform.sfy[i][j]
-                    fz = tranform.sfz[i][j]
-                    mx = tranform.smx[i][j]
-                    my = tranform.smy[i][j]
-                    mz = tranform.smz[i][j]
-                load = [fx+mfx, fy+mfy, fz+mfz, mx+mmx, my+mmy, mz+mmz]
+                    fx = np.round(tranform.sfx[i][j])
+                    fy = np.round(tranform.sfy[i][j])
+                    fz = np.round(tranform.sfz[i][j])
+                    mx = np.round(tranform.smx[i][j])
+                    my = np.round(tranform.smy[i][j])
+                    mz = np.round(tranform.smz[i][j])
+                # load = [fx+mfx, fy+mfy, fz+mfz, 0*mx+mmx, 0*my+mmy, 0*mz+mmz]
+                # self.beams[i].add('point_load', {'at': name, 'load': load})
+                load = [0*fx+mfx, 0*fy+mfy, 0*fz+mfz, mx+mmx, my+mmy, mz+mmz]
                 self.beams[i].add('point_load', {'at': name, 'load': load})
+                logger.debug(load)
+            logger.debug('iteration finised')
+
                 # for removing them at the end of the simulation but keeping
                 # the same mesh for computation time efficiency.
-                self.minusLoads = []
-                for t in load:
-                    self.minusLoads.append(-2*t)
+                # self.minusLoads = []
+                # for t in load:
+                #     self.minusLoads.append(-2*t)
                 # self.minusLoads = [-fx-mfx, -fy-mfy, -fz-mfz, -mx-mmx, -my-mmy, -mz-mmz]
 
-    def eraseLoad(self,tranform):
-        N = self.geo.nFuselage + self.geo.nWings
-        for i in range(N):
-            M = len(self.geo.aircraftNodesPoints[i])
-            for j in range(M):
-                name = self.geo.aircraftNodesNames[i][j]
-                self.beams[i].add('point_load', {'at': name, 'load': self.minusLoads})
+    # def eraseLoad(self,tranform):
+    #     N = self.geo.nFuselage + self.geo.nWings
+    #     for i in range(N):
+    #         M = len(self.geo.aircraftNodesPoints[i])
+    #         for j in range(M):
+    #             name = self.geo.aircraftNodesNames[i][j]
+    #             self.beams[i].add('point_load', {'at': name, 'load': self.minusLoads})
 
     def imposeBC(self):
         # ===== BOUNDARY CONDITIONS =====

@@ -50,6 +50,7 @@ import copy
 # import pandas as pd
 import os
 from mpl_toolkits.mplot3d import Axes3D
+import pandas as pd
 
 
 # from ceasiompy.SU2Run.func.extractloads import extract_loads
@@ -244,13 +245,19 @@ def forcesToCsv(args,pytornadoVariables,results):
     panelFx = results["vlmdata"].panelwise['fx']
     panelFy = results["vlmdata"].panelwise['fy']
     panelFz = results["vlmdata"].panelwise['fz']
+    panelMx = results["vlmdata"].panelwise['mx']
+    panelMy = results["vlmdata"].panelwise['my']
+    panelMz = results["vlmdata"].panelwise['mz']
 
     results = np.array([panelCoordinates[:,0],
                         panelCoordinates[:,1],
                         panelCoordinates[:,2],
                         panelFx,
                         panelFy,
-                        panelFz])
+                        panelFz,
+                        panelMx,
+                        panelMy,
+                        panelMz])
 
     np.savetxt(path, results.T, delimiter=';', header=headers)
     logger.info("Simulation finised")
@@ -378,18 +385,32 @@ def solverPytornadoFramat(args, aeroframeSettings, acceptedNames):
     structMx = []
     structMy = []
     structMz = []
+    pVold = pytornadoVariables
     tol = aeroframeSettings["ConvergeanceTolerence"]
     while (i < N):
         # basic user comminication
         logger.debug("aeroelastic loop number: "+str(i))
-
-        # Makes a copy to avoid memory linked mistakes
-        # WARNING with this setup it does not work properly
-        # transformCurrent = transform
-        # csdSolverClassVar = csdSolverClassVar
+        
+        # Saves the aerodynamic results
+        points = pVold[0].bound_leg_midpoints
+        Fx = pVold[1].panelwise['fx']
+        Fy = pVold[1].panelwise['fy']
+        Fz = pVold[1].panelwise['fz']
+        Mx = pVold[1].panelwise['mx']
+        My = pVold[1].panelwise['my']
+        Mz = pVold[1].panelwise['mz']
+        df = pd.DataFrame(points)
+        df['Fx'] = Fx
+        df['Fy'] = Fy
+        df['Fz'] = Fz
+        df['Mx'] = Mx
+        df['My'] = My
+        df['Mz'] = Mz
+        df.columns = ['x', 'y', 'z', 'Fx', 'Fy', 'Fz', 'Mx', 'My', 'Mz']
+        df.to_csv(args.cwd + '/CFD/_results/forces' + str(i) + '.csv')
 
         # Step 7) Projects the loads on CSD instance.
-        transform.aeroToStructure()
+        transform.aeroToStructure(args,i)
         logger.debug(transform)
 
         # Step 8) Compute structure solution
@@ -400,7 +421,7 @@ def solverPytornadoFramat(args, aeroframeSettings, acceptedNames):
         meshDeformation = aeroDef.Mesh_Def(args,aeroframeSettings,latticeCurrent)
 
         # Step 10) computes new aerodynamic points
-        transform.structureToAero()
+        transform.structureToAero(args,i)
         meshDeformation.deformation(acceptedNames,transform)
         pytornadoVariables = feeder(pytornadoVariables,meshDeformation)
 
@@ -410,6 +431,7 @@ def solverPytornadoFramat(args, aeroframeSettings, acceptedNames):
         error.append(np.abs(maxDisplacement[-1] - maxDisplacement[-2]))
         # Max structure displacement from undeformed state
         absoluteDisplacement.append(np.abs(maxDisplacement[-1] - maxDisplacement[0]))
+        
         aeroFx.append(transform.totalAerodynamicFx)
         aeroFy.append(transform.totalAerodynamicFy)
         aeroFz.append(transform.totalAerodynamicFz)
@@ -472,6 +494,10 @@ def solverPytornadoFramat(args, aeroframeSettings, acceptedNames):
                      )
         MyFile.write("\n")
     MyFile.close()
+    
+    # Writes the forces and points at which they apply
+    
+    
     sys.exit()
 
 

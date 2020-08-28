@@ -4,8 +4,8 @@
     "aircraftFile": "straightWing.xml",
     "CFD_solver": "Pytornado",
     "CSD_solver": "FramAT",
-    "MaxIterationsNumber": 20,
-    "ConvergeanceTolerence": 0.0001,
+    "MaxIterationsNumber": 15,
+    "ConvergeanceTolerence": 0.001,
     "deformation_activation": true,
     "deformation_from_file": false,
     "G_loads": false,
@@ -16,20 +16,20 @@
         "elasticAxis": 0.5,
         "massAxis": 0.0,
         "mechanicalProperties": {
-            "A":  1.14E-02,
-            "Iy": 7.94E-05,
-            "Iz": 2.76E-03,
-            "J":  2.84E-03
+            "A":  1E-02,
+            "Iy": 8E-05,
+            "Iz": 1E-03,
+            "J":  1E-03
         },
         "materialProperties": {
             "E": 70E9,
             "G": 27E9,
-            "rho": 2100
+            "rho": 1
         },
         "FEM": {
             "mechanicalInterpolationType": "quadratic",
-            "nodesFEM": 16,
-            "rigidNodes": 0
+            "nodesFEM": 5,
+            "rigidNodes": 2
         }
     }
 }
