@@ -1,8 +1,4 @@
-libpng warning: bKGD: invalid
-libpng warning: bKGD: invalid
-libpng warning: bKGD: invalid
-libpng warning: bKGD: invalid
-libpng warning: bKGD: invalid
-libpng warning: bKGD: invalid
-libpng warning: bKGD: invalid
-libpng warning: bKGD: invalid
+[5957:5957:0829/101315.573383:ERROR:zygote_communication_linux.cc(292)] Failed to send GetTerminationStatus message to zygote
+[5957:5957:0829/101315.615757:ERROR:zygote_communication_linux.cc(292)] Failed to send GetTerminationStatus message to zygote
+[5957:5957:0829/101315.620145:ERROR:zygote_communication_linux.cc(292)] Failed to send GetTerminationStatus message to zygote
+[5957:5957:0830/151154.888446:ERROR:child_process_launcher.cc(522)] Failed to launch child process

@@ -362,11 +362,15 @@ def solverPytornadoFramat(args, aeroframeSettings, acceptedNames):
 
     # Step 4) feeds the computed nodes to a mapping function which computes the
     # tranformation matrices (based on RBF)
+    logger.debug(pytornadoVariables[0].c)
+    # sys.exit()
     transform = mapping.mapper(pytornadoVariables,preMeshedStructre,csdSolverClassVar)
     transform.computesTransformationsMatrices()
+    
     # Step 5) Computes CFD problem.
     cfd.solver(pytornadoVariables)
     pytornadoVariablesInit = copy.deepcopy(pytornadoVariables)
+    
     # Setp 6) Aeroelastic loop.
     N = aeroframeSettings["MaxIterationsNumber"]
     i = 0
@@ -450,13 +454,16 @@ def solverPytornadoFramat(args, aeroframeSettings, acceptedNames):
         # logger.info('G load: '+str(transform.G))
         
         # Step 12) Deforms the CFD mesh.
-        pytornadoVariables = cfd.solver(pytornadoVariables)
+        pytornadoVariables, results = cfd.solver(pytornadoVariables)
+        # logger.debug(pytornadoVariables[0].bound_leg_midpoints)
+        # sys.exit()
         del(csdSolverClassVar)
         csdSolverClassVar = framatWrapper.framat(preMeshedStructre)
         csdSolverClassVar.mesh()
         
-        del(transform)
+        # del(transform)
         transform = mapping.mapper(pytornadoVariables,preMeshedStructre,csdSolverClassVar)
+        
         transform.computesTransformationsMatrices()
         # sys.exit()
         i += 1

@@ -29,7 +29,7 @@
         "FEM": {
             "mechanicalInterpolationType": "quadratic",
             "nodesFEM": 5,
-            "rigidNodes": 2
+            "rigidNodes": 1
         }
     }
 }

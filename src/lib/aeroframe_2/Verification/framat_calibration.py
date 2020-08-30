@@ -69,15 +69,15 @@ beam.add('orientation', {'from': v1, 'to': v2, 'up': [0, 0, 1]})
 # beam.add('point_load', {'at': 'h', 'load': [15.575, 0.011,    3821.05, 13430.958, 511.137, -60.007]})
 # beam.add('point_load', {'at': 'i', 'load': [12.812, 0.005,    1763.31, 7108.881,  24.792,  -54.809]})
 
-# beam.add('point_load', {'at': 'a', 'load': [0, 0, 1e4, 0, 0, 0]})
-# beam.add('point_load', {'at': 'b', 'load': [0, 0, 1e5, 0, 0, 0]})
-# beam.add('point_load', {'at': 'c', 'load': [0, 0, 1e4, 0, 0, 0]})
-# beam.add('point_load', {'at': 'd', 'load': [0, 0, 1e3, 0, 0, 0]})
-# beam.add('point_load', {'at': 'e', 'load': [0, 0, 1e2, 0, 0, 0]})
-# beam.add('point_load', {'at': 'f', 'load': [0, 0, 1e3, 0, 0, 0]})
-# beam.add('point_load', {'at': 'g', 'load': [0, 0, 1e4, 0, 0, 0]})
-# beam.add('point_load', {'at': 'h', 'load': [0, 0, 1e5, 0, 0, 0]})
-# beam.add('point_load', {'at': 'i', 'load': [0, 0, 1e4, 0, 0, 0]})
+beam.add('point_load', {'at': 'a', 'load': [0, 0, 0, 322.0, 0, 0]})
+beam.add('point_load', {'at': 'b', 'load': [0, 0, 0, 613.0, 0, 0]})
+beam.add('point_load', {'at': 'c', 'load': [0, 0, 0, 885.0, 0, 0]})
+beam.add('point_load', {'at': 'd', 'load': [0, 0, 0, 1019, 0, 0]})
+beam.add('point_load', {'at': 'e', 'load': [0, 0, 0, 1060.0, 0, 0]})
+beam.add('point_load', {'at': 'f', 'load': [0, 0, 0, 1019, 0, 0]})
+beam.add('point_load', {'at': 'g', 'load': [0, 0, 0, 885.0, 0, 0]})
+beam.add('point_load', {'at': 'h', 'load': [0, 0, 0, 613.0, 0, 0]})
+beam.add('point_load', {'at': 'i', 'load': [0, 0, 0, 322.0, 0, 0]})
 
 # beam.add('point_load', {'at': 'a', 'load': [12.812, 0.005, 1763.31,0*  7108.881, 0*  24.792,0* -54.809]})
 # beam.add('point_load', {'at': 'b', 'load': [15.575, 0.011, 3821.05,0* 13430.958, 0* 511.137,0* -60.007]})
@@ -90,15 +90,15 @@ beam.add('orientation', {'from': v1, 'to': v2, 'up': [0, 0, 1]})
 # beam.add('point_load', {'at': 'i', 'load': [12.812, 0.005, 1763.31,0*  7108.881, 0*  24.792,0* -54.809]})
 
 
-beam.add('point_load', {'at': 'a', 'load': [0*12.812,0* 0.005,0* 1763.31,  7108.881,   24.792, -54.809]})
-beam.add('point_load', {'at': 'b', 'load': [0*15.575,0* 0.011,0* 3821.05, 13430.958,  511.137, -60.007]})
-beam.add('point_load', {'at': 'c', 'load': [0*9.402, 0* 0.014,0* 4744.77,   11413.5,  845.287, -26.826]})
-beam.add('point_load', {'at': 'd', 'load': [0*4.908, 0* 0.014,0* 5100.26,  6182.208, 1022.159,  -7.982]})
-beam.add('point_load', {'at': 'e', 'load': [0*3.447, 0* 0.0 , 0* 5198.69,     0.001, 1076.735,     0.0]})
-beam.add('point_load', {'at': 'f', 'load': [0*4.908, 0* 0.014,0* 5100.26,  6182.208, 1022.159,  -7.982]})
-beam.add('point_load', {'at': 'g', 'load': [0*9.402, 0* 0.014,0* 4744.77,   11413.5,  845.287, -26.826]})
-beam.add('point_load', {'at': 'h', 'load': [0*15.575,0* 0.011,0* 3821.05, 13430.958,  511.137, -60.007]})
-beam.add('point_load', {'at': 'i', 'load': [0*12.812,0* 0.005,0* 1763.31,  7108.881,   24.792, -54.809]})
+# beam.add('point_load', {'at': 'a', 'load': [0*12.812,0* 0.005,0* 1763.31,  7108.881,   24.792, -54.809]})
+# beam.add('point_load', {'at': 'b', 'load': [0*15.575,0* 0.011,0* 3821.05, 13430.958,  511.137, -60.007]})
+# beam.add('point_load', {'at': 'c', 'load': [0*9.402, 0* 0.014,0* 4744.77,   11413.5,  845.287, -26.826]})
+# beam.add('point_load', {'at': 'd', 'load': [0*4.908, 0* 0.014,0* 5100.26,  6182.208, 1022.159,  -7.982]})
+# beam.add('point_load', {'at': 'e', 'load': [0*3.447, 0* 0.0 , 0* 5198.69,     0.001, 1076.735,     0.0]})
+# beam.add('point_load', {'at': 'f', 'load': [0*4.908, 0* 0.014,0* 5100.26,  6182.208, 1022.159,  -7.982]})
+# beam.add('point_load', {'at': 'g', 'load': [0*9.402, 0* 0.014,0* 4744.77,   11413.5,  845.287, -26.826]})
+# beam.add('point_load', {'at': 'h', 'load': [0*15.575,0* 0.011,0* 3821.05, 13430.958,  511.137, -60.007]})
+# beam.add('point_load', {'at': 'i', 'load': [0*12.812,0* 0.005,0* 1763.31,  7108.881,   24.792, -54.809]})
 
 
 # ===== BOUNDARY CONDITIONS =====
@@ -120,10 +120,14 @@ results = model.run()
 # ===== RESULTS =====
 # The result object contains all relevant results. For instance, we may fetch
 # the global load vector.
-load_vector = results.get('tensors').get('F')[2::6]
+# load_vector = results.get('tensors').get('F')[2::6]
 # load_vector = results.get('tensors').get('comp:U')["uz"]
 # print(load_vector)
 np.set_printoptions(3)
-# print(results.get('tensors').get('comp:U')["ux"])
-# print(results.get('tensors').get('comp:U')["uy"])
+print(results.get('tensors').get('comp:U')["ux"])
+print(results.get('tensors').get('comp:U')["uy"])
 print(results.get('tensors').get('comp:U')["uz"])
+
+print(results.get('tensors').get('comp:U')["thx"])
+print(results.get('tensors').get('comp:U')["thy"])
+print(results.get('tensors').get('comp:U')["thz"])
