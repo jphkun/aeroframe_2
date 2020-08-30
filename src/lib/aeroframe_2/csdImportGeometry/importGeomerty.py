@@ -373,7 +373,7 @@ class CsdGeometryImport:
 
             logger.debug("Number of wing nodes asked: "+str(w_m_N_nodes))
             # distance from leading edge to the elastic axis
-            xsiEl = self.settings['wing' + str(i+1)]['elasticAxis']
+            xsiEl = 1 - self.settings['wing' + str(i+1)]['elasticAxis']
             # distance between the mass axis and the elastic axis
             xsiMa = self.settings['wing' + str(i+1)]['massAxis']
             logger.debug("Wing"+str(i+1)+" Elastic center is: "+str(xsiEl))

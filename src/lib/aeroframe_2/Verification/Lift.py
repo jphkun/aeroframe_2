@@ -15,8 +15,8 @@ cwd = '/home/user/Documents/ICL/PDM/aeroframe_2/test/static/1_WingValidationPyto
 filename1 = 'forces0.csv'
 filename2 = 'FEM_frocesAndMoments0.csv'
 filename3 = 'FEM_displacementAndRotations0.csv'
-# distance between the aerodynamic center and the chordline
-e = 0.1
+# distance between the elastic center and the leading edge
+a = 0.45
 
 # Imports data
 df1 = pd.read_csv(cwd + filename1)
@@ -27,7 +27,10 @@ dfF = df1.groupby(['y'])['y','Fz'].agg('sum')
 df1['x_my'] = df1['x']
 # print(df1['x'])
 # print(df1['x_my'])
-df1['My'] = -df1['x']*df1['Fz']
+df1['My'] = (-df1['x']+(a-0.5)*2)*df1['Fz']
+# print(-df1['x'])
+# print(-df1['x']+(a-0.5)*2)
+# sys.exit()
 dfM = df1.groupby(['y'])['y','My'].agg('sum')
 # print(df2)
 
