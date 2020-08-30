@@ -13,7 +13,7 @@
     "deformation_file": "CSD/deformation/Optimale_disp_dlr.csv",
     "save_pkl": false,
     "wing1": {
-        "elasticAxis": 0.45,
+        "elasticAxis": 0.7,
         "massAxis": 0.0,
         "mechanicalProperties": {
             "A":  1E-02,

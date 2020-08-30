@@ -10,18 +10,29 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import sys
+import json
 
-cwd = '/home/user/Documents/ICL/PDM/aeroframe_2/test/static/1_WingValidationPytornado_case1/CFD/_results/'
+cwd1 = '/home/user/Documents/ICL/PDM/aeroframe_2/test/static/1_WingValidationPytornado_case1/CFD/_results/'
+cwd2 = '/home/user/Documents/ICL/PDM/aeroframe_2/test/static/1_WingValidationPytornado_case1/'
 filename1 = 'forces0.csv'
 filename2 = 'FEM_frocesAndMoments0.csv'
 filename3 = 'FEM_displacementAndRotations0.csv'
+filename4 = 'case1.json'
 # distance between the elastic center and the leading edge
-a = 0.45
+
+try:
+    with open(cwd2+filename4) as f:
+        settings = json.load(f)
+    f.close()
+except FileNotFoundError:
+    print('error')
+
+a = settings['wing1']['elasticAxis']
 
 # Imports data
-df1 = pd.read_csv(cwd + filename1)
-df2 = pd.read_csv(cwd + filename2)
-df3 = pd.read_csv(cwd + filename3)
+df1 = pd.read_csv(cwd1 + filename1)
+df2 = pd.read_csv(cwd1 + filename2)
+df3 = pd.read_csv(cwd1 + filename3)
 dfF = df1.groupby(['y'])['y','Fz'].agg('sum')
 # Computes the moment
 df1['x_my'] = df1['x']
