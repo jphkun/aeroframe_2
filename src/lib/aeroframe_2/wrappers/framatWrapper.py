@@ -42,25 +42,25 @@ class framat:
         self.applysLoad(tranform)
         # TODO add a user input if he wants or not to see the results
         # self.postProcessing()
-        logger.debug("Framat solver stars computing")
-        logger.debug(tranform.afx)
-        logger.debug(self.geo)
+        # logger.debug("Framat solver stars computing")
+        # logger.debug(tranform.afx)
+        # logger.debug(self.geo)
         self.results = self.model.run()
         var = self.results.get('tensors').get('comp:U')["thx"]
-        for i in var:
-            logger.debug(i)
+        # for i in var:
+        #     logger.debug(i)
         
-        var = self.results.get('tensors').get('F')[3::6]
-        for i in var:
-            logger.debug(i)
-        var = self.model.get('beam')[0].get('cross_section')
-        for i in var:
-            logger.debug(i)
+        # var = self.results.get('tensors').get('F')[3::6]
+        # for i in var:
+        #     logger.debug(i)
+        # var = self.model.get('beam')[0].get('cross_section')
+        # for i in var:
+        #     logger.debug(i)
             
-        logger.debug(self.model)
-        logger.debug(self.model.get('beam')[0].get('material'))
+        # logger.debug(self.model)
+        # logger.debug(self.model.get('beam')[0].get('material'))
         # logger.debug())
-        logger.debug(self.model.get('beam')[0].get('node'))
+        # logger.debug(self.model.get('beam')[0].get('node'))
         # sys.exit()
         logger.debug("Framat solver finised computing")
 
@@ -77,12 +77,12 @@ class framat:
             mat.set('E', self.geo.aircraftBeamsMaterials[i][1])
             mat.set('G', self.geo.aircraftBeamsMaterials[i][2])
             mat.set('rho', self.geo.aircraftBeamsMaterials[i][3])
-            logger.debug("mat E = "+str(mat.get("E")))
-            logger.debug("mat G = "+str(mat.get("G")))
-            logger.debug("mat rho = "+str(mat.get("rho")))
-            logger.error(self.geo.aircraftBeamsMaterials[i][1])
-            logger.error(self.geo.aircraftBeamsMaterials[i][2])
-            logger.error(self.geo.aircraftBeamsMaterials[i][3])
+            # logger.debug("mat E = "+str(mat.get("E")))
+            # logger.debug("mat G = "+str(mat.get("G")))
+            # logger.debug("mat rho = "+str(mat.get("rho")))
+            # logger.error(self.geo.aircraftBeamsMaterials[i][1])
+            # logger.error(self.geo.aircraftBeamsMaterials[i][2])
+            # logger.error(self.geo.aircraftBeamsMaterials[i][3])
 
     def loadGeometryPropertiesFromJson(self):
         # TODO add versatility to the cross_section part
@@ -103,10 +103,10 @@ class framat:
                 cs.set('Iy',np.round_(Iy, decimals=9))
                 cs.set('Iz',np.round_(Iz, decimals=9))
                 cs.set('J', np.round_(J , decimals=9))
-                logger.debug("uid = "+str(name))
-                logger.debug("Iy = "+str(Iy))
-                logger.debug("Iz = "+str(Iz))
-                logger.debug("J = "+str(np.round_(J , decimals=9)))
+                # logger.debug("uid = "+str(name))
+                # logger.debug("Iy = "+str(Iy))
+                # logger.debug("Iz = "+str(Iz))
+                # logger.debug("J = "+str(np.round_(J , decimals=9)))
                 # logger.debug(cs.get('Iy'))
             # sys.exit()
 
@@ -130,13 +130,13 @@ class framat:
                 name = self.geo.aircraftNodesNames[i][j]
                 # logger.debug("name = "+str(name))
                 self.beams[i].add("node",point,uid=name)
-                logger.debug(str(j) + ' ' + str(point))
+                # logger.debug(str(j) + ' ' + str(point))
         
             self.beams[i].set('nelem', 1)
             uid = self.geo.aircraftBeamsMaterials[i][0] + "_mat"
             a = self.geo.aircraftNodesNames[i][0]
             b = self.geo.aircraftNodesNames[i][-1]
-            logger.debug("Material uid = "+str(uid))
+            # logger.debug("Material uid = "+str(uid))
             # logger.debug()
             self.beams[i].add('material', {'from': a, 'to': b, 'uid': uid})
             self.beams[i].add('orientation',{'from': a, 'to': b, 'up': [0, 0, 1]})
@@ -224,8 +224,8 @@ class framat:
                     mx = 0
                     my = 0
                     mz = 0
-                logger.debug(fx)
-                logger.debug(fz)
+                # logger.debug(fx)
+                # logger.debug(fz)
                 # Distributes loads due to aerodynamics if CFD solver is SU2
                 if self.geo.settings['CFD_solver'] == 'SU2':
                     if j < int(np.floor(M/2)):

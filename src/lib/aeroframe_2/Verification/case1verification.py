@@ -12,12 +12,14 @@ import matplotlib.pyplot as plt
 import sys
 import json
 
-cwd1 = '/home/user/Documents/ICL/PDM/aeroframe_2/test/static/1_WingValidationPytornado_case1/CFD/_results/'
-cwd2 = '/home/user/Documents/ICL/PDM/aeroframe_2/test/static/1_WingValidationPytornado_case1/'
+cwd1 = '/home/cfse2/Documents/aeroframe_2/test/static/1_WingValidationPytornado_case1//CFD/_results/'
+cwd2 = '/home/cfse2/Documents/aeroframe_2/test/static/1_WingValidationPytornado_case1//'
+# /home/cfse2/Documents/aeroframe_2/test/static/1_WingValidationPytornado_case1/
 filename1 = 'forces0.csv'
 filename2 = 'FEM_frocesAndMoments0.csv'
 filename3 = 'FEM_displacementAndRotations0.csv'
 filename4 = 'case1.json'
+filename5 = 'forces1.csv'
 # distance between the elastic center and the leading edge
 
 try:
@@ -25,7 +27,7 @@ try:
         settings = json.load(f)
     f.close()
 except FileNotFoundError:
-    print('error')
+    print('error : \n'+cwd2+filename4)
 
 a = settings['wing1']['elasticAxis']
 
@@ -33,7 +35,17 @@ a = settings['wing1']['elasticAxis']
 df1 = pd.read_csv(cwd1 + filename1)
 df2 = pd.read_csv(cwd1 + filename2)
 df3 = pd.read_csv(cwd1 + filename3)
-dfF = df1.groupby(['y'])['y','Fz'].agg('sum')
+df5 = pd.read_csv(cwd1 + filename5)
+dfF0 = df1.groupby(['y'])['y','Fz'].agg('sum')
+aggregation_functions = {'y': 'first', 'Fy': 'sum'}
+df5['y'] = df5['y'].round(decimals=2)
+df_new = df5.groupby(df5['y']).aggregate(aggregation_functions)
+dfF1 = df5.groupby(['y'])['y','Fz'].sum()
+
+# print(dfF0)
+# print(dfF1)
+# sys.exit()
+
 # Computes the moment
 df1['x_my'] = df1['x']
 # print(df1['x'])
@@ -46,22 +58,27 @@ dfM = df1.groupby(['y'])['y','My'].agg('sum')
 # print(df2)
 
 # Converts data to the correct format for polynomial fit and plotting
-Fz_cfd = dfF.values
+Fz_cfd0 = dfF0.values
+Fz_cfd1 = dfF1.values
 My_cfd = dfM.values
-y_cfd = Fz_cfd[:,0]/5
+y_cfd = Fz_cfd0[:,0]/5
 
 # Computes the dy to make the force and moment idependent of the mesh
 dy1 = np.abs(y_cfd[1]-y_cfd[0])
 dy2 = np.abs(df2['y'][1]-df2['y'][0])
 # print(dy1)
 
-Fz_cfd = Fz_cfd[:,1]/dy1
+Fz_cfd0 = Fz_cfd0[:,1]/dy1
+Fz_cfd1 = Fz_cfd1[:,1]/dy1
+# print(Fz_cfd0)
+# print(Fz_cfd1)
+# sys.exit()
 My_cfd = My_cfd[:,1]/dy1
 # beam moment
 Mb_cfd = My_cfd
 
 # Polynomial fitting of both curves
-cFz, rFz, _, _, _ = np.polyfit(y_cfd, Fz_cfd, 7, full=True)
+cFz, rFz, _, _, _ = np.polyfit(y_cfd, Fz_cfd0, 7, full=True)
 cMb, rMb, _, _, _ = np.polyfit(y_cfd, Mb_cfd, 7, full=True)
 pFz = np.poly1d(cFz)
 print(pFz)
@@ -75,11 +92,12 @@ Fz_pol = pFz(y_pol)
 Mb_pol = pMb(y_pol)
 
 # Computes the analytical response
-E = 70e9
-G = 27e9
-Iy = 8E-05
-Iz = 1E-03
+E = settings['wing1']['materialProperties']['E']
+G = settings['wing1']['materialProperties']['G']
+Iy = settings['wing1']['mechanicalProperties']['Iy']
+Iz = settings['wing1']['mechanicalProperties']['Iz']
 l = 5
+
 c1 = -((cFz[6]*l**7)/7 +  (cFz[4]*l**5)/5  + (cFz[2]*l**3)/3 +  (cFz[0]*l**1)/1)
 c2 = -((cFz[6]*l**8)/56 + (cFz[4]*l**6)/30 + (cFz[2]*l**4)/12 + (cFz[0]*l**2)/2 +c1*l)
 # print(cFz)
@@ -87,11 +105,11 @@ c2 = -((cFz[6]*l**8)/56 + (cFz[4]*l**6)/30 + (cFz[2]*l**4)/12 + (cFz[0]*l**2)/2 
 def w(y):
     w = (1/(E*Iy)) * \
         ((cFz[0]*y**4) / 24 + \
-         (cFz[2]*y**6) / 360 + \
-         (cFz[4]*y**8) / 1680 + \
-         (cFz[6]*y**10)/ 5040 + \
-         (c1*y**3)     / 6 +\
-         (c2*y**2)     / 2)
+          (cFz[2]*y**6) / 360 + \
+          (cFz[4]*y**8) / 1680 + \
+          (cFz[6]*y**10)/ 5040 + \
+          (c1*y**3)     / 6 +\
+          (c2*y**2)     / 2)
     return w
 
 def f(x):
@@ -107,19 +125,27 @@ def t(y):
     yMax = 5
     t = (1/(G*Iz)) * \
         (((cMb[7]*yMax**1) / 1 +  \
-         (cMb[5]*yMax**3) / 3 + \
-         (cMb[3]*yMax**5) / 5 + \
-         (cMb[1]*yMax**7) / 7 )*y -
+          (cMb[5]*yMax**3) / 3 + \
+          (cMb[3]*yMax**5) / 5 + \
+          (cMb[1]*yMax**7) / 7 )*y -
         ((cMb[7]*y**2) / 2 +  \
-         (cMb[5]*y**4) / 12 + \
-         (cMb[3]*y**6) / 30 + \
-         (cMb[1]*y**8) / 56 ))
+          (cMb[5]*y**4) / 12 + \
+          (cMb[3]*y**6) / 30 + \
+          (cMb[1]*y**8) / 56 ))
     # t = (1/(G*Iz)) * \
     #     ((cMb[0]*y**2) / 2 +  \
     #      (cMb[2]*y**4) / 12 + \
     #      (cMb[4]*y**6) / 30 + \
     #      (cMb[6]*y**8) / 56 )
     return t
+
+def a0(L):
+    a = L/213.802
+    return a
+
+def a1(L,theta):
+    a = L/(6125*(np.deg2rad(2) + theta))
+    return a
 
 # Graph properties
 titleSize = 30
@@ -129,7 +155,7 @@ width = 3
 # Lift distribtion
 plt.figure(2)
 plt.plot(y_pol,Fz_pol,'r-',label='Polynomial fit', linewidth=width)
-plt.plot(y_cfd,Fz_cfd,'o-',label='CFD value', linewidth=width)
+plt.plot(y_cfd,Fz_cfd0,'o-',label='CFD value', linewidth=width)
 plt.plot(df2['y'],df2['Fz']/dy2,'o-',label='FEM value', linewidth=width)
 # plt.plot(y_cfd,f(y_cfd),'-',label='FEM value', linewidth=width)
 plt.title('Lift distribution',fontsize=titleSize)
@@ -145,7 +171,9 @@ plt.yticks(fontsize=textSize)
 plt.figure(3)
 plt.plot(df3['y'],df3['dz'],'-ro',label='FEM', linewidth=width)
 plt.plot(y_cfd,w(np.abs(y_cfd)),'-',label='Analytical solution', linewidth=width)
-plt.title('Displacement',fontsize=titleSize)
+errorMax = 100*(np.max(df3['dz']) - np.max(w(np.abs(y_cfd)))) / np.max(w(np.abs(y_cfd)))
+errorMax = errorMax.round(decimals=1)
+plt.title('Displacement \n Error max: '+str(errorMax)+'%',fontsize=titleSize)
 plt.xlabel('postion [m]',fontsize=textSize)
 plt.ylabel('Displacement [m]',fontsize=textSize)
 plt.grid()
@@ -154,8 +182,8 @@ plt.xticks(fontsize=textSize)
 plt.yticks(fontsize=textSize)
 
 
-print(df2)
-print(df3)
+# print(df2)
+# print(df3)
 
 # Torque distribution
 plt.figure(4)
@@ -175,16 +203,46 @@ plt.yticks(fontsize=textSize)
 # Rotation angle
 plt.figure(5)
 plt.plot(df3['y'],df3['tx'],'-ro',label='FEM', linewidth=width)
-plt.plot(y_cfd,np.flip(t(np.abs(y_cfd))),'-',label='Analytical solution', linewidth=width)
-plt.title('Rotation angle',fontsize=titleSize)
+plt.plot(y_cfd,t(np.abs(y_cfd)),'-',label='Analytical solution', linewidth=width)
+errorMax2 = 100*(np.max(df3['tx']) - np.max(t(np.abs(y_cfd)))) / np.max(t(np.abs(y_cfd)))
+errorMax2 = errorMax2.round(decimals=1)
+print(errorMax2)
+# np.set_printoptions(precision=3)
+plt.title('Rotation angle \n Max error: '+str(errorMax2)+'%',fontsize=titleSize)
 plt.xlabel('positon [m]',fontsize=textSize)
 plt.ylabel('Rotation angle [rad]',fontsize=textSize)
 plt.grid()
 plt.legend(fontsize=textSize)
 plt.xticks(fontsize=textSize)
 plt.yticks(fontsize=textSize)
+# plt.show()
+
+# a_0
+plt.figure(6)
+# plt.plot(y_cfd,Fz_cfd0,'r-',label='L cfd', linewidth=width)
+plt.plot(y_cfd,Fz_cfd0,'o-',
+         label='iteration 0 $c_{l}$ cfd',
+         linewidth=width)
+theta = t(np.abs(y_cfd))
+print()
+# 
+plt.plot(y_cfd,6125*(np.deg2rad(2.0) + theta) * a0(Fz_cfd0),'r-',
+         label='Iteration 1 $c_{l}$ analytical',
+         linewidth=width)
+
+plt.plot(y_cfd,Fz_cfd1,'go-',
+         label='Iteration 1 $c_{l}$ cfd',
+         linewidth=width)
+errMax3 = (np.max(6125*(np.deg2rad(2.0) + theta) * a0(Fz_cfd0)) - np.max(Fz_cfd1))/np.max(6125*(np.deg2rad(2.0) + theta) * a0(Fz_cfd0))
+errMax3 = 100*errMax3.round(decimals=3)
+plt.title('Lift distribution at step 1\n Max error: '+str(errMax3)+'%',fontsize=titleSize)
+plt.xlabel('y position [m]',fontsize=textSize)
+plt.ylabel('$C_{l}$ [1/(m)]',fontsize=textSize)
+plt.xlim(-5,5)
+plt.grid()
+plt.legend(fontsize=textSize)
+plt.xticks(fontsize=textSize)
+plt.yticks(fontsize=textSize)
 plt.show()
-
-
 
 

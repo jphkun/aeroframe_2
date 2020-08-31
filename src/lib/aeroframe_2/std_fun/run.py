@@ -449,12 +449,12 @@ def solverPytornadoFramat(args, aeroframeSettings, acceptedNames):
         structMy.append(transform.totalStructureMy)
         structMz.append(transform.totalStructureMz)
         
-        # logger.info("Max error between two iteration: "+str(error))
-        # logger.info("Max displacement between two iteration: "+str(absoluteDisplacement))
+        logger.info("Max error between two iteration: "+str(error))
+        logger.info("Max displacement between two iteration: "+str(absoluteDisplacement))
         # logger.info('G load: '+str(transform.G))
         
         # Step 12) Deforms the CFD mesh.
-        pytornadoVariables, results = cfd.solver(pytornadoVariables)
+        pytornadoVariables = cfd.solver(pytornadoVariables)
         # logger.debug(pytornadoVariables[0].bound_leg_midpoints)
         # sys.exit()
         del(csdSolverClassVar)
