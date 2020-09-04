@@ -319,6 +319,7 @@ class Mesh_Def:
         # Path of the deformation file from the current working directory
         pathFromCWD = self.aeroframeSettings["deformation_file"]
         path = self.args.cwd + "/" + pathFromCWD
+        
         logger.debug("Input deformation csv file path is: \n"+str(path))
         if path is None:
             logger.error("NO DEFORMATION FILE")
@@ -330,52 +331,62 @@ class Mesh_Def:
             z = dataset[:,2]
             d = dataset[:,3:]
             s = dataset.shape
-            # logger.debug(y)
 
-            # angle = angle - corrector
+
+            # h = list(disp.columns.values)
+            # N_headers = len(h)
+    
+            # Sorts out which type of FEM simulation was done (beam or shell)
+            # TODO: separate the airplane if half using the x axis. At the moment
+            #       there is an issue with the center of the airplane.
+            if s[1] == 6:
+                logger.info("Input deformation data is of type surface")
+                # interpolates the points (lattice.p)
+                # Previous experience with Optimale aircraft:
+                #   'multiquadric': GOOD RESULTS with eps = [1e-3;1e-1]
+                #   'inverse':      Does not work with any eps
+                #   'gaussian':     works only with eps to small to capture deformation
+                #   'linear':       GOOD RESULTS, small lack of symmetry
+                #   'cubic':        GOOD RESULTS, small lack of symmetry
+                #   'quintic':      GOOD RESULTS, small lack of symmetry
+                #   'thin_plate':   BEST RESULTS, very little loss of symmetry
+                rbfi = Rbf(x,y,z,d,function='thin_plate',mode="N-D",epsilon=1e-5)
+                self.u_p = rbfi(self.ir_p[:,0],self.ir_p[:,1],self.ir_p[:,2])
+    
+                # interpolates the vortex horseshoe points (lattice.v)
+                for i in range(len(self.ir_v)):
+                    if (i % 4) == 1:
+                        self.u_v[i] = rbfi(self.ir_v[i,0],
+                                           self.ir_v[i,1],
+                                           self.ir_v[i,2])
+                        self.u_v[i-1] = self.u_v[i]
+                    elif (i % 4) == 2:
+                        self.u_v[i] = rbfi(self.ir_v[i,0],
+                                           self.ir_v[i,1],
+                                           self.ir_v[i,2])
+                        self.u_v[i+1] = self.u_v[i]
+                # interpolates the collocation points (lattice.c)
+                self.u_c = rbfi(self.i_c[:,0],self.i_c[:,1],self.i_c[:,2])
+    
+                # interpolates the bound leg mid-points (lattice.blm)
+                self.u_b = rbfi(self.i_b[:,0],self.i_b[:,1],self.i_b[:,2])
+    
+                # Feed values to the deformed points (f for final).
+                self.fr_p = self.ir_p + self.u_p
+                self.f_p = self.i_p + self.u_p.reshape(self.s_p[0],
+                                                       self.s_p[1],
+                                                       self.s_p[2])
+                self.fr_v = self.ir_v + self.u_v
+                self.f_v = self.i_v + self.u_v.reshape(self.s_v[0],
+                                                       self.s_v[1],
+                                                       self.s_v[2])
         except FileNotFoundError:
-            logger.error("No such deformation file or directiory:\n" + str(path))
-        # h = list(disp.columns.values)
-        # N_headers = len(h)
+            logger.info("No such deformation file or directiory:\n" + str(path))
+            logger.info("Simulation is continued without deformation")
+            sys.exit()
 
-        # Sorts out which type of FEM simulation was done (beam or shell)
-        # TODO: separate the airplane if half using the x axis. At the moment
-        #       there is an issue with the center of the airplane.
-        if s[1] == 6:
-            logger.info("Input deformation data is of type surface")
-            # interpolates the points (lattice.p)
-            rbfi = Rbf(x,y,z,d,function='linear',mode="N-D")
-            self.u_p = rbfi(self.ir_p[:,0],self.ir_p[:,1],self.ir_p[:,2])
-
-            # interpolates the vortex horseshoe points (lattice.v)
-            for i in range(len(self.ir_v)):
-                if (i % 4) == 1:
-                    self.u_v[i] = rbfi(self.ir_v[i,0],
-                                       self.ir_v[i,1],
-                                       self.ir_v[i,2])
-                    self.u_v[i-1] = self.u_v[i]
-                elif (i % 4) == 2:
-                    self.u_v[i] = rbfi(self.ir_v[i,0],
-                                       self.ir_v[i,1],
-                                       self.ir_v[i,2])
-                    self.u_v[i+1] = self.u_v[i]
-            # interpolates the collocation points (lattice.c)
-            self.u_c = rbfi(self.i_c[:,0],self.i_c[:,1],self.i_c[:,2])
-
-            # interpolates the bound leg mid-points (lattice.blm)
-            self.u_b = rbfi(self.i_b[:,0],self.i_b[:,1],self.i_b[:,2])
-
-            # Feed values to the deformed points (f for final).
-            self.fr_p = self.ir_p + self.u_p
-            self.f_p = self.i_p + self.u_p.reshape(self.s_p[0],
-                                                   self.s_p[1],
-                                                   self.s_p[2])
-            self.fr_v = self.ir_v + self.u_v
-            self.f_v = self.i_v + self.u_v.reshape(self.s_v[0],
-                                                   self.s_v[1],
-                                                   self.s_v[2])
-            self.f_c = self.i_c + self.u_c
-            self.f_b = self.i_b + self.u_b
+        self.f_c = self.i_c + self.u_c
+        self.f_b = self.i_b + self.u_b
 
     def deformation(self,acceptedNames,transform=None):
         """

@@ -168,17 +168,18 @@ def csvDeformation(args,pytornadoSettings,aeroframeSettings,pytornadoVariables):
     mesh_def = aeroDef.Mesh_Def(args,aeroframeSettings,lattice)
 
     # Calls the deformation function that computes the new points positions
-    mesh_def.deformation()
-
-    # Feeds the result back to an understandable pytornado mesh. The idea is
-    # not to touch any unwanted variable, hence the action of feeding back the
-    # new point to the old lattice variable.
-    lattice.p = mesh_def.f_p
-    lattice.v = mesh_def.f_v
-    lattice.c = mesh_def.f_c
-    lattice.bound_leg_midpoints = mesh_def.f_b
-    lattice.n = mesh_def.f_n
-    lattice.a = mesh_def.f_a
+    if aeroframeSettings['deformation_from_file']:
+        mesh_def.deformation()
+    
+        # Feeds the result back to an understandable pytornado mesh. The idea is
+        # not to touch any unwanted variable, hence the action of feeding back the
+        # new point to the old lattice variable.
+        lattice.p = mesh_def.f_p
+        lattice.v = mesh_def.f_v
+        lattice.c = mesh_def.f_c
+        lattice.bound_leg_midpoints = mesh_def.f_b
+        lattice.n = mesh_def.f_n
+        lattice.a = mesh_def.f_a
 
     # For ease of use and code readability
     pytornadoVariables[0] = lattice
@@ -245,19 +246,20 @@ def forcesToCsv(args,pytornadoVariables,results):
     panelFx = results["vlmdata"].panelwise['fx']
     panelFy = results["vlmdata"].panelwise['fy']
     panelFz = results["vlmdata"].panelwise['fz']
-    panelMx = results["vlmdata"].panelwise['mx']
-    panelMy = results["vlmdata"].panelwise['my']
-    panelMz = results["vlmdata"].panelwise['mz']
+    # panelMx = results["vlmdata"].panelwise['mx']
+    # panelMy = results["vlmdata"].panelwise['my']
+    # panelMz = results["vlmdata"].panelwise['mz']
 
     results = np.array([panelCoordinates[:,0],
                         panelCoordinates[:,1],
                         panelCoordinates[:,2],
                         panelFx,
-                        panelFy,
+                        panelFy, 
                         panelFz,
-                        panelMx,
-                        panelMy,
-                        panelMz])
+                        # panelMx,
+                        # panelMy,
+                        # panelMz
+                        ])
 
     np.savetxt(path, results.T, delimiter=';', header=headers)
     logger.info("Simulation finised")
@@ -292,12 +294,13 @@ def solverPytornadoCSV(args, aeroframeSettings, acceptedNames):
     # Step 1) pytornado meshing
     pytornadoSettings, pytornadoVariables = pytornadoMeshing(args, aeroframeSettings)
 
-    # Step 2) Deforms CFD mesh
-    lattice = pytornadoVariables[0]
-    meshDeformation = aeroDef.Mesh_Def(args,aeroframeSettings,lattice)
-    meshDeformation.deformation(acceptedNames)
-    pytornadoVariables = feeder(pytornadoVariables,meshDeformation)
-
+    # Step 2) Deforms CFD mesh if necessary
+    if aeroframeSettings['deformation_from_file']:
+        lattice = pytornadoVariables[0]
+        meshDeformation = aeroDef.Mesh_Def(args,aeroframeSettings,lattice)
+        meshDeformation.deformation(acceptedNames)
+        pytornadoVariables = feeder(pytornadoVariables,meshDeformation)
+    
     # Step 3) Computes the CFD problem
     pytornadoVariables, results = cfd.solver(pytornadoVariables)
 
@@ -431,7 +434,7 @@ def solverPytornadoFramat(args, aeroframeSettings, acceptedNames):
 
         # Step 11) Computes the norm of the displacement error
         # Max structure displacement form one aeroelastic iteration to the next
-        maxDisplacement = np.append(maxDisplacement, np.max(transform.suz))
+        maxDisplacement = np.append(maxDisplacement, np.max(np.abs(transform.suz)))
         error.append(np.abs(maxDisplacement[-1] - maxDisplacement[-2]))
         # Max structure displacement from undeformed state
         absoluteDisplacement.append(np.abs(maxDisplacement[-1] - maxDisplacement[0]))
@@ -454,7 +457,7 @@ def solverPytornadoFramat(args, aeroframeSettings, acceptedNames):
         # logger.info('G load: '+str(transform.G))
         
         # Step 12) Deforms the CFD mesh.
-        pytornadoVariables = cfd.solver(pytornadoVariables)
+        pytornadoVariables, results = cfd.solver(pytornadoVariables)
         # logger.debug(pytornadoVariables[0].bound_leg_midpoints)
         # sys.exit()
         del(csdSolverClassVar)
@@ -463,7 +466,6 @@ def solverPytornadoFramat(args, aeroframeSettings, acceptedNames):
         
         # del(transform)
         transform = mapping.mapper(pytornadoVariables,preMeshedStructre,csdSolverClassVar)
-        
         transform.computesTransformationsMatrices()
         # sys.exit()
         i += 1
@@ -544,7 +546,7 @@ def solverSU2Framat(args, aeroframeSettings, acceptedNames):
     logger.debug("WKDIR: \n"+str(wkdir))
 
     # Step 2) Runs a single SU2 simulation
-    case = '/Case00_alt0_mach0.3_aoa2.0_aos0.0/'
+    case = '/Case/'
     ###
     # WARNING
     ###
@@ -566,7 +568,7 @@ def solverSU2Framat(args, aeroframeSettings, acceptedNames):
     # Step 5) feeds the computed nodes to a mapping function which computes the
     # tranformation matrices (based on RBF)
     logger.debug("Next step is transformation")
-    forceFile = '/CFD/Case00_alt0_mach0.3_aoa2.0_aos0.0/' + str(iteration) + '/force.csv'
+    forceFile = '/CFD/Case/' + str(iteration) + '/force.csv'
     logger.debug(wkdir)
     logger.debug(forceFile)
     forceInitFilePath = wkdir + forceFile
@@ -584,18 +586,18 @@ def solverSU2Framat(args, aeroframeSettings, acceptedNames):
 
         # basic user comminication
         logger.debug("aeroelastic loop number: "+str(iteration))
-        forceFilePath = wkdir + '/CFD/Case00_alt0_mach0.3_aoa2.0_aos0.0/' + str(iteration) + '/force.csv'
+        forceFilePath = wkdir + '/CFD/Case/' + str(iteration) + '/force.csv'
         # Makes a copy to avoid memory linked mistakes
         transformCurrent = transform
         csdSolverClassVarCurrent = csdSolverClassVar
         # Step 7) Projects the loads on CSD instance.
-        transformCurrent.aeroToStructure(forceFilePath)
+        transformCurrent.aeroToStructure(args,forceFilePath,iteration)
         # Step 8) Compute structure solution
         csdSolverClassVarCurrent.run(transformCurrent)
         transformCurrent.structureToAero(iteration,forceInitFilePath,forceFilePath)
 
         # Step 9) Computes convergence
-        maxDisplacement = np.append(maxDisplacement, np.max(transform.displacements))
+        maxDisplacement = np.append(maxDisplacement, np.max(np.abs(transform.displacements)))
         error.append(np.abs(maxDisplacement[-1] - maxDisplacement[-2]))
         absoluteDisplacement.append(np.abs(maxDisplacement[-1] - maxDisplacement[0]))
         Gloads.append(transform.G)
@@ -607,6 +609,17 @@ def solverSU2Framat(args, aeroframeSettings, acceptedNames):
         # Step 10) computes new CFD solution
 
         SU2_fsi.run_SU2_fsi(aeroframeSettings, wkdir, case, iteration)
+        
+        # Step 11) frees memory in order to avoir piling displacements in FramAT
+        del(csdSolverClassVar)
+        csdSolverClassVar = framatWrapper.framat(preMeshedStructre)
+        csdSolverClassVar.mesh()
+        
+        # del(transform)
+        transform = mappingSU2.mapper(forceInitFilePath,preMeshedStructre,csdSolverClassVar)
+        transform.computesTransformationsMatrices(forceInitFilePath)
+        
+        
         if iteration == N-1:
             logger.warning("Simulation has reached max number of step,")
             logger.warning("convergeance is yet to determine!")
@@ -627,6 +640,39 @@ def solverSU2Framat(args, aeroframeSettings, acceptedNames):
     MyFile.close()
     sys.exit()
 
+def solverSU2CSV(args, aeroframeSettings, acceptedNames):
+    iteration = aeroframeSettings['SU2_iteration']
+    wkdir = args.cwd
+    # TODO: read it form the config file
+    nb_proc = aeroframeSettings["SU2_Nproc"]
+    logger.debug("Configuration path: \n"+str(aeroframeSettings))
+    logger.debug("nb of proc: \n"+str(nb_proc))
+    logger.debug("WKDIR: \n"+str(wkdir))
+
+    # Step 2) Runs a single SU2 simulation
+    case = '/Case00_alt0_mach0.3_aoa2.0_aos0.0/'
+    
+    if iteration > 0:
+        SU2_deformationConverter(aeroframeSettings, wkdir, case, iteration)
+    
+    SU2_fsi.run_SU2_fsi(aeroframeSettings, wkdir, case, iteration)
+    
+def SU2_deformationConverter(aeroframeSettings, wkdir, case, iteration):
+    
+    defFilePath = wkdir + aeroframeSettings['deformation_file']
+    defData = pd.read_csv(defFilePath)
+    outputFile = pd.DataFrame()
+    outputFile['x'] = defData['x'] + defData['dx']
+    outputFile['y'] = defData['y'] + defData['dy']
+    outputFile['z'] = defData['z'] + defData['dz']
+    
+    # logger.debug(defData)
+    # logger.debug(outputFile)
+    outputFilePath = wkdir+'/CFD'+case+str(iteration-1)
+    logger.debug(outputFilePath)
+    # /home/cfse2/Documents/aeroframe_2/test/static/14_OptimaleSU2CSV_case4_3g/CFD/Case00_alt0_mach0.3_aoa2.0_aos0.0/0
+    #     9/cfse2/Documents/aeroframe_2/test/static/14_OptimaleSU2CSV_case4_3gCFD/Case00_alt0_mach0.3_aoa2.0_aos0.0/0
+    outputFile.to_csv(outputFilePath + '/disp.dat',sep='\t', header=None)
 
 def standard_run(args):
     """
@@ -685,12 +731,19 @@ def standard_run(args):
     if cfdSolver in acceptedNames[0] and csdSolver in acceptedNames[1]:
         logger.info("CFD with pytornado and external CSD solver")
         solverPytornadoCSV(args, aeroframeSettings, acceptedNames)
+
     elif cfdSolver in acceptedNames[0] and csdSolver in acceptedNames[2]:
         logger.info("CFD with pytornado and CSD with FramAT")
         solverPytornadoFramat(args, aeroframeSettings, acceptedNames)
+
     elif cfdSolver in acceptedNames[3] and csdSolver in acceptedNames[2]:
         logger.info("CFD with SU2 and CSD with FramAT")
         solverSU2Framat(args, aeroframeSettings, acceptedNames)
+
+    elif cfdSolver in acceptedNames[3] and csdSolver in acceptedNames[1]:
+        logger.info("CFD with SU2 and external CSD solver")
+        solverSU2CSV(args, aeroframeSettings, acceptedNames)
+
     else:
         logger.error("CFD solver or/and CSD solver not supported")
         sys.exit()

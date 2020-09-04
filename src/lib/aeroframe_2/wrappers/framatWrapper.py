@@ -64,8 +64,8 @@ class framat:
         # sys.exit()
         logger.debug("Framat solver finised computing")
 
-    def checkResults(self):
-        logger.debug(self.results[""])
+    # def checkResults(self):
+        # logger.debug(self.results[""])
 
     def loadMaterials(self):
         logger.error(self.geo.aircraftBeamsMaterials)
@@ -93,7 +93,7 @@ class framat:
             M = len(self.geo.aircraftNodesPoints[i])
             for j in range(M):
                 name = self.geo.aircraftNodesNames[i][j] + "_cross_section"
-                logger.debug(name)
+                # logger.debug(name)
                 A = self.geo.aircraftNodesA[i][j]
                 Iy = self.geo.aircraftNodesIy[i][j]
                 Iz = self.geo.aircraftNodesIz[i][j]
@@ -131,8 +131,8 @@ class framat:
                 # logger.debug("name = "+str(name))
                 self.beams[i].add("node",point,uid=name)
                 # logger.debug(str(j) + ' ' + str(point))
-        
-            self.beams[i].set('nelem', 1)
+            # Sets beam number of elements
+            self.beams[i].set('nelem', 2)
             uid = self.geo.aircraftBeamsMaterials[i][0] + "_mat"
             a = self.geo.aircraftNodesNames[i][0]
             b = self.geo.aircraftNodesNames[i][-1]
@@ -168,7 +168,7 @@ class framat:
                                                         'uid':  uid})
 
             # sys.exit()
-            # Sets beam number of elements
+            
 
 
     def applysLoad(self,tranform):
@@ -186,7 +186,7 @@ class framat:
                 # force, _m_ for moment, __* direction
                 if self.geo.settings['G_loads']:
                     if j < int(np.floor(M/2)):
-                        coef = -1
+                        coef = 1
                     else:
                         coef = 1
                     mfx = np.round(tranform.smf[i][j,0])
@@ -229,7 +229,7 @@ class framat:
                 # Distributes loads due to aerodynamics if CFD solver is SU2
                 if self.geo.settings['CFD_solver'] == 'SU2':
                     if j < int(np.floor(M/2)):
-                        coef = -1
+                        coef = 1
                     else:
                         coef = 1
                     fx = np.round(tranform.sfx[i][j])
@@ -244,9 +244,16 @@ class framat:
                 # airplaine y -> structure x
                 # airplaine z -> structure z
                 if i >= self.geo.nFuselage:
-                    load = [fx+mfx, fy+mfy, fz+mfz, mx+mmx, my+mmy, mz+mmz]
+                    load = [(fx-mfx), (fy-mfy), (fz-mfz), (mx-mmx), (my-mmy), (mz-mmz)]
                     self.beams[i].add('point_load', {'at': name, 'load': load})
-                    logger.debug(load)
+                    
+                    # logger.debug('Forces : '+ str(fx)  + ' ' + str(fy)  + ' ' + str(fz))
+                    # logger.debug('Forces : '+ str(mfx) + ' ' + str(mfy) + ' ' + str(mfz))
+                    # logger.debug('load: ' + str(load))
+                    # logger.debug('Moments: '+ str( mx) + ' ' + str( my) + ' ' + str( mz))
+                    # logger.debug('Moments: '+ str(mmx) + ' ' + str(mmy) + ' ' + str(mmz))
+
+                
                 # else:
                 #     # Fuselage
                 #     load = [0*fx+mfx, 0*fy+mfy, 0*fz+mfz, 0*mx+mmx, 0*my+mmy, 0*mz+mmz]
@@ -278,7 +285,7 @@ class framat:
         bc = self.model.set_feature('bc')
         if self.geo.nFuselage > 0:
             name = "f_n_clamped"
-            logger.debug(self.geo.aircraftNodesNames)
+            # logger.debug(self.geo.aircraftNodesNames)
 
             # # Connect nodes
             # Nc = len(self.geo.aircraftConnectedNodes[0])
@@ -304,25 +311,25 @@ class framat:
             
             # Connect nodes
             N = len(self.geo.aircraftConnectedNodes)
-            logger.debug(self.geo.aircraftConnectedNodes)
+            # logger.debug(self.geo.aircraftConnectedNodes)
             for i in range(N):
                 # logger.debug(self.geo.aircraftConnectedNodes[0][i])
                 beamIndex1 = int(self.geo.aircraftConnectedNodes[i][0])
                 beamIndex1Node = int(self.geo.aircraftConnectedNodes[i][2])
                 beamIndex2 = int(self.geo.aircraftConnectedNodes[i][1])
                 beamIndex2Node = int(self.geo.aircraftConnectedNodes[i][3])
-                logger.debug(beamIndex1)
-                logger.debug(beamIndex1Node)
-                logger.debug(beamIndex2)
-                logger.debug(beamIndex2Node)
+                # logger.debug(beamIndex1)
+                # logger.debug(beamIndex1Node)
+                # logger.debug(beamIndex2)
+                # logger.debug(beamIndex2Node)
                 name1 = self.geo.aircraftNodesNames[beamIndex1][beamIndex1Node]
                 name2 = self.geo.aircraftNodesNames[beamIndex2][beamIndex2Node]
                 bc.add('connect',{'node1': name1,
                                   'node2': name2,
                                   'fix':['all']})
-                logger.debug("Connects node: " + name1)
-                logger.debug("connects node: " + name2)
-                logger.debug("="*30)
+                # logger.debug("Connects node: " + name1)
+                # logger.debug("connects node: " + name2)
+                # logger.debug("="*30)
                 
             
         else:

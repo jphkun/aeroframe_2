@@ -123,7 +123,7 @@ class mapper:
         
         # Finds wings nodes close tu fuselage in order to correct the mesh
         # rotation
-        self.findCloseToWing(forceFilePath)
+        # self.findCloseToWing(forceFilePath)
         
         # Frees memory. not sure it is still needed
         del(SU2Data)
@@ -177,7 +177,7 @@ class mapper:
             phi_x = np.pi*((1/12*r**3) - r*eps**2 + 4/3*eps**3)
         return phi_x
         
-    def aeroToStructure(self,forceFilePath):
+    def aeroToStructure(self,args,forceFilePath,iteration):
         """
         Compute the forces for the structure solver from the CFD solver resutls.
         """
@@ -219,40 +219,85 @@ class mapper:
         self.computeMoments()
 
         # Computes the forces that act on the structure
+        Fx = 0
+        Fy = 0
+        Fz = 0
         for i in range(N):
             # Computes the forces
             self.sfx.append(np.matmul(self.H[i].T,self.afx[i]))
             self.sfy.append(np.matmul(self.H[i].T,self.afy[i]))
             self.sfz.append(np.matmul(self.H[i].T,self.afz[i]))
-            # Computes the moments
+            # Computes the moment part due to the aerodynamic force
             self.smx.append(np.matmul(self.H[i].T,self.amx[i]))
             self.smy.append(np.matmul(self.H[i].T,self.amy[i]))
             self.smz.append(np.matmul(self.H[i].T,self.amz[i]))
-        # Prints force felt by the structure
-        logger.debug("sfx = \n"+str(self.sfx))
-        logger.debug("sfy = \n"+str(self.sfy))
-        logger.debug("sfz = \n"+str(self.sfz))
-        # Prints moment felt by the structure
-        logger.debug("smx = \n"+str(self.smx))
-        logger.debug("smy = \n"+str(self.smy))
-        logger.debug("smz = \n"+str(self.smz))
-
-        if not self.geo.settings['G_static']:
-            Fx = SU2Data['fx'].sum(axis=0, skipna=True)
-            Fy = SU2Data['fy'].sum(axis=0, skipna=True)
-            Fz = SU2Data['fz'].sum(axis=0, skipna=True)
-            logger.debug(Fx)
-            logger.debug(Fy)
-            logger.debug(Fz)
-            a_x = Fx / self.geo.aircraftTotalMass
-            a_y = Fy / self.geo.aircraftTotalMass
-            a_z = (Fz - self.geo.aircraftTotalMass * 9.81)/self.geo.aircraftTotalMass
-        else:
+            
+            # sums all the aerodynamic forces
+            Fx += np.sum(self.afx[i])
+            Fy += np.sum(self.afx[i])
+            Fz += np.sum(self.afx[i])
+            
+            # Swept wing have a tendency to increase the central lift
+            M = int(np.floor(len(self.sfx[i])/2))
+            # Damps the inital and final jump
+            self.sfx[i][0] = self.sfx[i][1]#*0
+            self.sfx[i][-1] = self.sfx[i][-2]#*0
+            self.sfx[i][M] = self.sfx[i][M-1]
+            self.sfy[i][0] = self.sfy[i][1]#*0
+            self.sfy[i][-1] = self.sfy[i][-2]#*0
+            self.sfy[i][M] = self.sfy[i][M-1]
+            self.sfz[i][0] = self.sfz[i][1]#*0
+            self.sfz[i][-1] = self.sfz[i][-2]#*0
+            self.sfz[i][M] = self.sfz[i][M-1]
+            
+            # Damps the inital and final jump
+            self.smx[i][0] = self.smx[i][1]#*0
+            self.smx[i][-1] = self.smx[i][-2]#*0
+            self.smx[i][M] = self.smx[i][M-1]
+            self.smy[i][0] = self.smy[i][1]#*0
+            self.smy[i][-1] = self.smy[i][-2]#*0
+            self.smy[i][M] = self.smy[i][M-1]
+            self.smz[i][0] = self.smz[i][1]#*0
+            self.smz[i][-1] = self.smz[i][-2]#*0
+            self.smz[i][M] = self.smz[i][M-1]
+            
+        # logger.debug(self.smy)
+        
+        # Saves data for verificaiton
+        df = pd.DataFrame()
+        # Structure mesh node position
+        df['x'] = self.geo.aircraftNodesPoints[0][:,0]
+        df['y'] = self.geo.aircraftNodesPoints[0][:,1]
+        df['z'] = self.geo.aircraftNodesPoints[0][:,2]
+        # Forces
+        df['Fx'] = pd.Series(self.sfx[0])
+        df['Fy'] = pd.Series(self.sfy[0])
+        df['Fz'] = pd.Series(self.sfz[0])
+        # Moments/Torques
+        df['Mx'] = pd.Series(self.smx[0])
+        df['My'] = pd.Series(self.smy[0])
+        df['Mz'] = pd.Series(self.smz[0])
+        df.to_csv(args.cwd + '/CSD/results/'+str(iteration)+'.csv')
+        
+        if self.geo.settings['1G']:
+            n = 1.0
             a_x = 0
             a_y = 0
             a_z = -9.81
-        self.G = Fz / (self.geo.aircraftTotalMass * 9.81)
-
+        else:
+            n = Fz/(self.geo.aircraftTotalMass * 9.81)
+            a_x = Fx / self.geo.aircraftTotalMass
+            a_y = Fy / self.geo.aircraftTotalMass
+            a_z = n - 1
+        # n = 0
+        self.G = round(n,2)
+        # logger.debug('a_x = ' + str(a_x))
+        # logger.debug('a_y = ' + str(a_y))
+        # logger.debug('a_z = ' + str(a_z))
+        logger.debug('If G activated and 1G not activated G = '+str(self.G))
+        logger.debug('Only used if G_load:true and 1G:false')
+        # logger.debug('mass = ' + str(self.geo.aircraftTotalMass))
+        # sys.exit()
         # Computes the force due to inertia on each strcutre node
         self.smf = []
         N = len(self.geo.aircraftSegementsMass)
@@ -263,46 +308,49 @@ class mapper:
             force = np.empty((M,3))
             for j in range(M):
                 # loadFactor
-                n = a_z/9.81
+                # Each node supports half of the weight to the left and half
+                # to the right. This explains why the first and last nodes
+                # support half the value of the mass.
                 if j == 0:
                     massRight = self.geo.aircraftSegementsMass[i][j]
-                    # force in the x direction, earth reference frame
-                    force[j,0] = 0.5 * massRight * a_x * 0
-                    # force in the x direction, earth reference frame
-                    force[j,1] = 0.5 * massRight * a_y
-                    # force in the x direction, earth reference frame
+                    # Inertial force in the x direction, earth reference frame
+                    force[j,0] = 1 * massRight * a_x * 0
+                    # Inertial force in the x direction, earth reference frame
+                    force[j,1] = 1 * massRight * a_y * 0
+                    # Inertial force in the x direction, earth reference frame
                     force[j,2] = 0.5 * massRight * n * 9.81
                 elif j == M-1:
                     massLeft = self.geo.aircraftSegementsMass[i][j-1]
-                    # force in the x direction, earth reference frame
-                    force[j,0] = 0.5 * massLeft * a_x * 0
-                    # force in the x direction, earth reference frame
-                    force[j,1] = 0.5 * massLeft * a_y
-                    # force in the x direction, earth reference frame
+                    # Inertial force in the x direction, earth reference frame
+                    force[j,0] = 1 * massLeft * a_x * 0
+                    # Inertial force in the x direction, earth reference frame
+                    force[j,1] = 1 * massLeft * a_y * 0
+                    # Inertial force in the x direction, earth reference frame
                     force[j,2] = 0.5 * massLeft * n * 9.81
                 else:
                     massRight = self.geo.aircraftSegementsMass[i][j]
                     massLeft = self.geo.aircraftSegementsMass[i][j-1]
-                    # force in the x direction, earth reference frame
+                    # Inertial force in the x direction, earth reference frame
                     force[j,0] = 0.5 * massRight * a_x * 0 + \
-                                 0.5 * massLeft * a_x * 0
-                    # force in the x direction, earth reference frame
-                    force[j,1] = 0.5 * massRight * a_y + \
-                                 0.5 * massLeft * a_y
-                    # force in the x direction, earth reference frame
+                                 0.5 * massLeft  * a_x * 0 
+                    # Inertial force in the x direction, earth reference frame
+                    force[j,1] = 0.5 * massRight * a_y * 0 + \
+                                 0.5 * massLeft  * a_y * 0
+                    # Inertial force in the x direction, earth reference frame
                     force[j,2] = 0.5 * massRight * n * 9.81 + \
-                                 0.5 * massLeft * n * 9.81
+                                 0.5 * massLeft  * n * 9.81
+                        
             self.smf.append(force)
+        # logger.debug(self.smf)
+        # sys.exit()
+        
 
         # Computes the moment due to inertia on each strcture node
         # for i i
         N = len(self.geo.aircraftMassDistances)
-        # logger.debug(N)
-        # logger.debug(len(self.smf))
-        # sys.exit()
         self.smm = []
         for i in range(N):
-            # Since there is one more point then segment we need to ass one at
+            # Since there is one more point then segments we need to add one at
             # the end.
             M = len(self.geo.aircraftMassDistances[i])
             # logger.debug(M)
@@ -310,25 +358,60 @@ class mapper:
             # sys.exit()
             moments = np.empty((M,3))
             for j in range(M):
-                moments[j,0] = self.geo.aircraftMassDistances[i][j,0]
-                moments[j,1] = self.geo.aircraftMassDistances[i][j,1]
-                moments[j,2] = self.geo.aircraftMassDistances[i][j,2]
+                # WARNING only the vertical direction is implemented.
+                dx = self.geo.aircraftMassDistances[i][j,0]
+                dy = self.geo.aircraftMassDistances[i][j,1]
+                dz = self.geo.aircraftMassDistances[i][j,2]
+                moments[j,0] = 0
+                moments[j,1] = np.sign(dx)*np.sqrt(dx**2 + dy**2) * self.smf[i][j,2]
+                moments[j,2] = 0
             self.smm.append(moments)
+        # logger.debug(moments)
+        # sys.exit()
+        # Computes the total of each force and moment in order to have an idea
+        # of the information loss between two steps.
+        self.totalAerodynamicFx = np.sum(self.afx)
+        self.totalAerodynamicFy = np.sum(self.afy)
+        self.totalAerodynamicFz = np.sum(self.afz)
+        self.totalAerodynamicMx = np.sum(self.amx)
+        self.totalAerodynamicMy = np.sum(self.amy)
+        self.totalAerodynamicMz = np.sum(self.amz)
+        self.totalStructureFx = np.sum(self.sfx)
+        self.totalStructureFy = np.sum(self.sfy)
+        self.totalStructureFz = np.sum(self.sfz)
+        self.totalStructureMx = np.sum(self.smx)
+        self.totalStructureMy = np.sum(self.smy)
+        self.totalStructureMz = np.sum(self.smz)
+        # logger.debug('Conservation of forces and moments')
+        # logger.debug('\n'*5)
+        # logger.debug(np.sum(self.afx))
+        # logger.debug(np.sum(self.sfx))
+        # logger.debug(np.sum(self.afy))
+        # logger.debug(np.sum(self.sfy))
+        # logger.debug(np.sum(self.afz))
+        # logger.debug(np.sum(self.sfz))
+        # logger.debug('\n'*5)
+        # logger.debug(np.sum(self.amx))
+        # logger.debug(np.sum(self.smx))
+        # logger.debug(np.sum(self.amy))
+        # logger.debug(np.sum(self.smy))
+        # logger.debug(np.sum(self.amz))
+        # logger.debug(np.sum(self.smz))
 
     def computeDistanceForMorments(self,forceFilePath):
         """
         1) Retrieves the forces
         2) Retrieves the points
         3) Compute the distance between this point force location and all the
-            lines nodes points location.
+           lines nodes points location.
         4) Select the three closest points.
         5) Computes the point projection on both segments and on the closest
-            point. Retrives: dx,dy,dz
+           point. Retrives: dx,dy,dz
         6) Select if the current point projection is one of the following
-            three cases:
-                1. On the real segement for both secments
-                2. Only on one segment
-                3. On no segment and hence exactly the distance is taken from
+           three cases:
+               1. On the real segement for both secments
+               2. Only on one segment
+               3. On no segment and hence exactly the distance is taken from
                   the exact projection
         7) Computes the moment
         """
@@ -576,14 +659,14 @@ class mapper:
         y = SU2DataInit["y"] + const*self.displacements[start:,1]
         z = SU2DataInit["z"] + const*self.displacements[start:,2]
         
-        X = np.array([x,y,z])
-        logger.debug(X)
-        s = X.shape
-        X = X.T.reshape(s[1],s[0])
-        X = X[self.wingCTFIndexes]
-        u,s,vh = np.linalg.svd(X)
-        logger.debug(vh)
-        sys.exit()
+        # X = np.array([x,y,z])
+        # logger.debug(X)
+        # s = X.shape
+        # X = X.T.reshape(s[1],s[0])
+        # X = X[self.wingCTFIndexes]
+        # u,s,vh = np.linalg.svd(X)
+        # logger.debug(vh)
+        # sys.exit()
         
         path = os.path.join(self.geo.inputArgs.cwd,'CFD')
         caseName = os.listdir(path)

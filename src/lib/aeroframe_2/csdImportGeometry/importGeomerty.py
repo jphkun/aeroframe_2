@@ -473,7 +473,7 @@ class CsdGeometryImport:
                 # Gets the wing mesh points. Theses points will be always on
                 # the camber line.
                 w_me_points[j] = self.getWingCamberLinePoint(wingIndex,segmentIndex,eta,xsiEl)
-                w_ma_points[j] = self.getWingCamberLinePoint(wingIndex,segmentIndex,eta,xsiEl+xsiMa)
+                w_ma_points[j] = self.getWingCamberLinePoint(wingIndex,segmentIndex,eta,xsiEl-xsiMa)
                 if j > 0:
                     length = np.linalg.norm(w_me_points[j] - w_me_points[j-1])
                     w_me_distances[j-1] = length
@@ -487,7 +487,10 @@ class CsdGeometryImport:
                 # Computes section area
                 area = self.computePointSectionArea(wingIndex,segmentIndex,eta,xsiEl)
                 w_me_pointsInitArea[j] = area
-
+            
+            logger.debug(w_me_points)
+            logger.debug(w_ma_points)
+            # sys.exit()
             # For reference, in tigl3wrapper.py the symmetry is defined as such:
             #
             # class TiglSymmetryAxis(object):
@@ -529,6 +532,7 @@ class CsdGeometryImport:
             logger.debug("Wing mesh points:\n"+str(w_me_points))
             self.ws_me_points.append(w_me_points)
             self.ws_ma_points.append(w_ma_points)
+
             # me_distance is the distance betweent two points of the strcutral
             # mesh size
             self.ws_me_distances.append(w_me_distances)

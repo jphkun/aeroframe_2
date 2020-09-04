@@ -48,8 +48,8 @@ class mapper:
         self.limitsStart = []
         self.limitsEnd = []
 
-        # Separates the lattice points understand the VLM mesh for each wing
-        # hence leading to better results since each wing only contribute her
+        # Separates the lattice points, understand the VLM mesh for each wing
+        # hence leading to better results since each wing only contribute to her
         # specific beam.
         number = len(self.lattice.bookkeeping_by_wing_uid)
         for i in self.lattice.bookkeeping_by_wing_uid:
@@ -103,7 +103,7 @@ class mapper:
             # Computes the matrix M and then invert it
             # permitted choices are: G,L,TPS,HMQ,HIMQ,C0,C2,C4,C6,EH see below
             # the definition
-            fun = "EH"
+            fun = "C0"
             n = self.geoP[i + self.geo.nFuselage].shape
             n = n[0]
             Mbeam = np.zeros((n,n))
@@ -143,34 +143,34 @@ class mapper:
             dza = np.matmul(self.H[i],self.dzsGlob[i])
             self.dzaGlob.append(dza)
 
-        # Plots line
-        if plotting:
-            fig = plt.figure("figure 2")
-            ax = fig.add_subplot(111, projection='3d')
-            for p in range(len(self.wingsPoints)):
-                # ax.scatter(self.geoP[p + self.geo.nFuselage][:,0],
-                #             self.geoP[p + self.geo.nFuselage][:,1],
-                #             self.geoP[p + self.geo.nFuselage][:,2],
-                #             label='beam wing '+str(p+1))
-                # ax.scatter(self.geoP[p + self.geo.nFuselage][:,0],
-                #             self.geoP[p + self.geo.nFuselage][:,1],
-                #             self.geoP[p + self.geo.nFuselage][:,2]+self.dzsGlob[i],
-                #             label='deformed beam wing '+str(p+1))
-                ax.scatter(self.wingsPoints[p][:,0],
-                           self.wingsPoints[p][:,1],
-                           self.wingsPoints[p][:,2],
-                           label='undeformed wing'+str(p+1))
-                ax.scatter(self.wingsPoints[p][:,0],
-                           self.wingsPoints[p][:,1],
-                           self.wingsPoints[p][:,2]+self.dzaGlob[p],
-                           label='deformed wing'+str(p+1))
+        # # Plots line
+        # if plotting:
+        #     fig = plt.figure("figure 2")
+        #     ax = fig.add_subplot(111, projection='3d')
+        #     for p in range(len(self.wingsPoints)):
+        #         # ax.scatter(self.geoP[p + self.geo.nFuselage][:,0],
+        #         #             self.geoP[p + self.geo.nFuselage][:,1],
+        #         #             self.geoP[p + self.geo.nFuselage][:,2],
+        #         #             label='beam wing '+str(p+1))
+        #         # ax.scatter(self.geoP[p + self.geo.nFuselage][:,0],
+        #         #             self.geoP[p + self.geo.nFuselage][:,1],
+        #         #             self.geoP[p + self.geo.nFuselage][:,2]+self.dzsGlob[i],
+        #         #             label='deformed beam wing '+str(p+1))
+        #         ax.scatter(self.wingsPoints[p][:,0],
+        #                    self.wingsPoints[p][:,1],
+        #                    self.wingsPoints[p][:,2],
+        #                    label='undeformed wing'+str(p+1))
+        #         ax.scatter(self.wingsPoints[p][:,0],
+        #                    self.wingsPoints[p][:,1],
+        #                    self.wingsPoints[p][:,2]+self.dzaGlob[p],
+        #                    label='deformed wing'+str(p+1))
 
-            val = 15
-            ax.set_xlim(-val,val)
-            ax.set_ylim(-val,val)
-            ax.set_zlim(-val,val)
-            ax.legend()
-            plt.show()
+        #     val = 15
+        #     ax.set_xlim(-val,val)
+        #     ax.set_ylim(-val,val)
+        #     ax.set_zlim(-val,val)
+        #     ax.legend()
+        #     plt.show()
 
     def phi(self,x1,x2,fun):
         """
@@ -192,6 +192,9 @@ class mapper:
         elif fun == "L":
             # Linear
             phi_x = r
+        elif fun == "C":
+            # Linear
+            phi_x = 1
         elif fun == "TPS":
             # Thin plate spline
             phi_x = r**2 * np.log(r)
@@ -271,17 +274,32 @@ class mapper:
             self.smx.append(np.matmul(self.H[i].T,self.amx[i]))
             self.smy.append(np.matmul(self.H[i].T,self.amy[i]))
             self.smz.append(np.matmul(self.H[i].T,self.amz[i]))
-            # # Computes the moment part due to the aerodynamic moment
-            # self.spmx.append(np.matmul(self.H[i].T,self.apmx[i]))
-            # self.spmy.append(np.matmul(self.H[i].T,self.apmy[i]))
-            # self.spmz.append(np.matmul(self.H[i].T,self.apmz[i]))
             
-            # # Assembles the aerodynamic moment and the moment due to the
-            # # elastic angle displacement
-            # self.smx[i] = self.smx[i] + self.spmx[i]
-            # self.smy[i] = self.smy[i] + self.spmy[i]
-            # self.smz[i] = self.smz[i] + self.spmz[i]
-        logger.debug(self.smy)
+            # Swept wing have a tendency to increase the central lift
+            M = int(np.floor(len(self.sfx[i])/2))
+            # Damps the inital and final jump
+            self.sfx[i][0] = self.sfx[i][1]#*0
+            self.sfx[i][-1] = self.sfx[i][-2]#*0
+            self.sfx[i][M] = self.sfx[i][M-1]
+            self.sfy[i][0] = self.sfy[i][1]#*0
+            self.sfy[i][-1] = self.sfy[i][-2]#*0
+            self.sfy[i][M] = self.sfy[i][M-1]
+            self.sfz[i][0] = self.sfz[i][1]#*0
+            self.sfz[i][-1] = self.sfz[i][-2]#*0
+            self.sfz[i][M] = self.sfz[i][M-1]
+            
+            # Damps the inital and final jump
+            self.smx[i][0] = self.smx[i][1]#*0
+            self.smx[i][-1] = self.smx[i][-2]#*0
+            self.smx[i][M] = self.smx[i][M-1]
+            self.smy[i][0] = self.smy[i][1]#*0
+            self.smy[i][-1] = self.smy[i][-2]#*0
+            self.smy[i][M] = self.smy[i][M-1]
+            self.smz[i][0] = self.smz[i][1]#*0
+            self.smz[i][-1] = self.smz[i][-2]#*0
+            self.smz[i][M] = self.smz[i][M-1]
+            
+        # logger.debug(self.smy)
         
         # Saves data for verificaiton
         df = pd.DataFrame()
@@ -299,21 +317,25 @@ class mapper:
         df['Mz'] = pd.Series(self.smz[0])
         df.to_csv(args.cwd + '/CFD/_results/FEM_frocesAndMoments'+str(iteration)+'.csv')
         
-        if not self.geo.settings['G_static']:
-            a_x = self.VLMdata.forces['x'] / self.geo.aircraftTotalMass
-            a_y = self.VLMdata.forces['y'] / self.geo.aircraftTotalMass
-            a_z = (self.VLMdata.forces['z'] - self.geo.aircraftTotalMass*9.81)/self.geo.aircraftTotalMass
-        else:
+        if self.geo.settings['1G']:
+            n = 1.0
             a_x = 0
             a_y = 0
             a_z = -9.81
-        self.G = self.VLMdata.forces['z']/(self.geo.aircraftTotalMass * 9.81)
+        else:
+            n = self.VLMdata.forces['z']/(self.geo.aircraftTotalMass * 9.81)
+            a_x = self.VLMdata.forces['x'] / self.geo.aircraftTotalMass
+            a_y = self.VLMdata.forces['y'] / self.geo.aircraftTotalMass
+            a_z = n - 1
+        # n = 0
+        self.G = round(n,2)
         # logger.debug('a_x = ' + str(a_x))
         # logger.debug('a_y = ' + str(a_y))
         # logger.debug('a_z = ' + str(a_z))
-        # logger.debug('G = '+str(self.G))
+        logger.debug('If G activated and 1G not activated G = '+str(self.G))
+        logger.debug('Only used if G_load:true and 1G:false')
         # logger.debug('mass = ' + str(self.geo.aircraftTotalMass))
-
+        # sys.exit()
         # Computes the force due to inertia on each strcutre node
         self.smf = []
         N = len(self.geo.aircraftSegementsMass)
@@ -324,44 +346,49 @@ class mapper:
             force = np.empty((M,3))
             for j in range(M):
                 # loadFactor
-                n = a_z/9.81
+                # Each node supports half of the weight to the left and half
+                # to the right. This explains why the first and last nodes
+                # support half the value of the mass.
                 if j == 0:
                     massRight = self.geo.aircraftSegementsMass[i][j]
-                    # force in the x direction, earth reference frame
-                    force[j,0] = 0.5 * massRight * a_x * 0
-                    # force in the x direction, earth reference frame
-                    force[j,1] = 0.5 * massRight * a_y
-                    # force in the x direction, earth reference frame
+                    # Inertial force in the x direction, earth reference frame
+                    force[j,0] = 1 * massRight * a_x * 0
+                    # Inertial force in the x direction, earth reference frame
+                    force[j,1] = 1 * massRight * a_y * 0
+                    # Inertial force in the x direction, earth reference frame
                     force[j,2] = 0.5 * massRight * n * 9.81
                 elif j == M-1:
                     massLeft = self.geo.aircraftSegementsMass[i][j-1]
-                    # force in the x direction, earth reference frame
-                    force[j,0] = 0.5 * massLeft * a_x * 0
-                    # force in the x direction, earth reference frame
-                    force[j,1] = 0.5 * massLeft * a_y
-                    # force in the x direction, earth reference frame
+                    # Inertial force in the x direction, earth reference frame
+                    force[j,0] = 1 * massLeft * a_x * 0
+                    # Inertial force in the x direction, earth reference frame
+                    force[j,1] = 1 * massLeft * a_y * 0
+                    # Inertial force in the x direction, earth reference frame
                     force[j,2] = 0.5 * massLeft * n * 9.81
                 else:
                     massRight = self.geo.aircraftSegementsMass[i][j]
                     massLeft = self.geo.aircraftSegementsMass[i][j-1]
-                    # force in the x direction, earth reference frame
+                    # Inertial force in the x direction, earth reference frame
                     force[j,0] = 0.5 * massRight * a_x * 0 + \
-                                 0.5 * massLeft * a_x * 0
-                    # force in the x direction, earth reference frame
-                    force[j,1] = 0.5 * massRight * a_y + \
-                                 0.5 * massLeft * a_y
-                    # force in the x direction, earth reference frame
+                                 0.5 * massLeft  * a_x * 0 
+                    # Inertial force in the x direction, earth reference frame
+                    force[j,1] = 0.5 * massRight * a_y * 0 + \
+                                 0.5 * massLeft  * a_y * 0
+                    # Inertial force in the x direction, earth reference frame
                     force[j,2] = 0.5 * massRight * n * 9.81 + \
-                                 0.5 * massLeft * n * 9.81
+                                 0.5 * massLeft  * n * 9.81
+                        
             self.smf.append(force)
+        # logger.debug(self.smf)
+        # sys.exit()
+        
 
         # Computes the moment due to inertia on each strcture node
         # for i i
         N = len(self.geo.aircraftMassDistances)
-        
         self.smm = []
         for i in range(N):
-            # Since there is one more point then segment we need to ass one at
+            # Since there is one more point then segments we need to add one at
             # the end.
             M = len(self.geo.aircraftMassDistances[i])
             # logger.debug(M)
@@ -369,10 +396,18 @@ class mapper:
             # sys.exit()
             moments = np.empty((M,3))
             for j in range(M):
-                moments[j,0] = self.geo.aircraftMassDistances[i][j,0]
-                moments[j,1] = self.geo.aircraftMassDistances[i][j,1]
-                moments[j,2] = self.geo.aircraftMassDistances[i][j,2]
+                # WARNING only the vertical direction is implemented.
+                dx = self.geo.aircraftMassDistances[i][j,0]
+                dy = self.geo.aircraftMassDistances[i][j,1]
+                dz = self.geo.aircraftMassDistances[i][j,2]
+                moments[j,0] = 0
+                moments[j,1] = np.sign(dx)*np.sqrt(dx**2 + dy**2) * self.smf[i][j,2]
+                moments[j,2] = 0
             self.smm.append(moments)
+        # logger.debug(moments)
+        # sys.exit()
+        # Computes the total of each force and moment in order to have an idea
+        # of the information loss between two steps.
         self.totalAerodynamicFx = np.sum(self.afx)
         self.totalAerodynamicFy = np.sum(self.afy)
         self.totalAerodynamicFz = np.sum(self.afz)
@@ -427,7 +462,7 @@ class mapper:
             M = len(self.wingsPoints[i])
             X = self.wingsPoints[i]
             Y = self.geo.aircraftNodesPoints[i+self.geo.nFuselage]
-            logger.debug(Y)
+            # logger.debug(Y)
 
             # Computes the distance between each point of X and each point of
             # Y. This leads to an (NxM) matrix, M being the number of structure
@@ -437,7 +472,7 @@ class mapper:
             # frame.
             self.distanceMatrix.append(np.empty((M,3)))
             # Finds the minimal 3 values
-            logger.debug(dist)
+            # logger.debug(dist)
             
             for j in range(M):
                 point = self.wingsPoints[i][j]
@@ -589,7 +624,7 @@ class mapper:
             temp_tz = np.zeros(M)
             for j in range(M):
                 if j < int(np.floor(M/2)):
-                    coef = 1
+                    coef = -1
                 else:
                     coef = 1
                 temp_ux[j] = self.csd.results.get('tensors').get('comp:U')["ux"][old+j]
@@ -699,13 +734,13 @@ class mapper:
             ax = fig.add_subplot(111, projection='3d')
             # for p in range(len(self.wingsPoints)):
             #     ax.scatter(self.wingsPoints[p][:,0],
-            #                self.wingsPoints[p][:,1],
-            #                self.wingsPoints[p][:,2],
-            #                label='undeformed wing'+str(p+1))
+            #                 self.wingsPoints[p][:,1],
+            #                 self.wingsPoints[p][:,2],
+            #                 label='undeformed wing'+str(p+1))
             #     ax.scatter(self.wingsPoints[p][:,0]+self.aux[p],
-            #                self.wingsPoints[p][:,1]+self.auy[p],
-            #                self.wingsPoints[p][:,2]+self.auz[p],
-            #                label='deformed wing'+str(p+1))
+            #                 self.wingsPoints[p][:,1]+self.auy[p],
+            #                 self.wingsPoints[p][:,2]+self.auz[p],
+            #                 label='deformed wing'+str(p+1))
             ax.scatter(self.lattice.c[:,0],
                        self.lattice.c[:,1],
                        self.lattice.c[:,2],

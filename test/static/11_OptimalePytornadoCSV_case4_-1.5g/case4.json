@@ -1,0 +1,263 @@
+{
+    "_description": "Only useful for a Pytornado simulation",
+    "CFD_settings_file": "Optimale.json",
+
+    "_description": "Only useful for a Pytornado simulation, Put the name not the file. Nevertheless",
+    "_description": "the file should be in cwd/CFD/aircraft/",
+    "aircraftFile": "straightWing.xml",
+
+    "_description": "CFD solver choice. Implemented choices are: Pytornado, SU2",
+    "CFD_solver": "Pytornado",
+
+    "_description": "Number of processors used for a SU2 simulation. Pytornado is always one, but has",
+    "_description": "one step where he sees and use all available processors, no parameter neded though",
+    "SU2_Nproc": 4,
+
+    "_description": "Number of iterations done with SU2 for each aeroelastic iterations",
+    "SU2_Niter": 150,
+
+    "_description": "Configuration file path for the SU2 solver. Will not be red if the CFD solver is SU2",
+    "SU2ConfigPath":"/home/cfse2/Documents/aeroframe_2/test/static/8_Optimale_withDLR/CFD/Case00_alt0_mach0.3_aoa2.0_aos0.0/ConfigCFD.cfg",
+
+    "_description": "SU2 restart file. Could be interseting if the restart function is used. Currently deactivated in python",
+    "CFDResultFile": "/home/cfse2/Documents/CEASIOMpy/ceasiompy/WKDIR/CEASIOMpy_Run_2020-08-11_13-43-27/Case00_alt0_mach0.3_aoa2.0_aos0.0/force.csv",
+
+    "_description": "Accepted entrires are: FramAT, external",
+    "CSD_solver": "external",
+
+    "_description": "",
+    "deformation_file": "/CSD/deformation/0_LagDisp_PyTopanelwiseForces_-1.5g.csv",
+
+    "_description": "Maximal number of allowed iterations, only used if CSD_solver is set to FramAT",
+    "MaxIterationsNumber": 15,
+
+    "_description": "Maximal displacement in [m] between two iterations",
+    "ConvergeanceTolerence": 0.001,
+
+    "_description": "Does the deformation needs to be taken into account",
+    "deformation_activation": true,
+
+    "_description": "If external solver is used the user needs to first do an undeformed simulation",
+    "deformation_from_file": true,
+
+    "_description": "G load activation, if false G loads are not taken into account",
+    "G_loads": false,
+
+    "_description": "If G_loads are acvtivated, the user can impose the straight level flight loading case",
+    "1G": true,
+
+    "_description": "Fuselage instance comes here, if no fuselage definition in CPACS, do not put one",
+    "_description": "Wing innstance, add each wing after this one with the same indentation level.",
+    "_description": "naming should follow the order the CPACS construction but not the name.",
+    "_description": "Wing must be named 'wing*' where * is the number and this number should be from 1 to n.",
+
+    "fuselage": {
+        "_description": "Mechancial properties of the fuselage",
+        "mechanicalProperties": {
+            "_description": "Root aera of the wing [m^2]",
+            "A": 0.11,
+            "_description": "Second moment of aera in the horizontal direciton [m^4]",
+            "Iy": 8E-04,
+
+            "_description": "Second moment of aera in the vertical direciton [m^4]",
+            "Iz": 8E-04,
+
+            "_description": "Polar moment of aera [m^4]. Do not forget J = Iz + Iy",
+            "J": 16E-04
+        },
+
+        "_description": "Maerial properties definition",
+        "materialProperties": {
+            "_description": "Young's modulus, should be in [Pa]",
+            "E": 70e9,
+
+            "_description": "Shear modulus, should be in [Pa]",
+            "G": 26e9,
+
+            "_description": "Specific mass [kg/m^3]",
+            "rho": 2700
+        },
+        "FEM": {
+            "_description": "Poportionalty factor for a taperd wing. Accepeted choices are: constant, linear, quadratic",
+            "_description": "True proportion factor is quadratic",
+            "mechanicalInterpolationType": "quadratic",
+
+            "_description": "Number of structure node for this instance",
+            "nodesFEM": 6,
+
+            "_description": "Number of clamped nodes at the wing root. This permits to mitigate the ",
+            "_description": "mismatch phenomena at the wing root",
+            "rigidNodes": 1
+        }
+    },
+
+
+    "wing1": {
+        "_description":"chordlength from the leading edge",
+        "elasticAxis": 0.3,
+
+        "_description":"chordlength at which the axis is from the elasticAxis. + is behind the elastic axis, - is before",
+        "massAxis": 0.1,
+
+        "_description": "Mechancial properties of the wing",
+        "mechanicalProperties": {
+            "_description": "Root aera of the wing [m^2]",
+            "A": 0.11,
+
+            "_description": "Second moment of aera in the horizontal direciton [m^4]",
+            "Iy": 0.6E-04,
+
+            "_description": "Second moment of aera in the vertical direciton [m^4]",
+            "Iz": 0.6E-04,
+
+            "_description": "Polar moment of aera [m^4]. Do not forget J = Iz + Iy",
+            "J": 1E-03
+        },
+
+        "_description": "Maerial properties definition",
+        "materialProperties": {
+            "_description": "Young's modulus, should be in [Pa]",
+            "E": 70e9,
+
+            "_description": "Shear modulus, should be in [Pa]",
+            "G": 26e9,
+
+            "_description": "Specific mass [kg/m^3]",
+            "rho": 2700
+        },
+        "_description": "Structure mesh related parameters",
+        "FEM": {
+            "_description": "Poportionalty factor for a taperd wing. Accepeted choices are: constant, linear, quadratic",
+            "_description": "True proportion factor is quadratic",
+            "mechanicalInterpolationType": "quadratic",
+            "nodesFEM": 32,
+
+            "_description": "Number of structure node for this instance",
+            "nodesFEM": 20,
+
+            "_description": "Number of clamped nodes at the wing root. This permits to mitigate the ",
+            "_description": "mismatch phenomena at the wing root",
+            "rigidNodes": 1
+        }
+    },
+
+    "_description": "Fuselage instance comes here, if no fuselage do not put one",
+    "_description": "Wing innstance, Add each wing after this one with the same indentation level.",
+    "_description": "naming should follow the order the CPACS construction but not the name.",
+    "_description": "Wing must be named 'wing*' where * is the number and this number should be from 1 to n.",
+    "wing2": {
+        "_description":"chordlength from the leading edge",
+        "elasticAxis": 0.3,
+
+        "_description":"chordlength at which the axis is from the elasticAxis. + is behind the elastic axis, - is before",
+        "massAxis": 0.1,
+
+        "_description": "Mechancial properties of the wing",
+        "mechanicalProperties": {
+            "_description": "Root aera of the wing [m^2]",
+            "A": 0.10,
+
+            "_description": "Second moment of aera in the horizontal direciton [m^4]",
+            "Iy": 3.65E-04,
+
+            "_description": "Second moment of aera in the vertical direciton [m^4]",
+            "Iz": 3.65E-04,
+
+            "_description": "Polar moment of aera [m^4]. Do not forget J = Iz + Iy",
+            "J": 7.29E-04
+        },
+
+        "_description": "Maerial properties definition",
+        "materialProperties": {
+            "_description": "Young's modulus, should be in [Pa]",
+            "E": 70e9,
+
+            "_description": "Shear modulus, should be in [Pa]",
+            "G": 26e9,
+
+            "_description": "Specific mass [kg/m^3]",
+            "rho": 2700
+        },
+        "_description": "Structure mesh related parameters",
+        "FEM": {
+            "_description": "Poportionalty factor for a taperd wing. Accepeted choices are: constant, linear, quadratic",
+            "_description": "True proportion factor is quadratic",
+            "mechanicalInterpolationType": "quadratic",
+
+            "_description": "Number of structure node for this instance",
+            "nodesFEM": 10,
+
+            "_description": "Number of clamped nodes at the wing root. This permits to mitigate the ",
+            "_description": "mismatch phenomena at the wing root",
+            "rigidNodes": 1
+        }
+    },
+
+
+    "_description": "Fuselage instance comes here, if no fuselage do not put one",
+    "_description": "Wing innstance, Add each wing after this one with the same indentation level.",
+    "_description": "naming should follow the order the CPACS construction but not the name.",
+    "_description": "Wing must be named 'wing*' where * is the number and this number should be from 1 to n.",
+
+
+
+    "wing3": {
+        "_description":"chordlength from the leading edge",
+        "elasticAxis": 0.3,
+
+        "_description":"chordlength at which the axis is from the elasticAxis. + is behind the elastic axis, - is before",
+        "massAxis": 0.1,
+
+        "_description": "Mechancial properties of the wing",
+        "mechanicalProperties": {
+            "_description": "Root aera of the wing [m^2]",
+            "A": 0.10,
+
+            "_description": "Second moment of aera in the horizontal direciton [m^4]",
+            "Iy": 3.65E-04,
+
+            "_description": "Second moment of aera in the vertical direciton [m^4]",
+            "Iz": 3.65E-04,
+
+            "_description": "Polar moment of aera [m^4]. Do not forget J = Iz + Iy",
+            "J": 7.29E-04
+        },
+
+        "_description": "Material properties definition",
+        "materialProperties": {
+            "_description": "Young's modulus, should be in [Pa]",
+            "E": 70e9,
+
+            "_description": "Shear modulus, should be in [Pa]",
+            "G": 26e9,
+
+            "_description": "Specific mass [kg/m^3]",
+            "rho": 2700
+        },
+
+        "_description": "Structure mesh related parameters",
+        "FEM": {
+
+            "_description": "Poportionalty factor for a taperd wing. Accepeted choices are: constant, linear, quadratic",
+            "_description": "True proportion factor is quadratic",
+            "mechanicalInterpolationType": "constant",
+
+            "_description": "Number of structure node for this instance",
+            "nodesFEM": 6,
+
+            "_description": "Number of clamped nodes at the wing root. This permits to mitigate the ",
+            "_description": "mismatch phenomena at the wing root",
+            "rigidNodes": 1
+        }
+    },
+
+
+    "Results": {
+        "Save_mapping_matrix": false
+    },
+    "Plots": {
+        "Each_iteration": false,
+        "First_iteration": false,
+        "Last_iteration": false
+    }
+}
