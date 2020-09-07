@@ -1,0 +1,27 @@
+CATMAN TEST FILE
+PATH=C:\Users\labo\Desktop\Jean-Philippe
+Nom du job=Job1
+Fichier de données de mesure avec chemin=C:\Users\labo\Desktop\Jean-Philippe\s50a0p.XLSX
+Fichier de données de mesure=s50a0p.XLSX
+Projet de mesure=sting balance 7c.MEP
+Commentaire fichier=
+Fuseau horaire=Europe de l’Ouest (heure d’été) (UTC+2:00)
+Operator=
+Department=
+Comment=
+Vitesse de mesure standard=20 Hz
+Vitesse de mesure lente=10 Hz
+Vitesse de mesure rapide=4800 Hz
+Nombre de mesures pour la vitesse d'acquisition standard=1162
+Nombre de mesures pour la vitesse d'acquisition lente=0
+Nombre de mesures pour la vitesse d'acquisition rapide=0
+Mode de sécurisation=PROMPT
+Mode Maître-Esclave=Non
+Mode de démarrage=Manuellement
+Temps de démarrage=2020/08/29 18:45:19
+Mode d'arrêt=Manuellement
+Temps d'arrêt=2020/08/29 18:46:18
+catmanEasy/AP version=5.3.1.27
+Précision numérique=8 Byte Float
+Firmware MX840A=4.10.4.0
+DATAFILE=C:\Users\labo\Desktop\Jean-Philippe\s50a0p.XLSX

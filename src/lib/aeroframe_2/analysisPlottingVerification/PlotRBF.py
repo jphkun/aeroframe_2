@@ -32,16 +32,16 @@ def main():
     
     fig = plt.figure()
     ax = plt.subplot(111)
-    # ax.plot(x, y1, label='$\phi = r $', linewidth=lwdth)
+    ax.plot(x, y1, label='$Linear: \phi = r $', linewidth=lwdth)
     # ax.plot(x, y2, label='$\phi = r^2 ln(r) $', linewidth=lwdth)
-    # ax.plot(x, y3, label='$\phi = e^{-\epsilon r^2}$', linewidth=lwdth)
+    ax.plot(x, y3, 'r', label='Gaussian: $\phi = e^{-\epsilon r^2}$', linewidth=lwdth)
     # ax.plot(x, y4, label='$\phi = \sqrt{1+(\epsilon r)^2}$', linewidth=lwdth)
     # ax.plot(x, y5, label='$\phi = (\sqrt{1+(\epsilon r)^2})^{-1}$', linewidth=lwdth)
-    # ax.plot(x, y6, label='$\phi = (1−r)$', linewidth=lwdth)
+    ax.plot(x, y6, label='Wendland $C_0: \phi = (1−r)^2$', linewidth=lwdth)
     # ax.plot(x, y7, label='$\phi = (1−r)^4 (4r+ 1)$', linewidth=lwdth)
     # ax.plot(x, y8, label='$\phi = (1−r)^6 (35r^2+ 18r+ 3)$', linewidth=lwdth)
     # ax.plot(x, y9, label='$\phi = (1−r)^8 (32r^3+ 25r^2+ 8r+ 1)$', linewidth=lwdth)
-    ax.plot(x, y10, label='Euclid hat', linewidth=lwdth)
+    # ax.plot(x, y10, label='Euclid hat $ \phi = \pi*((1/12 r^3) - r \epsilon^2 + 4/3 \epsilon^3)$', linewidth=lwdth)
     
     plt.title('Common radial basis functions', fontsize=titleSize)
     ax.legend(loc='upper right',fontsize=labelSize)
@@ -62,7 +62,7 @@ def phi(r,fun):
     test "Wendland C2" seems to be the better choice, but this is really
     up to user preference.
     """
-    eps = 1000
+    eps = 1
     # r = np.linalg.norm(x1-x2)
     if fun == "G":
         # Gaussian

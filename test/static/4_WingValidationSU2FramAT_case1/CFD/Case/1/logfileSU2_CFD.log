@@ -1,0 +1,345 @@
+
+-------------------------------------------------------------------------
+|    ___ _   _ ___                                                      |
+|   / __| | | |_  )   Release 7.0.6 "Blackbird"                         |
+|   \__ \ |_| |/ /                                                      |
+|   |___/\___//___|   Suite (Computational Fluid Dynamics Code)         |
+|                                                                       |
+-------------------------------------------------------------------------
+| SU2 Project Website: https://su2code.github.io                        |
+|                                                                       |
+| The SU2 Project is maintained by the SU2 Foundation                   |
+| (http://su2foundation.org)                                            |
+-------------------------------------------------------------------------
+| Copyright 2012-2020, SU2 Contributors                                 |
+|                                                                       |
+| SU2 is free software; you can redistribute it and/or                  |
+| modify it under the terms of the GNU Lesser General Public            |
+| License as published by the Free Software Foundation; either          |
+| version 2.1 of the License, or (at your option) any later version.    |
+|                                                                       |
+| SU2 is distributed in the hope that it will be useful,                |
+| but WITHOUT ANY WARRANTY; without even the implied warranty of        |
+| MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU      |
+| Lesser General Public License for more details.                       |
+|                                                                       |
+| You should have received a copy of the GNU Lesser General Public      |
+| License along with SU2. If not, see <http://www.gnu.org/licenses/>.   |
+-------------------------------------------------------------------------
+
+Parsing config file for zone 0
+
+----------------- Physical Case Definition ( Zone 0 ) -------------------
+Compressible Euler equations.
+Mach number: 0.294.
+Angle of attack (AoA): 10 deg, and angle of sideslip (AoS): 0 deg.
+No restart solution, use the values at infinity (freestream).
+Dimensional simulation.
+The reference area is 10 m^2.
+The semi-span will be computed using the max y(3D) value.
+The reference length is 1 m.
+Reference origin for moment evaluation is (0, 0, 0).
+Surface(s) where the force coefficients are evaluated: Wing_1.
+
+Surface(s) where the objective function is evaluated: airfoil.
+Surface(s) plotted in the output file: Wing_1.
+Surface(s) to be analyzed in detail: airfoil.
+Surface(s) affected by the design variables: Wing_1.
+Input mesh file name: /home/user/Documents/ICL/PDM/aeroframe_2/test/static/4_WingValidationSU2FramAT_case1/CFD//Case/1/mesh_out.su2
+
+--------------- Space Numerical Integration ( Zone 0 ) ------------------
+Roe (with entropy fix = 0) solver for the flow inviscid terms.
+Roe with DDES's FD low-dissipation function.
+Second order integration in space, with slope limiter.
+Venkatakrishnan slope-limiting method, with constant: 0.05. 
+The reference element size is: 1. 
+Gradient for upwind reconstruction: Green-Gauss.
+Gradient for viscous and source terms: Green-Gauss.
+
+--------------- Time Numerical Integration  ( Zone 0 ) ------------------
+Local time stepping (steady state simulation).
+Euler implicit method for the flow equations.
+FGMRES is used for solving the linear system.
+Using a ILU(0) preconditioning.
+Convergence criteria of the linear solver: 1e-06.
+Max number of linear iterations: 5.
+V Multigrid Cycle, with 3 multigrid levels.
+Damping factor for the residual restriction: 0.75.
+Damping factor for the correction prolongation: 0.75.
+No CFL adaptation.
++-------------------------------------------+
+|  MG Level| Presmooth|PostSmooth|CorrectSmo|
++-------------------------------------------+
+|         0|         1|         0|         0|
+|         1|         2|         0|         0|
+|         2|         3|         0|         0|
+|         3|         3|         0|         0|
++-------------------------------------------+
+Courant-Friedrichs-Lewy number:        1
+
+------------------ Convergence Criteria  ( Zone 0 ) ---------------------
+Maximum number of solver subiterations: 40.
+Begin convergence monitoring at iteration 10.
+Residual minimum value: 1e-8.
+Cauchy series min. value: 1e-10.
+Number of Cauchy elements: 100.
+Begin windowed time average at iteration 0.
+
+-------------------- Output Information ( Zone 0 ) ----------------------
+Writing solution files every 10 iterations.
+Writing the convergence history file every 1 inner iterations.
+Writing the screen convergence history every 1 inner iterations.
+The tabular file format is Tecplot (.dat).
+Convergence history file name: history.
+Forces breakdown file name: forces_breakdown.dat.
+Surface file name: surface_flow.
+Volume file name: flow.
+Restart file name: /home/user/Documents/ICL/PDM/aeroframe_2/test/static/4_WingValidationSU2FramAT_case1/CFD//Case/1/solution_flow.dat.
+
+------------- Config File Boundary Information ( Zone 0 ) ---------------
++-----------------------------------------------------------------------+
+|                        Marker Type|                        Marker Name|
++-----------------------------------------------------------------------+
+|                         Euler wall|                             Wing_1|
++-----------------------------------------------------------------------+
+|                          Far-field|                           Farfield|
++-----------------------------------------------------------------------+
+|                     Symmetry plane|                                  0|
++-----------------------------------------------------------------------+
+|           Deformable mesh boundary|                            airfoil|
++-----------------------------------------------------------------------+
+
+-------------------- Output Preprocessing ( Zone 0 ) --------------------
+Screen output fields: INNER_ITER, TIME_ITER, RMS_DENSITY, RMS_MOMENTUM-X, RMS_MOMENTUM-Y, RMS_ENERGY, LIFT, DRAG
+  Info: Ignoring the following history output groups:
+  TIME_ITER
+History output group(s): ITER, RMS_RES, AERO_COEFF
+Convergence field(s): DRAG
+Warning: No (valid) fields chosen for time convergence monitoring. Time convergence monitoring inactive.
+Volume output fields: COORDINATES, SOLUTION, PRIMITIVE
+
+------------------- Geometry Preprocessing ( Zone 0 ) -------------------
+Three dimensional problem.
+22536 grid points before partitioning.
+124963 volume elements before partitioning.
+2 surface markers.
+9464 boundary elements in index 0 (Marker = Wing_1).
+1280 boundary elements in index 1 (Marker = Farfield).
+Executing the partitioning functions.
+Building the graph adjacency structure.
+Calling ParMETIS... graph partitioning complete (5063 edge cuts).
+Distributing ParMETIS coloring.
+Rebalancing vertices.
+Rebalancing volume element connectivity.
+Rebalancing markers and surface elements.
+25368 vertices including ghost points. 
+132589 interior elements including halo cells. 
+132589 tetrahedra.
+Establishing MPI communication patterns.
+Setting point connectivity.
+Renumbering points (Reverse Cuthill McKee Ordering).
+Recomputing point connectivity.
+Setting element connectivity.
+Checking the numerical grid orientation.
+All volume elements are correctly orientend.
+All surface elements are correctly orientend.
+Identifying edges and vertices.
+Computing centers of gravity.
+Setting the control volume structure.
+Volume of the computational grid: 587067.
+Searching for the closest normal neighbors to the surfaces.
+Storing a mapping from global to local point index.
+Compute the surface curvature.
+Max K: 299.559. Mean K: 18.0258. Standard deviation K: 32.3416.
+Checking for periodicity.
+Computing mesh quality statistics for the dual control volumes.
++--------------------------------------------------------------+
+|           Mesh Quality Metric|        Minimum|        Maximum|
++--------------------------------------------------------------+
+|    Orthogonality Angle (deg.)|        47.1122|        83.5151|
+|     CV Face Area Aspect Ratio|        1.51518|        89.4399|
+|           CV Sub-Volume Ratio|        1.00355|         274.14|
++--------------------------------------------------------------+
+Setting the multigrid structure.
++-------------------------------------------+
+|  MG Level|       CVs|Aggl. Rate|       CFL|
++-------------------------------------------+
+|         0|     25368|    1/1.00|         1|
+|         1|      4871|    1/5.21|   0.86537|
+|         2|      1376|    1/3.54|  0.851713|
+Finding max control volume width.
+Communicating number of neighbors.
+Semi-span length = 5.01322 m.
+Wetted area = 41.7393 m^2.
+Area projection in the x-plane = 3.04129 m^2, y-plane = 1.33382 m^2, z-plane = 19.8814 m^2.
+Max. coordinate in the x-direction = 1.02206 m, y-direction = 5.01322 m, z-direction = 0.429525 m.
+Min. coordinate in the x-direction = -1.0154 m, y-direction = -5.01318 m, z-direction = -0.120863 m.
+Checking if Euler & Symmetry markers are straight/plane:
+Boundary marker Wing_1 is NOT a single plane.
+Boundary marker 0 is a single plane.
+Computing wall distances.
+
+-------------------- Solver Preprocessing ( Zone 0 ) --------------------
+Inviscid flow: Computing density based on free-stream
+temperature and pressure using the ideal gas law.
+Force coefficients computed using free-stream values.
+
+-- Models:
++------------------------------------------------------------------------------+
+|          Viscosity Model|        Conductivity Model|              Fluid Model|
++------------------------------------------------------------------------------+
+|                        -|                         -|             STANDARD_AIR|
++------------------------------------------------------------------------------+
+-- Fluid properties:
++------------------------------------------------------------------------------+
+|                  Name|    Dim. value|    Ref. value|      Unit|Non-dim. value|
++------------------------------------------------------------------------------+
+|          Gas Constant|       287.058|             1|  N.m/kg.K|       287.058|
+|      Spec. Heat Ratio|             -|             -|         -|           1.4|
++------------------------------------------------------------------------------+
+-- Initial and free-stream conditions:
++------------------------------------------------------------------------------+
+|                  Name|    Dim. value|    Ref. value|      Unit|Non-dim. value|
++------------------------------------------------------------------------------+
+|       Static Pressure|        101325|             1|        Pa|        101325|
+|               Density|       1.22498|             1|    kg/m^3|       1.22498|
+|           Temperature|        288.15|             1|         K|        288.15|
+|          Total Energy|        211794|             1|   m^2/s^2|        211794|
+|            Velocity-X|       98.5274|             1|       m/s|       98.5274|
+|            Velocity-Y|             0|             1|       m/s|             0|
+|            Velocity-Z|        17.373|             1|       m/s|        17.373|
+|    Velocity Magnitude|       100.047|             1|       m/s|       100.047|
++------------------------------------------------------------------------------+
+|           Mach Number|             -|             -|         -|         0.294|
++------------------------------------------------------------------------------+
+Initialize Jacobian structure (Euler). MG level: 0.
+Initialize Jacobian structure (Euler). MG level: 1.
+Initialize Jacobian structure (Euler). MG level: 2.
+
+------------------- Numerics Preprocessing ( Zone 0 ) -------------------
+
+----------------- Integration Preprocessing ( Zone 0 ) ------------------
+
+------------------- Iteration Preprocessing ( Zone 0 ) ------------------
+Euler/Navier-Stokes/RANS fluid iteration.
+
+------------------------------ Begin Solver -----------------------------
+
+Simulation Run using the Single-zone Driver
++-------------------------------------------------------------------------------------------------------+
+|  Inner_Iter|   Time_Iter|    rms[Rho]|   rms[RhoU]|   rms[RhoV]|   rms[RhoE]|          CL|          CD|
++-------------------------------------------------------------------------------------------------------+
+|           0|           0|   -0.815308|    1.321603|    0.424688|    4.653792|    1.836781|    0.808548|
+|           1|           0|   -0.917196|    1.264007|    0.730116|    4.552516|    3.189816|    1.386531|
+|           2|           0|   -0.928079|    1.335546|    0.934780|    4.544333|    4.115308|    1.762251|
+|           3|           0|   -0.895430|    1.432025|    1.058440|    4.578487|    4.681624|    1.969291|
+|           4|           0|   -0.858943|    1.520868|    1.156319|    4.615774|    4.956579|    2.041174|
+|           5|           0|   -0.829556|    1.599949|    1.246417|    4.646033|    5.003683|    2.009658|
+|           6|           0|   -0.807385|    1.670456|    1.332831|    4.669247|    4.879484|    1.902948|
+|           7|           0|   -0.790770|    1.732734|    1.415223|    4.686865|    4.633265|    1.745202|
+|           8|           0|   -0.778835|    1.786726|    1.492199|    4.699396|    4.306840|    1.556592|
+|           9|           0|   -0.771281|    1.832329|    1.562663|    4.706779|    3.934604|    1.353646|
+|          10|           0|   -0.767850|    1.869434|    1.625399|    4.708935|    3.543345|    1.149146|
++-----------------------------------------------------------------------+
+|        File Writing Summary       |              Filename             |
++-----------------------------------------------------------------------+
+|SU2 restart                        |/home/user/Documents/ICL/PDM/aeroframe_2/test/static/4_WingValidationSU2FramAT_case1/CFD//Case/1/solution_flow.dat|
+|Paraview                           |flow.vtu                           |
+|Paraview surface                   |surface_flow.vtu                   |
++-----------------------------------------------------------------------+
+
+Writing the forces breakdown file (forces_breakdown.dat).
++-------------------------------------------------------------------------------------------------------+
+|  Inner_Iter|   Time_Iter|    rms[Rho]|   rms[RhoU]|   rms[RhoV]|   rms[RhoE]|          CL|          CD|
++-------------------------------------------------------------------------------------------------------+
+|          11|           0|   -0.768375|    1.898181|    1.679813|    4.705710|    3.152558|    0.952158|
+|          12|           0|   -0.771585|    1.918763|    1.725537|    4.698068|    2.775757|    0.768576|
+|          13|           0|   -0.775184|    1.931297|    1.762479|    4.688256|    2.421733|    0.601866|
+|          14|           0|   -0.775898|    1.936170|    1.790761|    4.680114|    2.095560|    0.453672|
+|          15|           0|   -0.770305|    1.933921|    1.810417|    4.678472|    1.799494|    0.324159|
+|          16|           0|   -0.756713|    1.925115|    1.821847|    4.686961|    1.533700|    0.212568|
+|          17|           0|   -0.735975|    1.910727|    1.825458|    4.706019|    1.297027|    0.117581|
+|          18|           0|   -0.710869|    1.891963|    1.821838|    4.732714|    1.087865|    0.037692|
+|          19|           0|   -0.685317|    1.870340|    1.811793|    4.762009|    0.904557|   -0.028594|
+|          20|           0|   -0.662798|    1.847369|    1.796789|    4.789217|    0.745629|   -0.082695|
++-----------------------------------------------------------------------+
+|        File Writing Summary       |              Filename             |
++-----------------------------------------------------------------------+
+|SU2 restart                        |/home/user/Documents/ICL/PDM/aeroframe_2/test/static/4_WingValidationSU2FramAT_case1/CFD//Case/1/solution_flow.dat|
+|Paraview                           |flow.vtu                           |
+|Paraview surface                   |surface_flow.vtu                   |
++-----------------------------------------------------------------------+
+
+Writing the forces breakdown file (forces_breakdown.dat).
++-------------------------------------------------------------------------------------------------------+
+|  Inner_Iter|   Time_Iter|    rms[Rho]|   rms[RhoU]|   rms[RhoV]|   rms[RhoE]|          CL|          CD|
++-------------------------------------------------------------------------------------------------------+
+|          21|           0|   -0.646341|    1.824998|    1.778821|    4.810402|    0.609669|   -0.125886|
+|          22|           0|   -0.637468|    1.804970|    1.760312|    4.823546|    0.495372|   -0.159346|
+|          23|           0|   -0.636847|    1.788461|    1.743130|    4.827596|    0.401841|   -0.184014|
+|          24|           0|   -0.643515|    1.775088|    1.728254|    4.823285|    0.328445|   -0.200666|
+|          25|           0|   -0.655399|    1.763946|    1.715270|    4.812677|    0.274745|   -0.209922|
+|          26|           0|   -0.669788|    1.754681|    1.703574|    4.798154|    0.240344|   -0.212308|
+|          27|           0|   -0.682160|    1.747254|    1.691795|    4.784086|    0.224856|   -0.208275|
+|          28|           0|   -0.687825|    1.741152|    1.678410|    4.775392|    0.227863|   -0.198252|
+|          29|           0|   -0.684256|    1.738299|    1.662224|    4.775541|    0.248931|   -0.182622|
+|          30|           0|   -0.672578|    1.740130|    1.646272|    4.784352|    0.287420|   -0.161792|
++-----------------------------------------------------------------------+
+|        File Writing Summary       |              Filename             |
++-----------------------------------------------------------------------+
+|SU2 restart                        |/home/user/Documents/ICL/PDM/aeroframe_2/test/static/4_WingValidationSU2FramAT_case1/CFD//Case/1/solution_flow.dat|
+|Paraview                           |flow.vtu                           |
+|Paraview surface                   |surface_flow.vtu                   |
++-----------------------------------------------------------------------+
+
+Writing the forces breakdown file (forces_breakdown.dat).
++-------------------------------------------------------------------------------------------------------+
+|  Inner_Iter|   Time_Iter|    rms[Rho]|   rms[RhoU]|   rms[RhoV]|   rms[RhoE]|          CL|          CD|
++-------------------------------------------------------------------------------------------------------+
+|          31|           0|   -0.655181|    1.748406|    1.635545|    4.800018|    0.342436|   -0.136220|
+|          32|           0|   -0.635815|    1.763610|    1.635284|    4.818924|    0.412825|   -0.106398|
+|          33|           0|   -0.619562|    1.783999|    1.649248|    4.835393|    0.497217|   -0.072865|
+|          34|           0|   -0.609219|    1.806807|    1.676713|    4.846232|    0.593995|   -0.036216|
+|          35|           0|   -0.606847|    1.829374|    1.712755|    4.848806|    0.701297|    0.002895|
+|          36|           0|   -0.612222|    1.850369|    1.752518|    4.843246|    0.817065|    0.043766|
+|          37|           0|   -0.623773|    1.866126|    1.789352|    4.830795|    0.939145|    0.085679|
+|          38|           0|   -0.640841|    1.875617|    1.820064|    4.811726|    1.065220|    0.127890|
+|          39|           0|   -0.661254|    1.878086|    1.843382|    4.788172|    1.192943|    0.169654|
+
+----------------------------- Solver Exit -------------------------------
+
+Maximum number of iterations reached (ITER = 40) before convergence.
++-----------------------------------------------------------------------+
+|      Convergence Field     |     Value    |   Criterion  |  Converged |
++-----------------------------------------------------------------------+
+|                  Cauchy[CD]|      0.278138|       < 1e-10|          No|
++-----------------------------------------------------------------------+
+-------------------------------------------------------------------------
++-----------------------------------------------------------------------+
+|        File Writing Summary       |              Filename             |
++-----------------------------------------------------------------------+
+|SU2 restart                        |/home/user/Documents/ICL/PDM/aeroframe_2/test/static/4_WingValidationSU2FramAT_case1/CFD//Case/1/solution_flow.dat|
+|Paraview                           |flow.vtu                           |
+|Paraview surface                   |surface_flow.vtu                   |
++-----------------------------------------------------------------------+
+
+Writing the forces breakdown file (forces_breakdown.dat).
+
+------------------------- Solver Postprocessing -------------------------
+Deleted CNumerics container.
+Deleted CIntegration container.
+Deleted CSolver container.
+Deleted CIteration container.
+Deleted CInterpolator container.
+Deleted CInterface container.
+Deleted CGeometry container.
+Deleted CFreeFormDefBox class.
+Deleted CSurfaceMovement class.
+Deleted CVolumetricMovement class.
+Deleted CConfig container.
+Deleted nInst container.
+Deleted COutput class.
+-------------------------------------------------------------------------
+
+------------------------- Exit Success (SU2_CFD) ------------------------
+

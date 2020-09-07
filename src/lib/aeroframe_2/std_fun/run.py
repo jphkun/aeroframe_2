@@ -594,7 +594,7 @@ def solverSU2Framat(args, aeroframeSettings, acceptedNames):
         transformCurrent.aeroToStructure(args,forceFilePath,iteration)
         # Step 8) Compute structure solution
         csdSolverClassVarCurrent.run(transformCurrent)
-        transformCurrent.structureToAero(iteration,forceInitFilePath,forceFilePath)
+        transformCurrent.structureToAero(args,iteration,forceInitFilePath,forceFilePath)
 
         # Step 9) Computes convergence
         maxDisplacement = np.append(maxDisplacement, np.max(np.abs(transform.displacements)))

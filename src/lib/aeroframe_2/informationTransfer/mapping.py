@@ -560,6 +560,12 @@ class mapper:
                 elif distP1Proj1 > distP1P2 and distP3Proj2 > distP2P3:
                     delta = -(point - p1)
                 self.distanceMatrix[i][j] = np.array([delta[0],delta[1],delta[2]])
+                
+                # logger.debug(proj1)
+                # logger.debug(proj2)
+                # logger.debug(point)
+                # logger.debug(self.distanceMatrix[i][j])
+                # sys.exit()
             # logger.debug(self.distanceMatrix)
             # logger.debug(self.wingsPoints[i])
             
@@ -577,6 +583,11 @@ class mapper:
                             # self.distanceMatrix[i][:,2]*self.afx[i])  # OK
             self.amz.append(self.distanceMatrix[i][:,0]*self.afy[i] + # OK
                             self.distanceMatrix[i][:,1]*self.afx[i])  # OK
+            # logger.debug(self.wingsPoints[i][0])
+            # logger.debug(self.distanceMatrix[i][:,0])
+            # logger.debug(self.afz[i])
+            # logger.debug(self.amy[i])
+            # sys.exit()
 
 
 

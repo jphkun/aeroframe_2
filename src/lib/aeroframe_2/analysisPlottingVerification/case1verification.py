@@ -12,8 +12,8 @@ import matplotlib.pyplot as plt
 import sys
 import json
 
-cwd1 = '/home/cfse2/Documents/aeroframe_2/test/static/1_WingValidationPytornadoFramAT_case1/CFD/_results/'
-cwd2 = '/home/cfse2/Documents/aeroframe_2/test/static/1_WingValidationPytornadoFramAT_case1/'
+cwd1 = '../../../../test/static/1_WingValidationPytornadoFramAT_case1/CFD/_results/'
+cwd2 = '../../../../test/static/1_WingValidationPytornadoFramAT_case1/'
 # /home/cfse2/Documents/aeroframe_2/test/static/1_WingValidationPytornado_case1/
 filename1 = 'forces0.csv'
 filename2 = 'FEM_frocesAndMoments0.csv'
@@ -29,7 +29,7 @@ try:
 except FileNotFoundError:
     print('error : \n'+cwd2+filename4)
 
-a = settings['wing1']['elasticAxis']
+e = settings['wing1']['elasticAxis']
 
 # Imports data
 df1 = pd.read_csv(cwd1 + filename1)
@@ -39,28 +39,36 @@ df5 = pd.read_csv(cwd1 + filename5)
 dfF0 = df1.groupby(['y'])['y','Fz'].agg('sum')
 aggregation_functions = {'y': 'first', 'Fy': 'sum'}
 df5['y'] = df1['y']  # .round(decimals=3)
-df_new = df5.groupby(df5['y']).aggregate(aggregation_functions)
+# df_new = df5.groupby(df5['y']).aggregate(aggregation_functions)
 dfF1 = df5.groupby(['y'])['y','Fz'].sum()
 
-# print(dfF0)
-# print(dfF1)
-# sys.exit()
-
 # Computes the moment
-df1['x_my'] = df1['x']
-# print(df1['x'])
-# print(df1['x_my'])
-df1['My'] = (-df1['x']+(a-0.5)*2)*df1['Fz']
-# print(-df1['x'])
+df1['My'] = (-df1['x'] + (e-0.5)*2) * df1['Fz']
+dy = 0.25
+dy2 = np.abs(df2['y'][2] - df2['y'][3])
+N = int(10/dy)
+upperLimit = 5
+df_1 = pd.DataFrame()
+for i in range(N):
+    df = df1[(df1['y'] <= upperLimit-i*dy) & (df1['y'] > upperLimit-(i+1)*dy)].sum(axis=0)
+    df['x'] = 0
+    df['y'] = 0.5 * ((upperLimit-i*dy) + upperLimit-(i+1)*dy)
+    df['z'] = 0
+    df['Fx'] = df['Fx'] / dy
+    df['Fy'] = df['Fy'] / dy
+    df['Fz'] = df['Fz'] / dy
+    df['My'] = df['My']
+    df_1 = df_1.append(df, ignore_index=True)
+print(np.sum(df2['My']))
+print(np.sum(df_1['My']))
+# print(np.sum(df1['My']))
 # print(-df1['x']+(a-0.5)*2)
 # sys.exit()
 dfM = df1.groupby(['y'])['y','My'].agg('sum')
-# print(df2)
 
 # Converts data to the correct format for polynomial fit and plotting
 Fz_cfd0 = dfF0.values
 Fz_cfd1 = dfF1.values
-My_cfd = dfM.values
 # Number of chordwise nodes!
 N = 10
 y_cfd = Fz_cfd0[:,0]/N
@@ -72,16 +80,11 @@ dy2 = np.abs(df2['y'][1]-df2['y'][0])
 
 Fz_cfd0 = Fz_cfd0[:,1]/dy1
 Fz_cfd1 = Fz_cfd1[:,1]/dy1
-print(Fz_cfd0)
-print(Fz_cfd1)
-# sys.exit()
-My_cfd = My_cfd[:,1]/dy1
-# beam moment
-Mb_cfd = My_cfd
+
 
 # Polynomial fitting of both curves
 cFz, rFz, _, _, _ = np.polyfit(y_cfd, Fz_cfd0, 7, full=True)
-cMb, rMb, _, _, _ = np.polyfit(y_cfd, Mb_cfd, 7, full=True)
+cMb, rMb, _, _, _ = np.polyfit(df_1['y'], df_1['My'], 7, full=True)
 pFz = np.poly1d(cFz)
 print(pFz)
 pMb = np.poly1d(cMb)
@@ -192,13 +195,10 @@ plt.xticks(fontsize=textSize)
 plt.yticks(fontsize=textSize)
 
 
-# # print(df2)
-# # print(df3)
-
 # Torque distribution
 plt.figure(4)
 # Plots
-plt.plot(y_cfd,My_cfd,'o',label='CFD', linewidth=width)
+plt.plot(df_1['y'], df_1['My'],'o',label='CFD', linewidth=width)
 plt.plot(y_pol,Mb_pol,'r-',label='Polynomial fitting', linewidth=width)
 plt.plot(df2['y'],df2['My']/dy2,'o-',label='FEM value', linewidth=width)
 plt.xlabel('postion [m]',fontsize=textSize)

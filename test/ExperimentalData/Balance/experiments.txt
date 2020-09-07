@@ -1,0 +1,22 @@
+speed 50%     Optitrack  FORCES  Photo
+angle 0       NON        NON     NON
+angle 5       NON        NON     NON
+angle 10      NON        NON     NON
+angle -5      NON        NON     NON
+
+speed 100%
+angle 0       NON        NON     NON
+angle 5       NON        NON     NON
+angle 10      NON        NON     NON
+angle -5      NON        NON     NON
+
+Nom de fichiers
+s50a0p
+s50a5p
+s50a10p
+s50a5n
+
+s100a0p
+s100a5p
+s100a10p
+s100a5n
