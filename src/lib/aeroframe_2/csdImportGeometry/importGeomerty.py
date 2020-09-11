@@ -118,7 +118,8 @@ class CsdGeometryImport:
         except NameError:
             logger.error("No wings found in CPACS file")
             sys.exit()
-        # Gets the UIDs for each fuselgae name
+        
+        # Gets the UIDs for each wing name
         for i in range(self.nWings):
             self.aircraftPartsUIDs.append(self.tigl.wingGetUID(i+1))
         logger.info("Aircraft parts names: \n"+str(self.aircraftPartsUIDs))
@@ -293,6 +294,10 @@ class CsdGeometryImport:
         xsi1 = np.linspace(0,1,N)
         upper = np.empty((N,3))
         lower = np.empty((N,3))
+
+
+        # t = np.max(np.abs(upper[:][2] - lower[:][2]))
+        
         for i in range(N):
             U = self.tigl.wingGetUpperPoint(wingIndex,segmentIndex,eta,xsi1[i])
             L = self.tigl.wingGetLowerPoint(wingIndex,segmentIndex,eta,xsi1[i])
@@ -300,36 +305,41 @@ class CsdGeometryImport:
             lower[i] = np.array(L)
         v1 = upper[0]-upper[-1]
         v2 = upper[7] - lower[7]
-        v1xv2 = np.cross(v1,v2)
-        upper = np.flip(upper,axis=0)
-        wingSectionPoints = np.concatenate((upper, lower))
-        ey_0 = np.array([0,1,0])
-        e_1 = v1xv2
-        # Computes the cross prodct
-        cross = np.cross(ey_0,e_1)
-        normCross = np.linalg.norm(cross)
-        cross = cross/normCross
-        if normCross < 1e-8:
-            # No need to rotate
-            wingSectionPoints = np.delete(wingSectionPoints,1,1)
-            hull = ConvexHull(wingSectionPoints)
-            area = hull.volume
-        else:
-            ab = inner1d(ey_0,e_1)
-            a = np.linalg.norm(ey_0)
-            b = np.linalg.norm(e_1)
-            angle = np.arccos(ab / (a*b))
-            logger.debug("angle: "+str(angle))
-            quat = angle*cross
-            r = R.from_rotvec(quat)
-            # Deletes the y column since the Convex hull will struggle with
-            # a 3d plane otherwise
-            wingSectionPoints = r.apply(wingSectionPoints)
-            wingSectionPoints = np.delete(wingSectionPoints,1,1)
-            hull = ConvexHull(wingSectionPoints)
-            # WARNING since we have built a 2D surface, the function is set up
-            # in a way that this is correct!
-            area = hull.volume
+        c = np.abs(upper[0][0] - upper[-1][0])
+        t = np.max(np.abs(upper[:][2] - lower[:][2]))
+        print(c)
+        area = c*0.1*t
+        # sys.exit()
+        # v1xv2 = np.cross(v1,v2)
+        # upper = np.flip(upper,axis=0)
+        # wingSectionPoints = np.concatenate((upper, lower))
+        # ey_0 = np.array([0,1,0])
+        # e_1 = v1xv2
+        # # Computes the cross prodct
+        # cross = np.cross(ey_0,e_1)
+        # normCross = np.linalg.norm(cross)
+        # cross = cross/normCross
+        # if normCross < 1e-8:
+        #     # No need to rotate
+        #     wingSectionPoints = np.delete(wingSectionPoints,1,1)
+        #     hull = ConvexHull(wingSectionPoints)
+        #     area = hull.volume
+        # else:
+        #     ab = inner1d(ey_0,e_1)
+        #     a = np.linalg.norm(ey_0)
+        #     b = np.linalg.norm(e_1)
+        #     angle = np.arccos(ab / (a*b))
+        #     logger.debug("angle: "+str(angle))
+        #     quat = angle*cross
+        #     r = R.from_rotvec(quat)
+        #     # Deletes the y column since the Convex hull will struggle with
+        #     # a 3d plane otherwise
+        #     wingSectionPoints = r.apply(wingSectionPoints)
+        #     wingSectionPoints = np.delete(wingSectionPoints,1,1)
+        #     hull = ConvexHull(wingSectionPoints)
+        #     # WARNING since we have built a 2D surface, the function is set up
+        #     # in a way that this is correct!
+        #     area = hull.volume
 
         logger.debug("Computed section area: "+str(area))
 
@@ -373,11 +383,12 @@ class CsdGeometryImport:
 
             logger.debug("Number of wing nodes asked: "+str(w_m_N_nodes))
             # distance from leading edge to the elastic axis
-            xsiEl = 1 - self.settings['wing' + str(i+1)]['elasticAxis']
-            
             ##################################################################
-            # Be very careful with what verion of TiGl you are using!!
+            # Be very careful with what verion of TiGl you are using! It looks
+            # like the order is inverted in last version at least I have
+            # eperianced some issues between home and CFSE computer.
             ##################################################################
+            # xsiEl = 1 - self.settings['wing' + str(i+1)]['elasticAxis']
             xsiEl = self.settings['wing' + str(i+1)]['elasticAxis']
             
             # distance between the mass axis and the elastic axis

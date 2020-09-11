@@ -26,7 +26,7 @@
     "CSD_solver": "external",
 
     "_description": "",
-    "deformation_file": "/CSD/deformation/0_LagDisp_PyTopanelwiseForces_0G.CSV",
+    "deformation_file": "/CSD/deformation/1_LagDisp_PyTopanelwiseForces_0G.csv",
 
     "_description": "Maximal number of allowed iterations, only used if CSD_solver is set to FramAT",
     "MaxIterationsNumber": 15,

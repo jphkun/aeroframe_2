@@ -26,7 +26,7 @@
     "CSD_solver": "FramAT",
 
     "_comment": "Maximal number of allowed iterations",
-    "MaxIterationsNumber": 15,
+    "MaxIterationsNumber": 25,
 
     "_comment": "Maximal displacement in [m] between two iterations",
     "ConvergeanceTolerence": 0.001,

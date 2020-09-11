@@ -20,7 +20,7 @@
 		},
 		"lattice": {
 			"opt": [],
-			"show": false,
+			"show": true,
 			"save": false
 		},
         	"matrix_downwash": {
@@ -31,7 +31,7 @@
 		"results": {
 		    "opt": ["cp"],
 		    "show": false,
-		    "save": true
+		    "save": false
         	}
     	}
 }

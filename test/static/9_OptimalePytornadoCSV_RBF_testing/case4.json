@@ -38,7 +38,7 @@
     "deformation_activation": true,
 
     "_description": "If external solver is used the user needs to first do an undeformed simulation",
-    "deformation_from_file": true,
+    "deformation_from_file": false,
 
     "_description": "G load activation, if false G loads are not taken into account",
     "G_loads": false,

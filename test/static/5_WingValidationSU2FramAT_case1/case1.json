@@ -1,0 +1,101 @@
+{
+    "_comment": "Only useful for a Pytornado simulation",
+    "CFD_settings_file": "straightWing.json",
+
+    "_comment": "Only useful for a Pytornado simulation, Put the name not the file. Nevertheless",
+    "_comment": "the file should be in cwd/CFD/aircraft/",
+    "aircraftFile": "straightWing.xml",
+
+    "_comment": "CFD solver choice. Implemented choices are: Pytornado, SU2",
+    "CFD_solver": "SU2",
+
+    "_comment": "Number of processors used for a SU2 simulation. Pytornado is always one, but has",
+    "_comment": "one step where he sees and use all available processors, no parameter neded though",
+    "SU2_Nproc": 8,
+
+    "_comment": "Number of iterations done with SU2 for each aeroelastic iterations",
+    "SU2_Niter": 1000,
+
+    "_comment": "Configuration file path for the SU2 solver. Will not be red if the CFD solver is SU2",
+    "SU2ConfigPath":"/home/cfse2/Documents/aeroframe_2/test/static/8_Optimale_withDLR/CFD/Case/ConfigCFD.cfg",
+
+    "_comment": "Could be interseting if the restart function is used. Currently deactivated in python",
+    "CFDResultFile": "/home/cfse2/Documents/CEASIOMpy/ceasiompy/WKDIR/CEASIOMpy_Run_2020-08-11_13-43-27/Case/force.csv",
+
+    "_comment": "Accepted entrires are: FramAT, external",
+    "CSD_solver": "FramAT",
+
+    "_comment": "Maximal number of allowed iterations",
+    "MaxIterationsNumber": 25,
+
+    "_comment": "Maximal displacement in [m] between two iterations",
+    "ConvergeanceTolerence": 0.001,
+
+    "_comment": "Does the deformation needs to be taken into account",
+    "deformation_activation": true,
+
+    "deformation_from_file": false,
+
+    "_comment": "G load activation, if false G loads are not taken into account",
+    "G_loads": false,
+
+    "_comment": "If G_loads are acvtivated, the user can impose the straight level flight loading case",
+    "1G": false,
+
+    "_comment": "If deformation is activated, path + name to the deformation file",
+    "deformation_file": "CSD/deformation/Optimale_disp_dlr.csv",
+
+    "_comment":"Deprecated",
+    "save_pkl": false,
+
+    "_comment":"Fuselage instance comes here, if no fuselage do not put one",
+
+    "_comment": "Wing innstance, Add each wing after this one with the same indentation level.",
+    "_comment": "naming should follow the order the CPACS construction but not the name.",
+    "_comment": "Wing must be named 'wing*' where * is the number and this number should be from 1 to n.",
+    "wing1": {
+        "_comment":"chordlength from the leading edge",
+        "elasticAxis": 0.6,
+        "_comment":"chordlength at which the axis is from the elasticAxis. + is behind the elastic axis, - is before",
+        "massAxis": 0.1,
+        "_comment": "Mechancial properties of the wing",
+        "mechanicalProperties": {
+            "_comment": "Root aera of the wing [m^2]",
+            "A":  3.591149E-01,
+
+            "_comment": "Second moment of aera in the horizontal direciton [m^4]",
+            "Iy": 4E-05,
+
+            "_comment": "Second moment of aera in the vertical direciton [m^4]",
+            "Iz": 4E-05,
+
+            "_comment": "Polar moment of aera [m^4]. Do not forget J = Iz + Iy",
+            "J":  8E-05
+        },
+
+        "_comment": "Maerial properties definition",
+        "materialProperties": {
+            "_comment": "Young's modulus, should be in [Pa]",
+            "E": 70E9,
+
+            "_comment": "Shear modulus, should be in [Pa]",
+            "G": 27E9,
+
+            "_comment": "Specific mass [kg/m^3]",
+            "rho": 2100
+        },
+        "_comment": "Structure mesh related parameters",
+        "FEM": {
+            "_comment": "Poportionalty factor for a taperd wing. Accepeted choices are: constant, linear, quadratic",
+            "_comment": "True proportion factor is quadratic",
+            "mechanicalInterpolationType": "quadratic",
+
+            "_comment": "Number of structure node for this instance",
+            "nodesFEM": 40,
+
+            "_comment": "Number of clamped nodes at the wing root. This permits to mitigate the ",
+            "_comment": "mismatch phenomena at the wing root",
+            "rigidNodes": 1
+        }
+    }
+}

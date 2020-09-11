@@ -14,23 +14,45 @@ import json
 import os
 
 # Choices: SU2, Pytornado
+# ssh cfs11
 solver = 'SU2'
 dy = 0.0625*10
 if solver == 'SU2':
     cwd1 = '../../../../test/static/4_WingValidationSU2FramAT_case1/CSD/results/'
     cwd2 = '../../../../test/static/4_WingValidationSU2FramAT_case1/'
+    filename4 = 'case1.json'
+    l = 5
+
 else:
-    cwd1 = '../../../../test/static/1_WingValidationPytornadoFramAT_case1/CFD/_results/'
-    cwd2 = '../../../../test/static/1_WingValidationPytornadoFramAT_case1/'
+
+    # cwd1 = '../../../../test/static/0_WingValidationPytornadoFramAT_case0/CFD/_results/'
+    # cwd2 = '../../../../test/static/0_WingValidationPytornadoFramAT_case0/'
+    # filename4 = 'case0.json'
+    # l = 5
+
+    # cwd1 = '../../../../test/static/1_WingValidationPytornadoFramAT_case1/CFD/_results/'
+    # cwd2 = '../../../../test/static/1_WingValidationPytornadoFramAT_case1/'
+    # filename4 = 'case1.json'
+    # l = 5
+
+    cwd1 = '../../../../test/static/2_WingValidationPytornadoFramAT_case2/CFD/_results/'
+    cwd2 = '../../../../test/static/2_WingValidationPytornadoFramAT_case2/'
+    filename4 = 'case2.json'
+    l = 5
+
+    # cwd1 = '../../../../test/static/7_wingWindTunnelPytornado/CFD/_results/'
+    # cwd2 = '../../../../test/static/7_wingWindTunnelPytornado/'
+    # filename4 = 'case5.json'
+    # l = 0.5
 
 # /home/cfse2/Documents/aeroframe_2/test/static/1_WingValidationPytornado_case1/
 if solver == 'SU2':
     filename1 = 'force0.csv'
 else:
     filename1 = 'forces0.csv'
+
 filename2 = 'FEM_frocesAndMoments0.csv'
 filename3 = 'FEM_displacementAndRotations0.csv'
-filename4 = 'case1.json'
 
 if solver == 'SU2':
     filename5 = 'force1.csv'
@@ -66,7 +88,7 @@ Iy = settings['wing1']['mechanicalProperties']['Iy']
 Iz = settings['wing1']['mechanicalProperties']['Iz']
 J = settings['wing1']['mechanicalProperties']['J']
 d = 2 * settings['wing1']['massAxis']
-l = 5
+
 mass = 2*l*A*rho
 linearMass = 1*A*rho
 print('A:    ' + str(A))
@@ -92,8 +114,8 @@ df5 = pd.read_csv(cwd1 + filename5)
 # Iteration 0 CFD forces
 
 dy2 = np.abs(df2['y'][2] - df2['y'][3])
-N = int(10/dy)
-upperLimit = 5
+N = int(2*l/dy)
+upperLimit = l
 
 # CFDmoment = 12127.657819960401
 # MAPPEDmoment = np.sum(df2['My'])
@@ -107,10 +129,6 @@ df1['My'] = (-df1['x'] + (e-0.5)*2) * df1[fz]
 
 print((-df1['x'] + (e-0.5)*2))
 print(df1['My'])
-# print(np.sum(df2['My']))
-# print(np.sum(df1['My']))
-
-# sys.exit()
 
 
 df_1 = pd.DataFrame()
@@ -172,7 +190,7 @@ print('Moment distribution function:')
 print(pMb)
 cFz = np.flip(cFz)
 
-y_pol = np.linspace(-5,5,100)
+y_pol = np.linspace(-l,l,100)
 Fz_pol = pFz(y_pol)
 Mb_pol = pMb(y_pol)
 
@@ -198,7 +216,7 @@ def w(y):
 
 
 def t(y):
-    yMax = 5
+    yMax = l
     t = (1/(G*J)) * \
         ((((cMb[7] + d*n*linearMass*9.81)*yMax**1) / 1 +  \
           (cMb[5]*yMax**3) / 3 + \
@@ -216,7 +234,7 @@ titleSize = 35
 textSize = 25
 width = 5
 
-y_an = np.linspace(-5,5,100)
+y_an = np.linspace(-l,l,100)
 
 
 # Lift distribtion
@@ -225,9 +243,9 @@ plt.plot(df_1['y'],df_1[fz],'-',label='CFD value',      linewidth=width)
 plt.plot(y_pol,    Fz_pol,    'r-',label='Polynomial fit', linewidth=width)
 plt.plot(df2['y'],df2['Fz']/dy2,'-',label='FEM value', linewidth=width)
 plt.title('Lift distribution',fontsize=titleSize)
-plt.xlabel('y position [m]',fontsize=textSize)
+plt.xlabel('position [m]',fontsize=textSize)
 plt.ylabel('Lift [N/m]',fontsize=textSize)
-plt.xlim(-5,5)
+plt.xlim(-l,l)
 plt.grid()
 plt.legend(fontsize=textSize)
 plt.xticks(fontsize=textSize)
@@ -241,7 +259,7 @@ errorMax = 100*(np.max(np.abs(df3['dz'])) - np.max(np.abs(w(np.abs(y_an))))) / n
 errorMax = round(errorMax,1)
 # print(df3['dz'])
 plt.title('Displacement \n Error max: '+str(errorMax)+'%',fontsize=titleSize)
-plt.xlabel('postion [m]',fontsize=textSize)
+plt.xlabel('position [m]',fontsize=textSize)
 plt.ylabel('Displacement [m]',fontsize=textSize)
 plt.grid()
 plt.legend(fontsize=textSize)
@@ -255,8 +273,8 @@ plt.figure(9)
 plt.plot(df_1['y'],df_1['My']/dy,'-',label='CFD', linewidth=width)
 plt.plot(y_pol,Mb_pol,'r-',label='Polynomial fitting', linewidth=width)
 plt.plot(df2['y'],df2['My']/dy2,'-',label='FEM value', linewidth=width)
-plt.xlabel('postion [m]',fontsize=textSize)
-plt.ylabel('Troque [Nm/m]',fontsize=textSize)
+plt.xlabel('position [m]',fontsize=textSize)
+plt.ylabel('Torque [Nm/m]',fontsize=textSize)
 plt.title('Torque distribution',fontsize=titleSize)
 plt.grid()
 plt.legend(fontsize=textSize)
@@ -265,15 +283,15 @@ plt.yticks(fontsize=textSize)
 
 # Rotation angle
 plt.figure(10)
-plt.plot(df3['y'],np.abs(df3['tx']),'-r',label='FEM', linewidth=width)
-plt.plot(y_an,t(np.abs(y_an)),'-',label='Analytical solution', linewidth=width)
+plt.plot(df3['y'],np.rad2deg(np.abs(df3['tx'])),'-r',label='FEM', linewidth=width)
+plt.plot(y_an,np.rad2deg(t(np.abs(y_an))),'-',label='Analytical solution', linewidth=width)
 errorMax2 = 100*(np.max(np.abs(df3['tx'])) - np.max(np.abs(t(np.abs(y_an))))) / np.max(np.abs(t(np.abs(y_an))))
 errorMax2 = round(errorMax2, 1)
 # print(errorMax2)
 # np.set_printoptions(precision=3)
 plt.title('Rotation angle \n Max error: '+str(errorMax2)+'%',fontsize=titleSize)
-plt.xlabel('positon [m]',fontsize=textSize)
-plt.ylabel('Rotation angle [rad]',fontsize=textSize)
+plt.xlabel('position [m]',fontsize=textSize)
+plt.ylabel('Rotation angle [deg]',fontsize=textSize)
 plt.grid()
 plt.legend(fontsize=textSize)
 plt.xticks(fontsize=textSize)
@@ -313,3 +331,5 @@ plt.show()
 plt.show()
 
 
+error =   np.array([44.3,10.8,0.7,-2.7,-4.0,-4.5,-4.7])
+Npoints = np.array([5,   10,  20, 40,  80,  160, 320])

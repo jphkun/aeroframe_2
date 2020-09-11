@@ -26,7 +26,7 @@
     "CSD_solver": "FramAT",
 
     "_comment": "Maximal number of allowed iterations",
-    "MaxIterationsNumber": 20,
+    "MaxIterationsNumber": 2,
 
     "_comment": "Maximal displacement in [m] between two iterations",
     "ConvergeanceTolerence": 0.001,
@@ -91,7 +91,7 @@
             "mechanicalInterpolationType": "quadratic",
 
             "_comment": "Number of structure node for this instance",
-            "nodesFEM": 24,
+            "nodesFEM": 20,
 
             "_comment": "Number of clamped nodes at the wing root. This permits to mitigate the ",
             "_comment": "mismatch phenomena at the wing root",

@@ -1,7 +1,7 @@
 
 -------------------------------------------------------------------------
 |    ___ _   _ ___                                                      |
-|   / __| | | |_  )   Release 7.0.6 "Blackbird"                         |
+|   / __| | | |_  )   Release 7.0.3 "Blackbird"                         |
 |   \__ \ |_| |/ /                                                      |
 |   |___/\___//___|   Suite (Mesh Deformation Code)                     |
 |                                                                       |
@@ -28,16 +28,16 @@
 -------------------------------------------------------------------------
 
 ----------------- Physical Case Definition ( Zone 0 ) -------------------
-Input mesh file name: /home/user/Documents/ICL/PDM/aeroframe_2/test/static/4_WingValidationSU2FramAT_case1/CFD/MESH/FlyingWing_baseline.su2
+Input mesh file name: /users/disk9/cfse2/Documents/aeroframe_2/test/static/4_WingValidationSU2FramAT_case1/CFD/MESH/FlyingWing_baseline.su2
 
 ---------------- Grid deformation parameters ( Zone 0 )  ----------------
 Grid deformation using a linear elasticity method.
 
 
 -------------------- Output Information ( Zone 0 ) ----------------------
-Output mesh file name: /home/user/Documents/ICL/PDM/aeroframe_2/test/static/4_WingValidationSU2FramAT_case1/CFD//Case/1/mesh_out.su2. 
+Output mesh file name: deformed.su2. 
 A file will be created to visualize the surface deformation.
-No file for visualizing the deformation.
+A file will be created to visualize the volume deformation.
 Cell stiffness scaled by distance to nearest solid surface.
 
 ------------- Config File Boundary Information ( Zone 0 ) ---------------
@@ -53,28 +53,26 @@ Cell stiffness scaled by distance to nearest solid surface.
 |           Deformable mesh boundary|                             Wing_1|
 +-----------------------------------------------------------------------+
 Three dimensional problem.
-22536 grid points before partitioning.
-124963 volume elements before partitioning.
+142678 grid points before partitioning.
+739205 volume elements before partitioning.
 2 surface markers.
-9464 boundary elements in index 0 (Marker = Wing_1).
+99234 boundary elements in index 0 (Marker = Wing_1).
 1280 boundary elements in index 1 (Marker = Farfield).
 Executing the partitioning functions.
 Building the graph adjacency structure.
-Calling ParMETIS... graph partitioning complete (5063 edge cuts).
+Calling ParMETIS... graph partitioning complete (18884 edge cuts).
 Distributing ParMETIS coloring.
 Rebalancing vertices.
 Rebalancing volume element connectivity.
 Rebalancing markers and surface elements.
-25368 vertices including ghost points. 
-132589 interior elements including halo cells. 
-132589 tetrahedra.
+153425 vertices including ghost points. 
+767118 interior elements including halo cells. 
+767118 tetrahedra.
 Establishing MPI communication patterns.
 
 ----------------------- Preprocessing computations ----------------------
 Setting local point connectivity.
 Checking the numerical grid orientation of the interior elements.
-All volume elements are correctly orientend.
-All surface elements are correctly orientend.
 Identify edges and vertices.
 Computing centers of gravity.
 Setting the bound control volume structure.
@@ -98,31 +96,36 @@ Updating the surface coordinates from the input file.
 ------------------- Volumetric grid deformation (ZONE 0) ----------------
 Performing the deformation of the volumetric grid.
 Computing volumes of the grid elements.
-Min. volume: 1.33012e-07, max. volume: 408.385.
-Min. distance: 0.0118533, max. distance: 51.9414.
+Min. volume: 1.14938e-08, max. volume: 402.351.
+Min. distance: 0.00649766, max. distance: 51.951.
+
+# LU_SGS preconditioner.
 
 # FGMRES residual history
 # Residual tolerance target = 1e-14
-# Initial residual norm     = 1.65244e-05
+# Initial residual norm     = 4.90444e-05
      0     1
-     10     0.00325467
-     20     9.99219e-05
-     30     5.64644e-06
-     40     1.07789e-06
-     50     9.90513e-08
-     60     5.66472e-09
-     70     1.68569e-10
-     80     9.52012e-12
-     90     4.73757e-13
-     100     1.67878e-14
+     10     0.00260789
+     20     0.000184254
+     30     8.71626e-06
+     40     9.87888e-07
+     50     1.88262e-07
+     60     2.53168e-08
+     70     1.60188e-09
+     80     1.12295e-10
+     90     7.73293e-12
+     100     3.35675e-13
+     110     1.55959e-14
 # FGMRES final (true) residual:
-# Iteration = 102: |res|/|res0| = 9.34902e-15.
+# Iteration = 112: |res|/|res0| = 8.16433e-15.
 
 Computing volumes of the grid elements.
-Non-linear iter.: 1/1. Linear iter.: 102. Min. volume: 1.34486e-07. Error: 9.34902e-15.
+Non-linear iter.: 1/1. Linear iter.: 112. Min. volume: 1.14814e-08. Error: 8.16433e-15.
 
 ----------------------- Write deformed grid files -----------------------
-|SU2 mesh                           |/home/user/Documents/ICL/PDM/aeroframe_2/test/static/4_WingValidationSU2FramAT_case1/CFD//Case/1/mesh_out.su2|
+|SU2 mesh                           |deformed.su2                       |
+|Paraview                           |volume_deformed.vtu                |
+|Paraview surface                   |surface_deformed.vtu               |
 Adding any FFD information to the SU2 file.
 
 ------------------------- Solver Postprocessing -------------------------
@@ -132,7 +135,7 @@ Deleted CVolumetricMovement class.
 Deleted CConfig container.
 Deleted COutput class.
 
-Completed in 1.000585 seconds on 4 cores.
+Completed in 30.376328 seconds on 8 cores.
 
 ------------------------- Exit Success (SU2_DEF) ------------------------
 

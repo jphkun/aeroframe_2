@@ -40,28 +40,8 @@ class framat:
         """
         self.imposeBC()
         self.applysLoad(tranform)
-        # TODO add a user input if he wants or not to see the results
-        # self.postProcessing()
-        # logger.debug("Framat solver stars computing")
-        # logger.debug(tranform.afx)
-        # logger.debug(self.geo)
         self.results = self.model.run()
-        var = self.results.get('tensors').get('comp:U')["thx"]
-        # for i in var:
-        #     logger.debug(i)
-        
-        # var = self.results.get('tensors').get('F')[3::6]
-        # for i in var:
-        #     logger.debug(i)
-        # var = self.model.get('beam')[0].get('cross_section')
-        # for i in var:
-        #     logger.debug(i)
-            
-        # logger.debug(self.model)
-        # logger.debug(self.model.get('beam')[0].get('material'))
-        # logger.debug())
-        # logger.debug(self.model.get('beam')[0].get('node'))
-        # sys.exit()
+        # var = self.results.get('tensors').get('comp:U')["thx"]
         logger.debug("Framat solver finised computing")
 
     # def checkResults(self):
@@ -99,10 +79,10 @@ class framat:
                 Iz = self.geo.aircraftNodesIz[i][j]
                 J = self.geo.aircraftNodesJ[i][j]
                 cs = self.model.add_feature('cross_section', uid=name)
-                cs.set('A', np.round_(A , decimals=4))
-                cs.set('Iy',np.round_(Iy, decimals=9))
-                cs.set('Iz',np.round_(Iz, decimals=9))
-                cs.set('J', np.round_(J , decimals=9))
+                cs.set('A', np.round_(A , decimals=15))
+                cs.set('Iy',np.round_(Iy, decimals=15))
+                cs.set('Iz',np.round_(Iz, decimals=15))
+                cs.set('J', np.round_(J , decimals=15))
                 # logger.debug("uid = "+str(name))
                 # logger.debug("Iy = "+str(Iy))
                 # logger.debug("Iz = "+str(Iz))
@@ -123,9 +103,9 @@ class framat:
             for j in range(M):
                 # adds the points (nodes) to the beam
                 point = self.geo.aircraftNodesPoints[i][j].tolist()
-                point[0] = np.round_(point[0], decimals=3)
-                point[1] = np.round_(point[1], decimals=3)
-                point[2] = np.round_(point[2], decimals=3)
+                point[0] = np.round_(point[0], decimals=15)
+                point[1] = np.round_(point[1], decimals=15)
+                point[2] = np.round_(point[2], decimals=15)
                 # logger.debug("point = "+str(point))
                 name = self.geo.aircraftNodesNames[i][j]
                 # logger.debug("name = "+str(name))
@@ -189,12 +169,12 @@ class framat:
                         coef = 1
                     else:
                         coef = 1
-                    mfx = np.round(tranform.smf[i][j,0])
-                    mfy = np.round(tranform.smf[i][j,1])
-                    mfz = np.round(tranform.smf[i][j,2])
-                    mmx = coef * np.round(tranform.smm[i][j,0])
-                    mmy = coef * np.round(tranform.smm[i][j,1])
-                    mmz = coef * np.round(tranform.smm[i][j,2])
+                    mfx = np.round(tranform.smf[i][j,0],decimals=15)
+                    mfy = np.round(tranform.smf[i][j,1],decimals=15)
+                    mfz = np.round(tranform.smf[i][j,2],decimals=15)
+                    mmx = coef * np.round(tranform.smm[i][j,0],decimals=15)
+                    mmy = coef * np.round(tranform.smm[i][j,1],decimals=15)
+                    mmz = coef * np.round(tranform.smm[i][j,2],decimals=15)
                 else:
                     mfx = 0
                     mfy = 0
@@ -211,12 +191,12 @@ class framat:
                         coef = 1
                     else:
                         coef = 1
-                    fx = np.round(tranform.sfx[i - self.geo.nFuselage][j])
-                    fy = np.round(tranform.sfy[i - self.geo.nFuselage][j])
-                    fz = np.round(tranform.sfz[i - self.geo.nFuselage][j])
-                    mx = np.round(tranform.smx[i - self.geo.nFuselage][j])
-                    my = coef * np.round(tranform.smy[i - self.geo.nFuselage][j])
-                    mz = np.round(tranform.smz[i - self.geo.nFuselage][j])
+                    fx = np.round(tranform.sfx[i - self.geo.nFuselage][j],decimals=15)
+                    fy = np.round(tranform.sfy[i - self.geo.nFuselage][j],decimals=15)
+                    fz = np.round(tranform.sfz[i - self.geo.nFuselage][j],decimals=15)
+                    mx = np.round(tranform.smx[i - self.geo.nFuselage][j],decimals=15)
+                    my = coef * np.round(tranform.smy[i - self.geo.nFuselage][j],decimals=15)
+                    mz = np.round(tranform.smz[i - self.geo.nFuselage][j],decimals=15)
                 elif self.geo.settings['CFD_solver'] == 'Pytornado':
                     fx = 0
                     fy = 0
@@ -232,12 +212,12 @@ class framat:
                         coef = 1
                     else:
                         coef = 1
-                    fx = np.round(tranform.sfx[i][j])
-                    fy = np.round(tranform.sfy[i][j])
-                    fz = np.round(tranform.sfz[i][j])
-                    mx = np.round(tranform.smx[i][j])
-                    my = coef * np.round(tranform.smy[i][j])
-                    mz = np.round(tranform.smz[i][j])
+                    fx = np.round(tranform.sfx[i][j],decimals=15)
+                    fy = np.round(tranform.sfy[i][j],decimals=15)
+                    fz = np.round(tranform.sfz[i][j],decimals=15)
+                    mx = np.round(tranform.smx[i][j],decimals=15)
+                    my = coef * np.round(tranform.smy[i][j],decimals=15)
+                    mz = np.round(tranform.smz[i][j],decimals=15)
                 # Warning the frame of reference of the structure mesh is
                 # rotated from the one of the airplane so:
                 # airplaine x -> structure y

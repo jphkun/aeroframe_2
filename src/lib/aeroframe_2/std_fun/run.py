@@ -39,7 +39,7 @@ import aeroframe_2.csdImportGeometry.importGeomerty as importGeomerty
 import aeroframe_2.informationTransfer.mapping as mapping
 import aeroframe_2.informationTransfer.mappingSU2 as mappingSU2
 import aeroframe_2.wrappers.framatWrapper as framatWrapper
-import aeroframe_2.wrappers.framatWrapperSU2 as framatWrapperSU2
+# import aeroframe_2.wrappers.framatWrapperSU2 as framatWrapperSU2
 import pytornado.stdfun.run as cfd
 import ceasiompy.SU2Run.su2run as SU2_fsi
 import numpy as np
@@ -550,7 +550,7 @@ def solverSU2Framat(args, aeroframeSettings, acceptedNames):
     ###
     # WARNING
     ###
-    # SU2_fsi.run_SU2_fsi(aeroframeSettings, wkdir, case, iteration)
+    SU2_fsi.run_SU2_fsi(aeroframeSettings, wkdir, case, iteration)
 
     # Step 3)  Reads CPACS files and computes the nodes of 3D beam structural
     #          mesh. Aeroframe_2 function 'importGeomerty' pre-meshes the

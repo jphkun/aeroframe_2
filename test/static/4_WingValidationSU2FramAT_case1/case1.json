@@ -11,10 +11,10 @@
 
     "_comment": "Number of processors used for a SU2 simulation. Pytornado is always one, but has",
     "_comment": "one step where he sees and use all available processors, no parameter neded though",
-    "SU2_Nproc": 4,
+    "SU2_Nproc": 8,
 
     "_comment": "Number of iterations done with SU2 for each aeroelastic iterations",
-    "SU2_Niter": 40,
+    "SU2_Niter": 1000,
 
     "_comment": "Configuration file path for the SU2 solver. Will not be red if the CFD solver is SU2",
     "SU2ConfigPath":"/home/cfse2/Documents/aeroframe_2/test/static/8_Optimale_withDLR/CFD/Case/ConfigCFD.cfg",
@@ -26,7 +26,7 @@
     "CSD_solver": "FramAT",
 
     "_comment": "Maximal number of allowed iterations",
-    "MaxIterationsNumber": 2,
+    "MaxIterationsNumber": 25,
 
     "_comment": "Maximal displacement in [m] between two iterations",
     "ConvergeanceTolerence": 0.001,
@@ -91,7 +91,7 @@
             "mechanicalInterpolationType": "quadratic",
 
             "_comment": "Number of structure node for this instance",
-            "nodesFEM": 24,
+            "nodesFEM": 20,
 
             "_comment": "Number of clamped nodes at the wing root. This permits to mitigate the ",
             "_comment": "mismatch phenomena at the wing root",

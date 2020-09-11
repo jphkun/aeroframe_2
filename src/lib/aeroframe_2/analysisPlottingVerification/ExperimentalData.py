@@ -16,15 +16,15 @@ import numpy as np
 import numpy.linalg as LA
 import pandas as pd
 import matplotlib.pyplot as plt
-import skspatial.objects as sk
+# import skspatial.objects as sk
 from mpl_toolkits.mplot3d import Axes3D
 import sys
 
 
-pathBalance = '/home/user/Documents/ICL/PDM/aeroframe_2/test/ExperimentalData/Balance/'
+pathBalance = '../../../../test/ExperimentalData/Balance/'
 nameBalance = 's100a10p.xlsx'
 
-pathOptiTrack = '/home/user/Documents/ICL/PDM/aeroframe_2/test/ExperimentalData/OptiTrack/'
+pathOptiTrack = '../../../../test/ExperimentalData/OptiTrack/'
 nameOptiTrack = 's100a10p.csv'
 
 # Reads balance data

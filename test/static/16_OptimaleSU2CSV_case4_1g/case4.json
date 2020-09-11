@@ -10,14 +10,14 @@
     "CFD_solver": "SU2",
 
     "_description": "Aeroelastic iteration while using SU2 and the external solver",
-    "SU2_iteration": 1,
+    "SU2_iteration": 2,
 
     "_description": "Number of processors used for a SU2 simulation. Pytornado is always one, but has",
     "_description": "one step where he sees and use all available processors, no parameter neded though",
     "SU2_Nproc": 8,
 
     "_description": "Number of iterations done with SU2 for each aeroelastic iterations",
-    "SU2_Niter": 500,
+    "SU2_Niter": 1000,
 
     "_description": "Configuration file path for the SU2 solver. Will not be red if the CFD solver is SU2",
     "SU2ConfigPath":"/home/cfse2/Documents/aeroframe_2/test/static/13_OptimaleSU2CSV_case4_3g/CFD/Case00_alt0_mach0.3_aoa2.0_aos0.0/ConfigCFD.cfg",
@@ -29,7 +29,7 @@
     "CSD_solver": "external",
 
     "_description": "",
-    "deformation_file": "/CSD/deformation/0_LagDisp_SU2_1g.csv",
+    "deformation_file": "/CSD/deformation/1_LagDisp_SU2_1g.csv",
 
     "_description": "Maximal number of allowed iterations, only used if CSD_solver is set to FramAT",
     "MaxIterationsNumber": 15,
